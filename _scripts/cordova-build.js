@@ -82,9 +82,9 @@ const archiver = require('archiver');
             }
         } else {
             await exec(" cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npm install browserify --save-dev");
-            if (!await fsExists(__dirname + "/../node_modules/browserify")) {
+            /*if (!await fsExists(__dirname + "/../node_modules/browserify")) {
                 await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/node_modules/browserify", __dirname + "/../node_modules/browserify", { recursive: true, force: true });
-            }
+            }*/
         }
 
         
@@ -121,9 +121,9 @@ const archiver = require('archiver');
             }
         } else {
             await exec(" cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npm install https://github.com/jvilk/BrowserFS.git");
-            if (!await fsExists(__dirname + "/../node_modules/browserfs")) {
+            /*if (!await fsExists(__dirname + "/../node_modules/browserfs")) {
                 await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/node_modules/browserfs", __dirname + "/../node_modules/browserfs", { recursive: true, force: true });
-            }
+            }*/
         }
         console.log("Copying browserfs dist to cordova www folder")
         await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/node_modules/browserfs", __dirname + "/../build/" + DIST_FOLDER_NAME + "/www/browserfs",  { recursive: true, force: true });
@@ -515,6 +515,7 @@ const archiver = require('archiver');
                       }
                   });
               };
+              
               window.isDarkMode = "light";
               if (await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isAvailable(resolve, reject) }) ) {
                     if (await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isDarkModeEnabled(resolve,reject) }) ) {
