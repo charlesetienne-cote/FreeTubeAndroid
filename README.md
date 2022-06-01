@@ -1,4 +1,4 @@
-To export to cordova
+## To export the webapp to cordova:
 
 ```bash
     npm run pack
@@ -11,18 +11,26 @@ To export to cordova
     npm run run:cordova android
 ```
 
-Exporting history, playlists, subscriptions:
-    They will go to:
-        /storage/emulated/0/Android/io.freetubeapp.freetube/
-    I would love to have it go to a user selected directory, but it doesn't do that right now.
+### To export data from the app:
 
-# Known Issues
-    - Downloading videos is untested. It probably doesn't work though.
-    - LocalAPI doesn't work. I don't know exactly why. This sometimes causes infinite loops of fallback to invidious (which may fail for any number of reasons) and fallback to local api (which will always fail). It doesn't freeze the application, but when the application gets in this state, the easiest fix is restarting the application (because the invidous server changes on restart)
-        - I would love to have it cycle through invidous servers when a single server fails in order to prevent this issue.
-    - Sometimes the title and author of a video do not show up in the media notification
+1. Navigate to the Data Settings
+2. Click the export buttons
+3. Navigate in your file manager to the directory:
 
-<p align="center">
+    /storage/emulated/0/Android/io.freetubeapp.freetube/
+    
+I would love to have it go to a user selected directory, but it doesn't do that right now.
+
+### Known Issues:
+  - Downloading videos is untested. It probably doesn't work though.
+  - LocalAPI doesn't work. I don't know exactly why. This sometimes causes infinite loops of fallback to invidious (which may fail for any number of reasons) and fallback to local api (which will always fail). It doesn't freeze the application, but when the application gets in this state, the easiest fix is restarting the application (because the invidous server changes on restart)
+      - I would love to have it cycle through invidous servers when a single server fails in order to prevent this issue.
+  - Sometimes the title and author of a video do not show up in the media notification
+
+#
+
+
+<p align="center" >
  <img src="https://docs.freetubeapp.io/images/logoColor.png" width=500 align="center">
 </p>
 
