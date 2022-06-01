@@ -16,13 +16,16 @@ Exporting history, playlists, subscriptions:
         /storage/emulated/0/Android/io.freetubeapp.freetube/
     I would love to have it go to a user selected directory, but it doesn't do that right now.
 
-# Known Issues
+Known Issues
   - Downloading videos is untested. It probably doesn't work though.
   - LocalAPI doesn't work. I don't know exactly why. This sometimes causes infinite loops of fallback to invidious (which may fail for any number of reasons) and fallback to local api (which will always fail). It doesn't freeze the application, but when the application gets in this state, the easiest fix is restarting the application (because the invidous server changes on restart)
       - I would love to have it cycle through invidous servers when a single server fails in order to prevent this issue.
   - Sometimes the title and author of a video do not show up in the media notification
 
-<p align="center">
+#
+
+
+<p align="center" >
  <img src="https://docs.freetubeapp.io/images/logoColor.png" width=500 align="center">
 </p>
 
