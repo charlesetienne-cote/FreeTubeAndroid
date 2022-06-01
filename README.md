@@ -1,4 +1,4 @@
-To export the webapp to cordova:
+## To export the webapp to cordova:
 
 ```bash
     npm run pack
@@ -11,7 +11,7 @@ To export the webapp to cordova:
     npm run run:cordova android
 ```
 
-To export data from the app:
+### To export data from the app:
 
 1. Navigate to the Data Settings
 2. Click the export buttons
@@ -21,7 +21,7 @@ To export data from the app:
     
 I would love to have it go to a user selected directory, but it doesn't do that right now.
 
-Known Issues
+### Known Issues:
   - Downloading videos is untested. It probably doesn't work though.
   - LocalAPI doesn't work. I don't know exactly why. This sometimes causes infinite loops of fallback to invidious (which may fail for any number of reasons) and fallback to local api (which will always fail). It doesn't freeze the application, but when the application gets in this state, the easiest fix is restarting the application (because the invidous server changes on restart)
       - I would love to have it cycle through invidous servers when a single server fails in order to prevent this issue.
