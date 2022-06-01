@@ -1,3 +1,10 @@
+
+### Web Version:
+
+There is a web version of freetube exported with this repo available here:
+
+[https://marmadilemanteater.github.io/freetube/#/](https://marmadilemanteater.github.io/freetube/#/)
+
 ## To export the webapp to cordova:
 
 ```bash
@@ -27,7 +34,9 @@ I would love to have it go to a user selected directory, but it doesn't do that 
       - I would love to have it cycle through invidous servers when a single server fails in order to prevent this issue.
   - Sometimes the title and author of a video do not show up in the media notification
 
-#
+
+
+# 
 
 
 <p align="center" >
