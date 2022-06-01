@@ -1,4 +1,4 @@
-To export to cordova
+To export the webapp to cordova:
 
 ```bash
     npm run pack
@@ -11,10 +11,15 @@ To export to cordova
     npm run run:cordova android
 ```
 
-Exporting history, playlists, subscriptions:
-    They will go to:
-        /storage/emulated/0/Android/io.freetubeapp.freetube/
-    I would love to have it go to a user selected directory, but it doesn't do that right now.
+To export data from the app:
+
+1. Navigate to the Data Settings
+2. Click the export buttons
+3. Navigate in your file manager to the directory:
+
+    /storage/emulated/0/Android/io.freetubeapp.freetube/
+    
+I would love to have it go to a user selected directory, but it doesn't do that right now.
 
 Known Issues
   - Downloading videos is untested. It probably doesn't work though.
