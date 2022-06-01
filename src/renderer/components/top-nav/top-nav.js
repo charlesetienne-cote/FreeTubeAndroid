@@ -85,6 +85,7 @@ export default Vue.extend({
 
     if (appWidth <= 680) {
       const searchContainer = $('.searchContainer').get(0)
+      
       searchContainer.style.display = 'none'
     }
 
@@ -101,7 +102,7 @@ export default Vue.extend({
 
       if (width > 680) {
         searchContainer.style.display = ''
-      } else {
+      } else if (!navigator.userAgent.match(/Mobile|Windows Phone|Lumia|Android|webOS|iPhone|iPod|Blackberry|PlayBook|BB10|Opera Mini|\bCrMo\/|Opera Mobi/i)) {
         searchContainer.style.display = 'none'
       }
     })
@@ -115,7 +116,9 @@ export default Vue.extend({
       if (appWidth <= 680) {
         const searchContainer = $('.searchContainer').get(0)
         searchContainer.blur()
-        searchContainer.style.display = 'none'
+        if  (!navigator.userAgent.match(/Mobile|Windows Phone|Lumia|Android|webOS|iPhone|iPod|Blackberry|PlayBook|BB10|Opera Mini|\bCrMo\/|Opera Mobi/i))  {
+          searchContainer.style.display = 'none'
+        }
       } else {
         const searchInput = $('.searchInput input').get(0)
         searchInput.blur()

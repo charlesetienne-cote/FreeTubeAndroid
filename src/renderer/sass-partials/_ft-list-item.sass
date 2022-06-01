@@ -33,6 +33,11 @@ $watched-transition-duration: 0.5s
       color: $col
       transition-duration: $watched-transition-duration
 
+.playlistItems
+  .ft-list-item
+    .videoThumbnail
+      width: 46%
+
 .ft-list-item
   padding: 6px
 
@@ -55,7 +60,9 @@ $watched-transition-duration: 0.5s
       display: flex
 
     .thumbnailImage
-
+      width: auto
+      height: auto
+      max-width: 100%
       @include is-sidebar-item
         height: 75px
 
@@ -152,7 +159,7 @@ $watched-transition-duration: 0.5s
   .info
     flex: 1
     position: relative
-
+    
     .optionsButton
       float: right // ohhhh man, float was finally the right choice for something
 
@@ -172,6 +179,7 @@ $watched-transition-duration: 0.5s
     .infoLine
       margin-top: 5px
       font-size: 14px
+      padding-bottom: 8px
 
       @include is-sidebar-item
         font-size: 12px
@@ -187,6 +195,7 @@ $watched-transition-duration: 0.5s
       max-height: 50px
       overflow-y: hidden
       @include low-contrast-when-watched(var(--secondary-text-color))
+
 
   &.list
     display: flex

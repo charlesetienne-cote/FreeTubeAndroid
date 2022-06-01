@@ -1836,6 +1836,35 @@ video::-webkit-media-text-track-display {
     width: 3em
 }
 
+@media(max-width: 500px) {
+  .video-js .vjs-time-control {
+    display: none !important;
+  }
+  .videoLayout .videoArea[data-v-8162b946],
+  .videoLayout .infoArea[data-v-8162b946],
+  .videoLayout .sidebarArea[data-v-8162b946] {
+    max-width: 95vw;
+  }
+}
+
+@media(max-width: 390px) {
+  .video-js .vjs-time-control {
+    display: none !important;
+  }
+  .videoLayout .videoArea[data-v-8162b946],
+  .videoLayout .infoArea[data-v-8162b946],
+  .videoLayout .sidebarArea[data-v-8162b946] {
+    max-width: 95vw;
+  }
+}
+@media(max-width: 314px) {
+  .video-js .vjs-control:not(.vjs-progress-control):not(.vjs-volume-horizontal) {
+    width: 1.5rem !important;
+    transform: scale(0.7);
+  }
+}
+
+
 .video-js .vjs-menu-button-inline:before {
     width: 1.5em
 }

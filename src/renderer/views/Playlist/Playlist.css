@@ -6,7 +6,7 @@
   top: 60px;
   width: 30%;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: visible;
 }
 
 .playlistItems {
@@ -15,4 +15,30 @@
   padding: 10px;
   display: grid;
   grid-gap: 10px;
+}
+
+
+@media (max-width: 800px) {
+
+  .playlistInfo {
+    padding-bottom: 10px;
+    float: none;
+    position: relative;
+    top: auto;
+    width: 88vw;
+    height: auto;
+    min-height: 445px;
+    padding-bottom: 34px;
+  }
+
+  .playlistItems {
+    float: none;
+    width: 88vw;
+    padding: 10px;
+    display: grid;
+    grid-gap: 10px;
+    left: -2vw;
+    position: relative;
+  }
+
 }
