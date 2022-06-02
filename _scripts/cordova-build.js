@@ -164,8 +164,9 @@ const archiver = require('archiver');
         rendererContent = rendererContent.replaceAll("this.getChannelInfoInvidious(),this.getPlaylistsInvidious()}else this.getVideoInformationInvidious()", "this.getChannelInfoInvidious(),this.getPlaylistsInvidious()}else this.getChannelInfoInvidious(),this.getPlaylistsInvidious()");
         console.log("Setting up browserfs in the renderer");
         await fsWriteFile( __dirname + "/../build/" + DIST_FOLDER_NAME + "/" + "www/renderer.js", `(async function () {
-            var createControls = function (object = {}) {
-                MusicControls.create(object);
+            
+            var createControls = function (object = {}, success = function () {}) {
+                MusicControls.create(object, success);
                 var listeners = {};
                 var addListener = function (type, funct) {
                     var listenerTypes = Object.keys(listeners);
@@ -301,8 +302,20 @@ const archiver = require('archiver');
               });
             }
             window.updatePlayingVideo = function (videoObject) {
-                currentControls.updateData({ track: videoObject.title, artist: videoObject.author, cover: videoObject.videoThumbnails[videoObject.videoThumbnails.length - 4].url })
+                var videoObject = { track: videoObject.title, artist: videoObject.author, cover: videoObject.videoThumbnails[videoObject.videoThumbnails.length - 4].url };
+                currentControls.updateData(videoObject)
+                window.currentVideoData = videoObject;
             }
+            try {
+                // trying to fix the issue where the first controls object created does not have any data
+                currentControls = createControls(window.currentVideoData, function () {
+                    // Destroy any rouge controls that have popped up
+                    MusicControls.destroy();
+                });
+            } catch {
+
+            }
+            window.currentVideoData = {};
             setInterval(function () {
               // Check for current video
               var video = document.querySelector('video');
@@ -314,7 +327,7 @@ const archiver = require('archiver');
                 }
                 if (video.getAttribute("data-music-controls-loaded") !== "true") {
                   if (currentControls === null) {
-                    currentControls = createControls();
+                    currentControls = createControls(window.currentVideoData);
                     setupControlsListeners(currentControls);
                   }
                   video.setAttribute("data-music-controls-loaded", "true");
@@ -431,7 +444,6 @@ const archiver = require('archiver');
                     }
                 }
                 return new Promise(function (resolve, reject) {
-                    var permissions = cordova.plugins.permissions;
                     var fileNameArray = filename.split("/");
                     filename = fileNameArray[fileNameArray.length - 1];
                     // Run both methods because each will only work in their respective environments
@@ -468,6 +480,7 @@ const archiver = require('archiver');
 
                     });
                     }
+                    var permissions = cordova.plugins.permissions;
                     permissions.hasPermission(permissions.WRITE_EXTERNAL_STORAGE, function (status) {
                     if (!status.hasPermission) {
                         permissions.requestPermission(permissions.WRITE_EXTERNAL_STORAGE, function (status) {
