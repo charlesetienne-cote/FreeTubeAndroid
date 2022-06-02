@@ -109,8 +109,9 @@ jobs:
       uses: andstor/copycat-action@v3
       with:
         personal_token: ${{ secrets.PERSONAL_TOKEN }}
-        src_path: /build/freetube
-        dst_path: /
+        src_path: ./build/freetube
+        dst_path: ./
+        dst_branch: development
         dst_owner: MarmadileManteater
         dst_repo_name: MarmadileManteater.github.io
         clean: true
