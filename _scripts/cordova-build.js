@@ -558,7 +558,7 @@ const archiver = require('archiver');
         await fsWriteFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/renderer.js", content);
         
         var indexContent = (await fsReadFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/index.html")).toString();
-        indexContent = indexContent.replace("</title>", "</title><script src=\"browserfs/dist/browserfs.js\"></script>")
+        indexContent = indexContent.replace("</title>", "</title><link rel=\"shortcut icon\" href=\"./_icons/icon.ico\" /><script src=\"browserfs/dist/browserfs.js\"></script>");
         if (exportType === "cordova") {
             indexContent = indexContent.replace("</title>", "</title><script src=\"cordova.js\"></script>");
         }
@@ -617,11 +617,11 @@ const archiver = require('archiver');
                 "description": sourcePackage.description,
                 "display": "standalone",
                 "icons": [
-                  {
-                    "src": "_icons/256x256.png",
-                    "sizes": "256x256",
-                    "type": "image/png"
-                  }
+                    {
+                        "src": "_icons/icon.ico",
+                        "sizes": "256x256",
+                        "type": "image/ico"
+                    }
                 ],
                 "name": sourcePackage.productName,
                 "short_name": sourcePackage.productName,
