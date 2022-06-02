@@ -124,9 +124,7 @@ jobs:
         
         git commit -m "Deploying from GitHub Actions🚀"
         git config --global hub.protocol https
-        hub auth ${{ secrets.GITHUB_TOKEN }}
-        git push origin development https://github.com/MarmadileManteater/MarmadileManteater.github.io.git # push to remote branch
-        - name: Pushes to Repository
+        
     - uses: tech-thinker/push-to-repo@main
       env:
         API_TOKEN_GITHUB: ${{ secrets.GIT_PAT_TOKEN }}
