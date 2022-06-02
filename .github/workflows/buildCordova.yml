@@ -35,9 +35,6 @@ jobs:
         path: 'package.json'
         follow-symlinks: false
 
-    - name: Setup Android SDK Tools
-      uses: android-actions/setup-android@v2.0.2
-
     - name: Set Version Number Variable
       id: versionNumber
       uses: actions/github-script@v3
@@ -74,6 +71,10 @@ jobs:
     - name: Pack the dist directory with Node.js ${{ matrix.node-version}}
       if: contains(matrix.runtime, 'x64')
       run: npm run pack
+
+    - name: Setup Android SDK Tools
+      if: contains(matrix.runtime, 'x64')
+      uses: android-actions/setup-android@v2.0.2
 
     - name: Build with Cordova with Node.js ${{ matrix.node-version}}
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-arm64')
