@@ -621,12 +621,12 @@ const archiver = require('archiver');
                   }
                 ],
                 "name": sourcePackage.productName,
-                "short_name": package,
+                "short_name": sourcePackage.productName,
                 "start_url": "./index.html"
             };
             await fsWriteFile(__dirname + "/../build/" + apkName + "/manifest.webmanifest",JSON.stringify(manifest, null, 2));
         }
     } catch (exception) {
-        console.log(exception);
+        throw exception;
     }
 }());
