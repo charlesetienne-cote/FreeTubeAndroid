@@ -110,17 +110,17 @@ jobs:
       with:
         path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
 
-    - name: List working directory
-      run: ls
-      
-    - name: Copy HTML5 output to website repo
-      uses: andstor/copycat-action@v3
-      with:
-        personal_token: ${{ secrets.PERSONAL_TOKEN }}
-        src_path: ../build/freetube
-        src_branch: development
-        dst_path: ./
-        dst_branch: development
-        dst_owner: MarmadileManteater
-        dst_repo_name: MarmadileManteater.github.io
-        clean: true
+    - name: copy
+      env:
+        SRC_FOLDER_PATH: 'build/freetube'
+        TARGET_BRANCH: 'development'
+      run: |
+        files=$SRC_FOLDER_PATH
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'action@github.com'
+        git fetch                         # fetch branches
+        git checkout $TARGET_BRANCH       # checkout to your branch
+        git checkout ${GITHUB_REF##*/} -- $files # copy files from the source branch
+        git add -A
+        git diff-index --quiet HEAD ||  git commit -am "deploy files"  # commit to the repository (ignore if no modification)
+          git push origin $TARGET_BRANCH # push to remote branch
