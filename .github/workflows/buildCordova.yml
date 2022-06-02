@@ -119,7 +119,7 @@ jobs:
         personal_token: ${{ secrets.PERSONAL_TOKEN }}
         src_path: ../build/freetube
         src_branch: development
-        dst_path: .
+        dst_path: ./
         dst_branch: development
         dst_owner: MarmadileManteater
         dst_repo_name: MarmadileManteater.github.io
