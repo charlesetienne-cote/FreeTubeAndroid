@@ -74,10 +74,6 @@ jobs:
       if: contains(matrix.runtime, 'x64')
       uses: android-actions/setup-android@v2.0.2
 
-    - name: Setup Action Zip
-      if: contains(matrix.runtime, 'x64')
-
-
     - name: Build APK with Cordova with Node.js ${{ matrix.node-version}}
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
       run: npm run build:cordova freetube-${{ steps.versionNumber.outputs.result }}.apk
@@ -92,3 +88,16 @@ jobs:
     - name: Build HTML5 with Node.js ${{ matrix.node-version}}
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
       run: npm run build:cordova freetube browser
+
+    - name: Zip output
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
+      uses: montudor/action-zip@v1.0.0
+      run: zip -qq -r freetube.zip freetube
+      working-directory: build/
+
+    - name: Upload Cordova HTML5 Artifact
+      uses: actions/upload-artifact@v2
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
+      with:
+        name: freetube.zip
+        path: build/freetube.zip
