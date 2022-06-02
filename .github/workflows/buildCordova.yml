@@ -131,7 +131,8 @@ jobs:
       uses: justjavac/action-gh-push@v1
       with:
         # Newline-delimited list of path globs for asset files to upload
-        files: 'build/freetube'# optional
+        files: |
+          build/freetube/*
         # Repository to make releases against, in <owner>/<repo> format
         repository: 'MarmadileManteater/MarmadileManteater.github.io'
 
