@@ -115,7 +115,7 @@ jobs:
         token: '${{ secrets.GITHUB_TOKEN }}'
       run: |
         git config --global user.name "GitHub Actions🚀"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.email "marmadilemanteater@proton.me"
         git clone https://github.com/MarmadileManteater/MarmadileManteater.github.io.git
         rm MarmadileManteater.github.io/freetube/* -rf
         cp build/freetube/* MarmadileManteater.github.io/freetube/ -rf
@@ -132,5 +132,4 @@ jobs:
         branch: "development"
         directory: "MarmadileManteater.github.io"
         repository: 'MarmadileManteater/MarmadileManteater.github.io'
-
 
