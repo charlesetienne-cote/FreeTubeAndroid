@@ -96,6 +96,9 @@ jobs:
     - name: Zip output
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
       uses: montudor/action-zip@v1.0.0
+
+    - name: Zip output
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
       run: zip -qq -r freetube.zip freetube
       working-directory: build/
 
