@@ -30,7 +30,7 @@ I would love to have it go to a user selected directory, but it doesn't do that 
 
 ### Known Issues:
   - Downloading videos is untested. It probably doesn't work though.
-  - LocalAPI doesn't work. I don't know exactly why. This sometimes causes infinite loops of fallback to invidious (which may fail for any number of reasons) and fallback to local api (which will always fail). It doesn't freeze the application, but when the application gets in this state, the easiest fix is restarting the application (because the invidous server changes on restart)
+  - LocalAPI doesn't work. I don't know exactly why, but I'm guess it is CORS. This sometimes causes infinite loops of fallback to invidious (which may fail for any number of reasons) and fallback to local api (which will always fail). It doesn't freeze the application, but when the application gets in this state, the easiest fix is restarting the application (because the invidous server changes on restart)
       - I would love to have it cycle through invidous servers when a single server fails in order to prevent this issue.
   - Sometimes the title and author of a video do not show up in the media notification
   - Background play works fine in the web app, but it can be a bit finicky in the cordova app. Setting the player type to audio seems to make it work more consistently.
