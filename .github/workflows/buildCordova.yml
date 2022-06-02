@@ -5,7 +5,7 @@ name: Build
 
 on:
   push:
-    branches: [ development, '**-RC' ]
+    branches: [ master, '**-RC' ]
 
 jobs:
   build:
