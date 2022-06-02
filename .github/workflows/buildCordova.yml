@@ -109,10 +109,13 @@ jobs:
       uses: JesseTG/rm@v1.0.2
       with:
         path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
-
+        
+    - uses: oleksiyrudenko/gha-git-credentials@v2-latest
+      with:
+        token: '${{ secrets.GITHUB_TOKEN }}'
+        
     - name: Copy files to github.io site
       run: |
-        files=$SRC_FOLDER_PATH
         git clone https://github.com/MarmadileManteater/MarmadileManteater.github.io.git
         rm MarmadileManteater.github.io/freetube/* -rf
         cp build/freetube/* MarmadileManteater.github.io/freetube/ -rf
