@@ -309,6 +309,7 @@ const archiver = require('archiver');
             try {
                 // trying to fix the issue where the first controls object created does not have any data
                 currentControls = createControls(window.currentVideoData, function () {
+                    setupControlsListeners(currentControls);
                     // Destroy any rouge controls that have popped up
                     MusicControls.destroy();
                 });
