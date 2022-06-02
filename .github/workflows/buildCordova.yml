@@ -17,14 +17,6 @@ jobs:
         - runtime: linux-x64
           os: ubuntu-18.04
 
-        - runtime: linux-arm64
-          os: ubuntu-latest
-
-        - runtime: osx-x64
-          os: macOS-latest
-
-        - runtime: win-x64
-          os: windows-latest
 
     runs-on: ${{ matrix.os }}
 
@@ -42,6 +34,9 @@ jobs:
       with:
         path: 'package.json'
         follow-symlinks: false
+
+    - name: Setup Android SDK Tools
+      uses: android-actions/setup-android@v2.0.2
 
     - name: Set Version Number Variable
       id: versionNumber
