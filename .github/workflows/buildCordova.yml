@@ -104,12 +104,15 @@ jobs:
       with:
         name: freetube-${{ steps.versionNumber.outputs.result }}.zip
         path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
-        
-    - name: Remove File
+
+    - name: Remove Zip of HTML
       uses: JesseTG/rm@v1.0.2
       with:
         path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
 
+    - name: List working directory
+      run: ls
+      
     - name: Copy HTML5 output to website repo
       uses: andstor/copycat-action@v3
       with:
