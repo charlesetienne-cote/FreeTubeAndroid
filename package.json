@@ -44,7 +44,7 @@
     "rebuild:electron": "electron-builder install-app-deps",
     "rebuild:node": "npm rebuild",
     "release": "run-s test build",
-    "ci": "yarn install --frozen-lockfile"
+    "ci": "yarn install"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
