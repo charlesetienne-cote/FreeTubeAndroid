@@ -21,6 +21,7 @@ const archiver = require('archiver');
 
 (async function () {
     try {
+
         // Remove the dist folder if it already exists
         if (!await fsExists(__dirname + "/../build")) {
             await fsMkdir(__dirname + "/../build");
@@ -70,6 +71,11 @@ const archiver = require('archiver');
         destinationPackage.license = sourcePackage.license;
         destinationPackage.description = sourcePackage.description;
         destinationPackage.private = sourcePackage.private;
+
+        var apkName = sourcePackage.name + "-" + sourcePackage.version + ".apk";
+        if (process.argv.length > 2) {
+            apkName = process.argv[2];
+        }
         
         console.log("Installing browserify");
         if (await fsExists(__dirname + "/../node_modules/browserify")) {
@@ -587,7 +593,7 @@ const archiver = require('archiver');
         await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npx cordova build android");
         // Copy the apk to the build dir
         console.log("Copying apk file to build directory");
-        await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/platforms/android/app/build/outputs/apk/debug/app-debug.apk", __dirname + "/../build/" + sourcePackage.productName + " " + sourcePackage.version + ".apk")
+        await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/platforms/android/app/build/outputs/apk/debug/app-debug.apk", __dirname + "/../build/" + apkName)
     } catch (exception) {
         console.log(exception);
     }
