@@ -109,18 +109,21 @@ jobs:
       uses: JesseTG/rm@v1.0.2
       with:
         path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
-
-    - name: List working directory
-      run: ls
-      
-    - name: Copy HTML5 output to website repo
-      uses: andstor/copycat-action@v3
-      with:
-        personal_token: ${{ secrets.PERSONAL_TOKEN }}
-        src_path: build/freetube
-        src_branch: development
-        dst_path: .
-        dst_branch: development
-        dst_owner: MarmadileManteater
-        dst_repo_name: MarmadileManteater.github.io
-        clean: true
+        
+    - name: Copy files to github.io site
+      env:
+        token: '${{ secrets.GITHUB_TOKEN }}'
+      run: |
+        git config --global user.name "GitHub Actions🚀"
+        git config --global user.email "marmadilemanteater@proton.me"
+        git clone https://github.com/MarmadileManteater/MarmadileManteater.github.io.git
+        rm MarmadileManteater.github.io/freetube/* -rf
+        cp build/freetube/* MarmadileManteater.github.io/freetube/ -rf
+        cd MarmadileManteater.github.io
+        git add *
+        
+        git commit -m "Deploying from GitHub Actions🚀"
+        git config --global hub.protocol https
+        hub auth ${{ secrets.GITHUB_TOKEN }}
+        git push origin development https://github.com/MarmadileManteater/MarmadileManteater.github.io.git # push to remote branch
+        
