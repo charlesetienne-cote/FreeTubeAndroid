@@ -73,8 +73,12 @@ const archiver = require('archiver');
         destinationPackage.private = sourcePackage.private;
 
         var apkName = sourcePackage.name + "-" + sourcePackage.version + ".apk";
+        var exportType = "cordova";
         if (process.argv.length > 2) {
             apkName = process.argv[2];
+        }
+        if (process.argv.length > 3) {
+            exportType = process.argv[3];
         }
         
         console.log("Installing browserify");
@@ -164,13 +168,15 @@ const archiver = require('archiver');
         rendererContent = rendererContent.replace(/(this.showOpenDialog)\(([^\(\)]*?)\)/g, "showFileLoadDialog($2);")
         rendererContent = rendererContent.replace(/(this.showSaveDialog)\(([^\(\)]*?)\)/g, "showFileSaveDialog($2);")
         rendererContent = rendererContent.replace(/const store (= localforage.createInstance)/g, `const store = window.dataStore $1`);
-        rendererContent = rendererContent.replace(/this.invidiousGetVideoInformation\(this.videoId\).then\(/g, "this.invidiousGetVideoInformation(this.videoId).then(updatePlayingVideo);this.invidiousGetVideoInformation\(this.videoId\).then(")
-        rendererContent = rendererContent.replace("systemTheme:function(){return window.matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\"}", "systemTheme:function () { return window.isDarkMode }")
+        if (exportType === "cordova") {
+            rendererContent = rendererContent.replace(/this.invidiousGetVideoInformation\(this.videoId\).then\(/g, "this.invidiousGetVideoInformation(this.videoId).then(updatePlayingVideo);this.invidiousGetVideoInformation\(this.videoId\).then(")
+            rendererContent = rendererContent.replace("systemTheme:function(){return window.matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\"}", "systemTheme:function () { return window.isDarkMode }")
+        }
         // This enables channel view
         rendererContent = rendererContent.replaceAll("this.getChannelInfoInvidious(),this.getPlaylistsInvidious()}else this.getVideoInformationInvidious()", "this.getChannelInfoInvidious(),this.getPlaylistsInvidious()}else this.getChannelInfoInvidious(),this.getPlaylistsInvidious()");
         console.log("Setting up browserfs in the renderer");
         await fsWriteFile( __dirname + "/../build/" + DIST_FOLDER_NAME + "/" + "www/renderer.js", `(async function () {
-            
+            ` + ((exportType === "cordova")?`
             var createControls = function (object = {}, success = function () {}) {
                 MusicControls.create(object, success);
                 var listeners = {};
@@ -348,8 +354,8 @@ const archiver = require('archiver');
                 }
               }
               
-            }, 500);
-            BrowserFS.install(window);
+            }, 500);`:'')
+            + `BrowserFS.install(window);
             var staticData = await (await fetch('static.zip')).arrayBuffer();
             // Configure the browserfs before the renderer code
             await new Promise(function (resolve, reject) {
@@ -471,7 +477,7 @@ const archiver = require('archiver');
                     document.body.appendChild(element);
                     element.click();
                     document.body.removeChild(element);
-
+                    ` + ((exportType === "cordova")?`
                     function whenHasPermission () {
                     window.requestFileSystem(LocalFileSystem.PERSISTENT, 10000, function (fs) {
                         window.resolveLocalFileSystemURL(cordova.file.externalApplicationStorageDirectory, function (dir) {
@@ -499,6 +505,7 @@ const archiver = require('archiver');
                         whenHasPermission();
                     }
                     }, reject);
+                    `:"") + `
                 });
               }
               window.showFileSaveDialog = function (fileDialogObject) {
@@ -535,13 +542,13 @@ const archiver = require('archiver');
                       }
                   });
               };
-              
+              ` + ((exportType === "cordova")?`
               window.isDarkMode = "light";
               if (await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isAvailable(resolve, reject) }) ) {
                     if (await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isDarkModeEnabled(resolve,reject) }) ) {
                         window.isDarkMode = isDarkMode?"dark":"light";
                     }
-            }
+              }`:"") + `
         ` + rendererContent + `
         }());
         `);
@@ -551,7 +558,10 @@ const archiver = require('archiver');
         await fsWriteFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/renderer.js", content);
         
         var indexContent = (await fsReadFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/index.html")).toString();
-        indexContent = indexContent.replace("</title>", "</title><script src=\"browserfs/dist/browserfs.js\"></script><script src=\"cordova.js\"></script>")
+        indexContent = indexContent.replace("</title>", "</title><script src=\"browserfs/dist/browserfs.js\"></script>")
+        if (exportType === "cordova") {
+            indexContent = indexContent.replace("</title>", "</title><script src=\"cordova.js\"></script>");
+        }
         await fsWriteFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/index.html", indexContent);
         // Copy the icons to the cordova directory
         console.log("Copying icons into cordova project");
@@ -585,15 +595,21 @@ const archiver = require('archiver');
 
         // Adding export platforms to cordova
         console.log("Adding platforms to cordova project");
-        await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npx cordova platform add android");
+        if (exportType === "cordova") {
+            await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npx cordova platform add android");
+        }
         await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npx cordova platform add browser");
-
-        // Run the apk build
-        console.log("Building apk file");
-        await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npx cordova build android");
-        // Copy the apk to the build dir
-        console.log("Copying apk file to build directory");
-        await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/platforms/android/app/build/outputs/apk/debug/app-debug.apk", __dirname + "/../build/" + apkName)
+        if (exportType === "cordova") {
+            // Run the apk build
+            console.log("Building apk file");
+            await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npx cordova build android");
+            // Copy the apk to the build dir
+            console.log("Copying apk file to build directory");
+            await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/platforms/android/app/build/outputs/apk/debug/app-debug.apk", __dirname + "/../build/" + apkName);
+        } else if (exportType === "browser") {
+            console.log("Copying output directory to build directory");
+            await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/", __dirname + "/../build/" + apkName, { recursive: true, force: true });
+        }
     } catch (exception) {
         console.log(exception);
     }
