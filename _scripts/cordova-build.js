@@ -562,6 +562,9 @@ const archiver = require('archiver');
         if (exportType === "cordova") {
             indexContent = indexContent.replace("</title>", "</title><script src=\"cordova.js\"></script>");
         }
+        if (exportType === "browser") {
+            indexContent = indexContent.replace('<link rel="manifest" href="static/manifest.json"/>', "<link rel=\"manifest\" href=\"manifest.webmanifest\" />");
+        }
         await fsWriteFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/index.html", indexContent);
         // Copy the icons to the cordova directory
         console.log("Copying icons into cordova project");
