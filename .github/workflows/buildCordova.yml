@@ -131,5 +131,6 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: "development"
         directory: "MarmadileManteater.github.io"
+        repository: 'https://github.com/MarmadileManteater/MarmadileManteater.github.io.git'
 
 
