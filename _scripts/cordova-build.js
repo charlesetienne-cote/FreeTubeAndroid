@@ -609,6 +609,22 @@ const archiver = require('archiver');
         } else if (exportType === "browser") {
             console.log("Copying output directory to build directory");
             await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/", __dirname + "/../build/" + apkName, { recursive: true, force: true });
+            var manifest = {
+                "background_color": "white",
+                "description": sourcePackage.description,
+                "display": "standalone",
+                "icons": [
+                  {
+                    "src": "_icons/256x256.png",
+                    "sizes": "256x256",
+                    "type": "image/png"
+                  }
+                ],
+                "name": sourcePackage.productName,
+                "short_name": package,
+                "start_url": "./index.html"
+            };
+            await fsWriteFile(__dirname + "/../build/" + apkName + "/manifest.webmanifest",JSON.stringify(manifest, null, 2));
         }
     } catch (exception) {
         console.log(exception);
