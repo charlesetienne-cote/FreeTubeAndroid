@@ -104,3 +104,13 @@ jobs:
       with:
         name: freetube-${{ steps.versionNumber.outputs.result }}.zip
         path: build/freetube-${{ steps.versionNumber.outputs.result }}.zip
+
+    - name: Copy HTML5 output to website repo
+      uses: andstor/copycat-action@v3
+      with:
+        personal_token: ${{ secrets.PERSONAL_TOKEN }}
+        src_path: /build/freetube
+        dst_path: /
+        dst_owner: MarmadileManteater
+        dst_repo_name: MarmadileManteater.github.io
+        clean: true
