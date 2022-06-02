@@ -37,8 +37,8 @@ jobs:
       id: versionNumber
       uses: actions/github-script@v3
       env:
-        IS_DEV: ${{ contains(github.ref, 'development') }}
-        IS_RC: ${{ contains(github.ref, 'RC') }}
+        IS_DEV: ${{ contains(github.ref, 'master') }}
+        IS_RC: ${{ contains(github.ref, 'release') }}
         VERSION_NUMBER_NIGHTLY: ${{ env.PACKAGE_VERSION }}-nightly-${{ github.run_number }}
         VERSION_NUMBER_RC: ${{ env.PACKAGE_VERSION }}-RC-${{ github.run_number }}
         VERSION_NUMBER: ${{ env.PACKAGE_VERSION }}
