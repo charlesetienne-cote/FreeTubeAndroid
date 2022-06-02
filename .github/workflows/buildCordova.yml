@@ -104,32 +104,3 @@ jobs:
       with:
         name: freetube-${{ steps.versionNumber.outputs.result }}.zip
         path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
-
-    - name: Remove Zip of HTML
-      uses: JesseTG/rm@v1.0.2
-      with:
-        path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
-
-    - name: Copy files to github.io site
-      env:
-        token: '${{ secrets.GITHUB_TOKEN }}'
-      run: |
-        git config --global user.name "GitHub Actions🚀"
-        git config --global user.email "marmadilemanteater@proton.me"
-        git clone https://github.com/MarmadileManteater/MarmadileManteater.github.io.git
-        rm MarmadileManteater.github.io/freetube/* -rf
-        cp build/freetube/* MarmadileManteater.github.io/freetube/ -rf
-        cd MarmadileManteater.github.io
-        git add *
-        
-        git commit -m "Deploying from GitHub Actions🚀"
-        git config --global hub.protocol https
-        
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: "development"
-        directory: "MarmadileManteater.github.io"
-        repository: 'MarmadileManteater/MarmadileManteater.github.io'
-
