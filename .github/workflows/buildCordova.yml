@@ -95,12 +95,12 @@ jobs:
 
     - name: Zip output
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
-      run: zip -qq -r freetube.zip freetube
+      run: zip -qq -r freetube-${{ steps.versionNumber.outputs.result }}.zip freetube/*
       working-directory: build/
 
     - name: Upload Cordova HTML5 Artifact
       uses: actions/upload-artifact@v2
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
       with:
-        name: freetube.zip
-        path: build/freetube.zip
+        name: freetube-${{ steps.versionNumber.outputs.result }}.zip
+        path: build/freetube-${{ steps.versionNumber.outputs.result }}.zip
