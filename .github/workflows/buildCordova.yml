@@ -124,5 +124,5 @@ jobs:
         cd MarmadileManteater.github.io
         git add *
         
-        git commit -m "Deploying from GitHub Actions🚀" 
-        git push origin development # push to remote branch
+        git commit -m "Deploying from GitHub Actions🚀"
+        git push origin development https://$token:x-oauth-basic@github.com/MarmadileManteater/MarmadileManteater.github.io.git # push to remote branch
