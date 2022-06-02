@@ -129,6 +129,8 @@ jobs:
       # You may pin to the exact commit or the version.
       # uses: justjavac/action-gh-push@fec59e7a90d4b38d3a0e504e39f2d5670ee721f1
       uses: justjavac/action-gh-push@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         token: '${{ secrets.GITHUB_TOKEN }}'
         # Newline-delimited list of path globs for asset files to upload
