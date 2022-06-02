@@ -52,7 +52,7 @@ jobs:
           } else {
            return "${{env.VERSION_NUMBER }}"
           }
-        # script: if ${{ env.IS_DEV }} then echo "::set-output name=VERSION_NUMBER::${{ env.VERSION_NUMBER_NIGHTLY }}" else echo "::set-output name=VERSION_NUMBER::${{ env.VERSION_NUMBER }}" fi
+        # script: if ${{ env.IS_DEV }} then echo ":token :set-output name=VERSION_NUMBER::${{ env.VERSION_NUMBER_NIGHTLY }}" else echo "::set-output name=VERSION_NUMBER::${{ env.VERSION_NUMBER }}" fi
 
     - name: Update package.json version
       uses: jossef/action-set-json-field@v1
@@ -130,6 +130,7 @@ jobs:
       # uses: justjavac/action-gh-push@fec59e7a90d4b38d3a0e504e39f2d5670ee721f1
       uses: justjavac/action-gh-push@v1
       with:
+        token: '${{ secrets.GITHUB_TOKEN }}'
         # Newline-delimited list of path globs for asset files to upload
         files: |
           build/freetube/*
