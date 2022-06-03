@@ -484,6 +484,7 @@ const archiver = require('archiver');
                     `:"") + `
                 });
               }
+
               window.showFileLoadDialog = function (fileDialogObject) {
                   return new Promise(function (resolve, reject) {
                       // If opening a file
@@ -512,6 +513,16 @@ const archiver = require('archiver');
                       }
                   });
               };
+              window.play = function () {
+                  if (currentVideo !== null) {
+                      currentVideo.play();
+                  }
+              };
+              Object.defineProperty(window, 'player', {
+                  get: function () {
+                    return currentVideo;
+                  }
+              });
               ` + ((exportType === "cordova")?`
               window.isDarkMode = "light";
               if (await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isAvailable(resolve, reject) }) ) {

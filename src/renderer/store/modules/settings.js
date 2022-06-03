@@ -263,6 +263,10 @@ const state = {
   screenshotFilenamePattern: '%Y%M%D-%H%N%S'
 }
 
+if (window.BrowserFS !== undefined) {
+  state.backendPreference = "invidious";
+}
+
 const stateWithSideEffects = {
   currentLocale: {
     defaultValue: 'en-US',

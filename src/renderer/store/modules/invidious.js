@@ -32,9 +32,13 @@ const actions = {
       instances = response.filter((instance) => {
         if (instance[0].includes('.onion') || instance[0].includes('.i2p')) {
           return false
-        } else {
-          return true
         }
+        if (window.BrowserFS !== undefined) { // if not in electron
+          if (!instance[1].cors) { // if cors is not enabled
+            return false
+          }
+        }
+        return true;
       }).map((instance) => {
         return instance[1].uri.replace(/\/$/, '')
       })
@@ -69,7 +73,7 @@ const actions = {
     commit('setCurrentInvidiousInstance', instanceList[randomIndex])
   },
 
-  invidiousAPICall({ state }, payload) {
+  invidiousAPICall({ commit, state }, payload) {
     return new Promise((resolve, reject) => {
       const requestUrl = state.currentInvidiousInstance + '/api/v1/' + payload.resource + '/' + payload.id + '?' + $.param(payload.params)
 
@@ -80,7 +84,13 @@ const actions = {
         console.log(textStatus)
         console.log(requestUrl)
         console.log(error)
-        reject(xhr)
+        reject(xhr);
+        if (window.BrowserFS !== undefined) { // if not in electron
+          const instanceList = state.invidiousInstancesList;
+          const randomIndex = Math.floor(Math.random() * instanceList.length)
+          commit('setCurrentInvidiousInstance', instanceList[randomIndex]);
+        }
+
       })
     })
   },
