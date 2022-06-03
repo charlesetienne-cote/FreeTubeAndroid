@@ -416,30 +416,6 @@ const archiver = require('archiver');
                 existsSync: psuedoFileSystem.existsSync
             }
             
-            window.showFileSaveDialog = function (fileDialogObject) {
-                return new Promise(function (resolve, reject) {
-                    console.log(fileDialogObject);
-                    resolve({filePath: "downloads/"});
-                });
-            };
-            window.showFileLoadDialog = function (fileDialogObject) {
-                return new Promise(function (resolve, reject) {
-                    // If opening a file
-                    if (fileDialogObject.properties.indexOf("openFile") !== -1) {
-                        var fileInput = document.createElement("input");
-                        fileInput.setAttribute("type", "file");
-                        fileInput.onchange = function() {
-                            try {
-                                resolve(this);
-                            }
-                            catch (exception) {
-                                reject(exception);
-                            }
-                        }
-                        fileInput.click();
-                    }
-                });
-            };
             function download(filename, textInput) {
                 if (filename === undefined) {
                     try {
@@ -508,12 +484,6 @@ const archiver = require('archiver');
                     `:"") + `
                 });
               }
-              window.showFileSaveDialog = function (fileDialogObject) {
-                  return new Promise(function (resolve, reject) {
-                      fileDialogObject.filePath = fileDialogObject.options.defaultPath;
-                      resolve(fileDialogObject);
-                  });
-              };
               window.showFileLoadDialog = function (fileDialogObject) {
                   return new Promise(function (resolve, reject) {
                       // If opening a file
