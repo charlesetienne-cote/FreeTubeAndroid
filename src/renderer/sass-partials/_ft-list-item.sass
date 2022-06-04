@@ -55,6 +55,8 @@ $watched-transition-duration: 0.5s
 
   .videoThumbnail
     position: relative
+    @include is-sidebar-item
+      width: auto
 
     .thumbnailLink
       display: flex
@@ -62,9 +64,10 @@ $watched-transition-duration: 0.5s
     .thumbnailImage
       width: auto
       height: auto
-      max-width: 100%
+      width: 100%
       @include is-sidebar-item
         height: 75px
+        width: auto
 
       @include is-recommendation
         width: 163px
