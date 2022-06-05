@@ -484,7 +484,12 @@ const archiver = require('archiver');
                     `:"") + `
                 });
               }
-
+              window.showFileSaveDialog = function (fileDialogObject) {
+                return new Promise(function (resolve, reject) {
+                    fileDialogObject.filePath = fileDialogObject.options.defaultPath;
+                    resolve(fileDialogObject);
+                });
+              };
               window.showFileLoadDialog = function (fileDialogObject) {
                   return new Promise(function (resolve, reject) {
                       // If opening a file
