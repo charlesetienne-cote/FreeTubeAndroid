@@ -23,7 +23,7 @@ const exec = util.promisify(require('child_process').exec);
             if (process.argv.length > 2) {
                 type = process.argv[2];
             }
-            await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npx cordova run " + type);
+            await exec("npx cordova run " + type, { cwd: __dirname + "/../build/" + DIST_FOLDER_NAME });
         } else {
             console.log("No cordova build found.");
             console.log("Run: ");
