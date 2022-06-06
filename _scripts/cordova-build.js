@@ -531,8 +531,9 @@ const archiver = require('archiver');
               ` + ((exportType === "cordova")?`
               window.isDarkMode = "light";
               if (await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isAvailable(resolve, reject) }) ) {
-                    if (await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isDarkModeEnabled(resolve,reject) }) ) {
-                        window.isDarkMode = isDarkMode?"dark":"light";
+                    var isDarkMode = await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isDarkModeEnabled(function (result) { resolve(result.value) },reject) });
+                    if (isDarkMode) {
+                        window.isDarkMode = "dark";
                     }
               }`:"") + `
         ` + rendererContent + `
