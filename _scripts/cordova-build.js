@@ -50,7 +50,10 @@ const archiver = require('archiver');
             console.log("Installed Media Controls Plugin");
             await exec("cd " + __dirname + "/../build/"+ DIST_FOLDER_NAME + " && npx cordova plugin add cordova-plugin-android-permissions" );
             console.log("Installed File Permissions Plugin");
-
+            await exec(" cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npm install browserify --save-dev");
+            console.log("Installed browserify");
+            await exec(" cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npm install https://github.com/jvilk/BrowserFS.git");
+            console.log("Installed browserfs");
             if (await fsExists(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/")) {
                 await fsRm(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/", { recursive: true, force: true });
             }
@@ -80,24 +83,7 @@ const archiver = require('archiver');
         if (process.argv.length > 3) {
             exportType = process.argv[3];
         }
-        
-        console.log("Installing browserify");
-        if (await fsExists(__dirname + "/../node_modules/browserify")) {
-            try {
-                await fsCopy(__dirname + "/../node_modules/browserify", __dirname + "/../build/" + DIST_FOLDER_NAME + "/node_modules/browserify", { recursive: true, force: true });
-                console.log("Was able to recycle module from last build");
-            } catch (exception) {
-                console.log(exception);
-                // just ignore these errors for now
-            }
-        } else {
-            await exec(" cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npm install browserify --save-dev");
-            /*if (!await fsExists(__dirname + "/../node_modules/browserify")) {
-                await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/node_modules/browserify", __dirname + "/../node_modules/browserify", { recursive: true, force: true });
-            }*/
-        }
 
-        
         var browserfsPath = __dirname + "/../build/" + DIST_FOLDER_NAME + "/www/browserfs";
         // Copy dist folder into cordova project;
         console.log("Copying dist output to cordova outline");
@@ -119,22 +105,6 @@ const archiver = require('archiver');
             })
         });
 
-        // Adding browserfs to the dist
-        console.log("Installing browserfs");
-        if (await fsExists(__dirname + "/../node_modules/browserfs")) {
-            try {
-                await fsCopy(__dirname + "/../node_modules/browserfs", __dirname + "/../build/" + DIST_FOLDER_NAME + "/node_modules/browserfs", { recursive: true, force: true });
-                console.log("Was able to recycle module from last build");
-            } catch (exception) {
-                console.log(exception);
-                // just ignore these errors for now
-            }
-        } else {
-            await exec(" cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npm install https://github.com/jvilk/BrowserFS.git");
-            /*if (!await fsExists(__dirname + "/../node_modules/browserfs")) {
-                await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/node_modules/browserfs", __dirname + "/../node_modules/browserfs", { recursive: true, force: true });
-            }*/
-        }
         console.log("Copying browserfs dist to cordova www folder")
         await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/node_modules/browserfs", __dirname + "/../build/" + DIST_FOLDER_NAME + "/www/browserfs",  { recursive: true, force: true });
         var browserifyConfig = {
