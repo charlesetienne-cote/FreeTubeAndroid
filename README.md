@@ -1,11 +1,11 @@
 
-### Web Version:
+## Web Version:
 
 There is a web version of freetube exported with this repo available here:
 
 [https://marmadilemanteater.github.io/freetube/#/](https://marmadilemanteater.github.io/freetube/#/)
 
-## To export the webapp to cordova:
+## How to build and test:
 
 ```bash
     npm run pack
@@ -18,18 +18,15 @@ There is a web version of freetube exported with this repo available here:
     npm run run:cordova android
 ```
 
-### To export data from the app:
-
-1. Navigate to the Data Settings
-2. Click the export buttons
-3. Navigate in your file manager to the directory:
+## Quirks:
+  - Data exports (within settings) automatically go to:
 
     /storage/emulated/0/Android/io.freetubeapp.freetube/
     
-I would love to have it go to a user selected directory, but it doesn't do that right now.
+    I would love to have it go to a user selected directory, but it doesn't do that right now.
+  - Background play works as long as you pause the video before the app enters the background.
 
-# 
-
+#
 
 <p align="center" >
  <img src="https://docs.freetubeapp.io/images/logoColor.png" width=500 align="center">
