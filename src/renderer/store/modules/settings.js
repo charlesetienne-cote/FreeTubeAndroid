@@ -265,7 +265,7 @@ const state = {
 }
 
 if (window.BrowserFS !== undefined) {
-  state.backendPreference = "invidious";
+  state.backendPreference = 'invidious'
 }
 
 const stateWithSideEffects = {

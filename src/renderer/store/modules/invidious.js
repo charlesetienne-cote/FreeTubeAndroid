@@ -38,7 +38,7 @@ const actions = {
             return false
           }
         }
-        return true;
+        return true
       }).map((instance) => {
         return instance[1].uri.replace(/\/$/, '')
       })
@@ -84,13 +84,12 @@ const actions = {
         console.log(textStatus)
         console.log(requestUrl)
         console.log(error)
-        reject(xhr);
+        reject(xhr)
         if (window.BrowserFS !== undefined) { // if not in electron
-          const instanceList = state.invidiousInstancesList;
+          const instanceList = state.invidiousInstancesList
           const randomIndex = Math.floor(Math.random() * instanceList.length)
-          commit('setCurrentInvidiousInstance', instanceList[randomIndex]);
+          commit('setCurrentInvidiousInstance', instanceList[randomIndex])
         }
-
       })
     })
   },

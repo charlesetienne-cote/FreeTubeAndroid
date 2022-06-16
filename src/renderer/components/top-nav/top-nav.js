@@ -81,7 +81,7 @@ export default Vue.extend({
 
     if (appWidth <= 680) {
       const searchContainer = $('.searchContainer').get(0)
-      
+
       searchContainer.style.display = 'none'
     }
 
@@ -112,7 +112,7 @@ export default Vue.extend({
       if (appWidth <= 680) {
         const searchContainer = $('.searchContainer').get(0)
         searchContainer.blur()
-        if  (!navigator.userAgent.match(/Mobile|Windows Phone|Lumia|Android|webOS|iPhone|iPod|Blackberry|PlayBook|BB10|Opera Mini|\bCrMo\/|Opera Mobi/i))  {
+        if (!navigator.userAgent.match(/Mobile|Windows Phone|Lumia|Android|webOS|iPhone|iPod|Blackberry|PlayBook|BB10|Opera Mini|\bCrMo\/|Opera Mobi/i)) {
           searchContainer.style.display = 'none'
         }
       } else {
