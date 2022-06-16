@@ -71,8 +71,12 @@ const archiver = require('archiver');
                 console.log(exception);
             }
         }
-        var sourcePackage = JSON.parse((await fsReadFile(__dirname + "/../package.json")).toString());
-        var destinationPackage = JSON.parse((await fsReadFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/package.json")).toString());
+        var sourcePackageUri = path.join(sourceDirectory, "package.json");
+        var sourcePackage = JSON.parse((await fsReadFile(sourcePackageUri)).toString());
+
+        var destinationPackageUri = path.join(distDirectory, "package.json");
+        var destinationPackage = JSON.parse((await fsReadFile(destinationPackageUri)).toString());
+        
         destinationPackage.name = "io.freetubeapp." + sourcePackage.name;
         destinationPackage.displayName = sourcePackage.productName;
         destinationPackage.version = sourcePackage.version;
