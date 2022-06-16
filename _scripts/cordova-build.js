@@ -1,6 +1,7 @@
 
 
 const DIST_FOLDER_NAME = "android-dist";
+const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
 const util = require('util');
@@ -23,8 +24,8 @@ const archiver = require('archiver');
     try {
 
         // Remove the dist folder if it already exists
-        if (!await fsExists(__dirname + "/../build")) {
-            await fsMkdir(__dirname + "/../build");
+        if (!await fsExists(path.resolve(__dirname, "/../build"))) {
+            await fsMkdir(path.resolve(__dirname, "/../build"));
         }
         if (await fsExists(__dirname + "/../build/" + DIST_FOLDER_NAME)) {
             await fsRm(__dirname + "/../build/" + DIST_FOLDER_NAME, { recursive: true, force: true });
