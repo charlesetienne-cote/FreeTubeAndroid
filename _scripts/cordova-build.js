@@ -1,6 +1,27 @@
 
 const DIST_FOLDER_NAME = 'android-dist'
-const path = require('path')
+const path = {
+    // redefining path.join because the node definition concatenates join paths differently between linux and windows, 
+    // and that discrepancy makes this code not work
+    // literally all I want is string concatentation 
+    // because that will work in every single environment 
+    // while path.join is returning:
+    // __dirname === path.join(__dirname, "/../") 
+    // in linux
+    // and
+    // __dirname + "/../" === path.join(__dirname, "/../")
+    // in windows
+    // which doesn't make any sense, and makes the code not work in one of the two environments
+    // at the end of the day, this is kind of ironic because path.join is supposed to increase 
+    // consistency between environments, and all it does is cause problems
+    join: function (...array) {
+        var result = "";
+        for (var i = 0; i < array.length; i++) {
+            result += array[i]
+        }
+        return result;
+    }
+}
 const fs = require('fs')
 const fse = require('fs-extra')
 const util = require('util')
@@ -71,8 +92,11 @@ const archiver = require('archiver');
       console.log(exception)
     }
   }
-  const sourcePackage = JSON.parse((await fsReadFile(path.join(__dirname, '../', 'package.json'))).toString())
-  const destinationPackage = JSON.parse((await fsReadFile(path.join(__dirname, "../") + path.join('build', DIST_FOLDER_NAME, '/package.json')))).toString()
+  const sourcePackage = JSON.parse((await fsReadFile(path.join(__dirname, '/../', 'package.json'))).toString())
+  // This line is the reason for the redefinition of path.join
+  // on linux, this joins to /home/user/path-to-repo/path-to-repo/build/package.json
+  // on windows this joins to C:/Users/User/path-to-repo/build/package.json
+  const destinationPackage = JSON.parse((await fsReadFile(path.join(__dirname, "/../build/", DIST_FOLDER_NAME, '/package.json'))).toString())
   destinationPackage.name = 'io.freetubeapp.' + sourcePackage.name
   destinationPackage.displayName = sourcePackage.productName
   destinationPackage.version = sourcePackage.version
