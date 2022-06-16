@@ -5,6 +5,8 @@ const joinPath = function (...paths) {
     var joinedPath = path.join.apply(null, paths)
     console.log(path.join(__dirname, "../build"))
     console.log(path.join(__dirname, "/../build"))
+    console.log(__dirname)
+    console.log(path.join(__dirname, "../build").indexOf(__dirname))
     if (path.join(__dirname, "../build").indexOf(__dirname) !== -1) {
         console.log("is in bizzaro world")
         // we are in bizzaro world
