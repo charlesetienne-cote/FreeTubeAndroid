@@ -10,16 +10,11 @@ const joinPath = function (...paths) {
         // we are in bizzaro world
         // .. isn't
         // .. needs to happen twice or else it doesn't happen at all
-        var returnedPaths = [];
+        var returnedUri = "";
         for (var i = 0; i < paths.length; i++) {
-            if (paths[i].indexOf("..") != -1) {
-                returnedPaths.push('..');
-            }
-            returnedPaths.push(paths[i]);
+            returnedUri += paths[i]
         }
-        console.log(returnedPaths);
-        console.log(path.join.apply(null, returnedPaths))
-        return path.join.apply(null, returnedPaths);
+        return path.normalize(returnedUri);
     } else {
         return joinedPath;
     }
