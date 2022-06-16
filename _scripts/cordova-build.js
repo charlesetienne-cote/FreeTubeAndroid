@@ -6,6 +6,7 @@ const joinPath = function (...paths) {
     console.log(path.join(__dirname, "../build"))
     console.log(path.join(__dirname, "/../build"))
     if (path.join(__dirname, "../build").indexOf(__dirname) !== -1) {
+        console.log("is in bizzaro world")
         // we are in bizzaro world
         // .. isn't
         // .. needs to happen twice or else it doesn't happen at all
@@ -16,6 +17,8 @@ const joinPath = function (...paths) {
             }
             returnedPaths.push(paths[i]);
         }
+        console.log(returnedPaths);
+        console.log(path.join.apply(null, returnedPaths))
         return path.join.apply(null, returnedPaths);
     } else {
         return joinedPath;
