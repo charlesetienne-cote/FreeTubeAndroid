@@ -44,23 +44,25 @@ const archiver = require('archiver');
             console.log("Was able to recycle previously built outline");
         }
         if (!await fsExists(cordovaTemplateDirectory)) {
+            var addCordovaPlugin = async function (pluginName) {
+                await exec("cd " + distDirectory + " && npx cordova plugin add " + pluginName );
+                console.log("Installed " + pluginName);
+            }
+            var addNpmPackage = async function (packageName) {
+                await exec(" cd " + distDirectory + " && npm install " + packageName);
+                console.log("Installed " + packageName);
+            }
             await exec("cd " + buildDirectory + " && npx cordova create " + DIST_FOLDER_NAME);
-            await exec("cd " + distDirectory + " && npx cordova plugin add cordova-plugin-background-mode" );
-            console.log("Installed Background Mode Plugin");
-            await exec("cd " + distDirectory + " && npx cordova plugin add cordova-plugin-theme-detection" );
-            console.log("Installed Theme Detection Plugin");
-            await exec("cd " + distDirectory + " && npx cordova plugin add cordova-plugin-advanced-background-mode" );
-            console.log("Installed Advanced Background Mode Plugin");
-            await exec("cd " + distDirectory +" && npx cordova plugin add cordova-plugin-media" );
-            console.log("Installed Cordova Media Plugin");
-            await exec("cd " + distDirectory + " && npx cordova plugin add https://github.com/ghenry22/cordova-plugin-music-controls2.git" );
-            console.log("Installed Media Controls Plugin");
-            await exec("cd " + distDirectory + " && npx cordova plugin add cordova-plugin-android-permissions" );
-            console.log("Installed File Permissions Plugin");
-            await exec(" cd " + distDirectory + " && npm install browserify --save-dev");
-            console.log("Installed browserify");
-            await exec(" cd " + distDirectory + " && npm install https://github.com/jvilk/BrowserFS.git");
-            console.log("Installed browserfs");
+            await addCordovaPlugin("cordova-plugin-background-mode");
+            await addCordovaPlugin("cordova-plugin-theme-detection" );
+            await addCordovaPlugin("cordova-plugin-advanced-background-mode" );
+            await addCordovaPlugin("cordova-plugin-media" );
+            await addCordovaPlugin("https://github.com/ghenry22/cordova-plugin-music-controls2.git" );
+            await addCordovaPlugin("cordova-plugin-android-permissions" );
+
+            await addNpmPackage("browserify");
+            await addNpmPackage("https://github.com/jvilk/BrowserFS.git");
+
             var wwwroot = path.join(distDirectory, "www")
             if (await fsExists(wwwroot)) {
                 await fsRm(wwwroot, { recursive: true, force: true });
@@ -76,7 +78,7 @@ const archiver = require('archiver');
 
         var destinationPackageUri = path.join(distDirectory, "package.json");
         var destinationPackage = JSON.parse((await fsReadFile(destinationPackageUri)).toString());
-        
+
         destinationPackage.name = "io.freetubeapp." + sourcePackage.name;
         destinationPackage.displayName = sourcePackage.productName;
         destinationPackage.version = sourcePackage.version;
@@ -96,16 +98,16 @@ const archiver = require('archiver');
             exportType = process.argv[3];
         }
 
-        var browserfsPath = __dirname + "/../build/" + DIST_FOLDER_NAME + "/www/browserfs";
+        var browserfsPath = path.join(distDirectory, "www/browserfs");
         // Copy dist folder into cordova project;
         console.log("Copying dist output to cordova outline");
-        await fsCopy(__dirname + "/../dist/", __dirname + "/../build/" + DIST_FOLDER_NAME + "/www", { recursive: true, force: true });
+        await fsCopy(path.join(sourceDirectory, "dist"), wwwroot, { recursive: true, force: true });
 
         console.log("Write static archive for browserfs");
         var staticArchive = archiver("zip");
-        var output = fs.createWriteStream(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/static.zip");
+        var output = fs.createWriteStream(path.join(wwwroot, "static.zip"));
         staticArchive.pipe(output);
-        staticArchive.directory(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/static/", false);
+        staticArchive.directory(path.join(wwwroot, "static"), false);
         staticArchive.finalize();
         // Wait until finished making zip
          await new Promise(function (resolve, reject) {
@@ -118,13 +120,13 @@ const archiver = require('archiver');
         });
 
         console.log("Copying browserfs dist to cordova www folder")
-        await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/node_modules/browserfs", __dirname + "/../build/" + DIST_FOLDER_NAME + "/www/browserfs",  { recursive: true, force: true });
+        await fsCopy(path.join(distDirectory, "node_modules/browserfs"), path.join(wwwroot, "browserfs"),  { recursive: true, force: true });
         var browserifyConfig = {
             // Override Browserify's builtins for buffer/fs/path.
-            builtins: Object.assign({}, require(__dirname + "/../build/" + DIST_FOLDER_NAME + '/node_modules/browserify/lib/builtins'), {
-                "buffer": require.resolve(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/browserfs/dist/shims/buffer.js"),
-                "fs": require.resolve(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/browserfs/dist/shims/fs.js"),
-                "path": require.resolve(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/browserfs/dist/shims/path.js")
+            builtins: Object.assign({}, require(path.join(distDirectory, 'node_modules/browserify/lib/builtins')), {
+                "buffer": require.resolve(path.join(wwwroot + "browserfs/dist/shims/buffer.js")),
+                "fs": require.resolve(path.join(wwwroot, "browserfs/dist/shims/fs.js")),
+                "path": require.resolve(path.join(wwwroot, "browserfs/dist/shims/path.js"))
             }),
             insertGlobalVars: {
                 // process, Buffer, and BrowserFS globals.
@@ -137,7 +139,7 @@ const archiver = require('archiver');
         };
         destinationPackage.browserify = browserifyConfig;
         console.log("Writing package.json in cordova project");
-        await fsWriteFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/package.json", JSON.stringify(destinationPackage, null, 2));
+        await fsWriteFile(destinationPackageUri, JSON.stringify(destinationPackage, null, 2));
 
 
         // Running browserify on the renderer to remove to allow app to run in browser frame
