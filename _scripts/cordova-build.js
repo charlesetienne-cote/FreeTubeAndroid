@@ -34,12 +34,10 @@ const createXMLStringFromObject = function (obj) {
 const archiver = require('archiver');
 
 (async function () {
-  var pathParts = process.cwd().split('/')
-  if (pathParts[pathParts.length - 1] === pathParts[pathParts.length - 2]) {
-    // repeating directory (which is indicator that we are in GitHub Actions and should expect weirdness)
-    pathParts.pop()
-    __dirname = pathParts.join("/") + __dirname.replace(process.cwd(), "")
-  }
+  console.log((await exec("ls")).stdout)
+  console.log((await exec("pwd")).stdout)
+  console.log((await exec("cd ..")).stdout)
+  console.log((await exec("ls")).stdout)
   // Remove the dist folder if it already exists
   if (!await fsExists(joinPath(__dirname, '/../build'))) {
     await fsMkdir(joinPath(__dirname, '/../build'))
