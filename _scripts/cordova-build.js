@@ -601,4 +601,4 @@ const archiver = require('archiver');
     }
     await fsWriteFile(path.join(__dirname, '/../build/', apkName, '/manifest.webmanifest'), JSON.stringify(manifest, null, 2))
   }
-}())['error'](console.error)
+}())['error'](console.log)
