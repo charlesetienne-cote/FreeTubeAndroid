@@ -22,19 +22,25 @@ const archiver = require('archiver');
 
 (async function () {
     try {
-
+        var sourceDirectory = path.join(__dirname, "..")
+        console.log("Using source directory: " + sourceDirectory)
         // Remove the dist folder if it already exists
-        if (!await fsExists(path.join(__dirname, "/../build"))) {
-            await fsMkdir(path.join(__dirname, "/../build"));
+        var buildDirectory = path.join(sourceDirectory, "build");
+        console.log("Using build directory: " + buildDirectory)
+        if (!await fsExists(buildDirectory)) {
+            await fsMkdir(buildDirectory);
         }
-        if (await fsExists(__dirname + "/../build/" + DIST_FOLDER_NAME)) {
-            await fsRm(__dirname + "/../build/" + DIST_FOLDER_NAME, { recursive: true, force: true });
+        var distDirectory = path.join(buildDirectory, DIST_FOLDER_NAME)
+        console.log("Using dist directory: " + distDirectory)
+        if (await fsExists(distDirectory)) {
+            await fsRm(distDirectory, { recursive: true, force: true });
         }
 
         // Create the outline of the cordova project
         console.log("Creating cordova outline");
-        if (await fsExists(__dirname + "/../node_modules/cordova-template")) {
-            await fsCopy( __dirname + "/../node_modules/cordova-template", __dirname + "/../build/" + DIST_FOLDER_NAME, { recursive: true, force: true });
+        var cordovaTemplateDirectory = path.join(sourceDirectory, "node_modules/cordova-template");
+        if (await fsExists(cordovaTemplateDirectory)) {
+            await fsCopy(cordovaTemplateDirectory, buildDirectory, { recursive: true, force: true });
             console.log("Was able to recycle previously built outline");
         }
         if (!await fsExists(__dirname + "/../node_modules/cordova-template")) {
