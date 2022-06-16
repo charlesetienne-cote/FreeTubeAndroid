@@ -1,27 +1,6 @@
 
 const DIST_FOLDER_NAME = 'android-dist'
-const path = {
-    // redefining path.join because the node definition concatenates join paths differently between linux and windows, 
-    // and that discrepancy makes this code not work
-    // literally all I want is string concatentation 
-    // because that will work in every single environment 
-    // while path.join is returning:
-    // __dirname === path.join(__dirname, "/../") 
-    // in linux
-    // and
-    // __dirname + "/../" === path.join(__dirname, "/../")
-    // in windows
-    // which doesn't make any sense, and makes the code not work in one of the two environments
-    // at the end of the day, this is kind of ironic because path.join is supposed to increase 
-    // consistency between environments, and all it does is cause problems
-    join: function (...array) {
-        var result = "";
-        for (var i = 0; i < array.length; i++) {
-            result += array[i]
-        }
-        return result;
-    }
-}
+const path = require('path')
 const fs = require('fs')
 const fse = require('fs-extra')
 const util = require('util')
@@ -157,13 +136,13 @@ const archiver = require('archiver');
   }
   destinationPackage.browserify = browserifyConfig
   console.log('Writing package.json in cordova project')
-  await fsWriteFile(path.join(__dirname, '/../build/', DIST_FOLDER_NAME, '/package.json'), JSON.stringify(destinationPackage, null, 2))
+  await fsWriteFile(path.join(path.resolve(__dirname, '/../build/'), DIST_FOLDER_NAME, '/package.json'), JSON.stringify(destinationPackage, null, 2))
 
   // Running browserify on the renderer to remove to allow app to run in browser frame
   console.log('Running browserify on cordova project')
   await exec('cd ' + path.join(__dirname, '/../build/', DIST_FOLDER_NAME) + ' && npx browserify www/renderer.js -o www/renderer.js')
 
-  let rendererContent = (await fsReadFile(path.join(__dirname, '/../build/', DIST_FOLDER_NAME, '/', 'www/renderer.js'))).toString()
+  let rendererContent = (await fsReadFile(path.join(path.resolve(__dirname, '/../build/'), DIST_FOLDER_NAME, '/', 'www/renderer.js'))).toString()
   // The characters below ( and ) need to be escaped because they refer to the literal characters '(' and ')' instead of the regular expression formatting
   rendererContent = rendererContent.replace(/([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, 'fileSystem$2') // eslint-disable-line
   rendererContent = rendererContent.replace(/\)([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, ';fileSystem$2') // eslint-disable-line
