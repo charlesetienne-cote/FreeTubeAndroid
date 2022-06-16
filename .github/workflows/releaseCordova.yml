@@ -1,7 +1,7 @@
 # This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: Release
+name: Release Cordova
 on:
   push:
     branches: [ release, '**-RC' ]
@@ -115,7 +115,8 @@ jobs:
         draft: true
         prerelease: false
 
-    - uses: actions/upload-release-asset@v1.0.1
+    - name: Upload HTML5 Artifact to Release
+      uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -125,7 +126,8 @@ jobs:
         asset_content_type: application/zip
 
 
-    - uses: actions/upload-release-asset@v1.0.1
+    - name: Upload Android APK Artifact to Release
+      uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
