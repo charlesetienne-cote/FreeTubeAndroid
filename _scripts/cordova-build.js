@@ -45,9 +45,9 @@ const archiver = require('archiver');
         }
         if (!await fsExists(cordovaTemplateDirectory)) {
             await exec("cd " + buildDirectory + " && npx cordova create " + DIST_FOLDER_NAME);
-            await exec("cd " + buildDirectory + " && npx cordova plugin add cordova-plugin-background-mode" );
+            await exec("cd " + distDirectory + " && npx cordova plugin add cordova-plugin-background-mode" );
             console.log("Installed Background Mode Plugin");
-            await exec("cd " + buildDirectory + " && npx cordova plugin add cordova-plugin-theme-detection" );
+            await exec("cd " + distDirectory + " && npx cordova plugin add cordova-plugin-theme-detection" );
             console.log("Installed Theme Detection Plugin");
             await exec("cd " + distDirectory + " && npx cordova plugin add cordova-plugin-advanced-background-mode" );
             console.log("Installed Advanced Background Mode Plugin");
