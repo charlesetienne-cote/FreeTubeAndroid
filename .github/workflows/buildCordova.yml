@@ -66,8 +66,8 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
       run: sudo apt -y install libarchive-tools; echo "Version Number ${{ toJson(job) }} ${{ toJson(needs) }}"
 
-    - name: Lint code
-      run: npm run lint
+#    - name: Lint code
+#      run: npm run lint
 
     - name: Pack with Node.js ${{ matrix.node-version}}
       if: contains(matrix.runtime, 'x64')
