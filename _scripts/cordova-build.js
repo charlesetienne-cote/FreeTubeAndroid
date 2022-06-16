@@ -40,6 +40,8 @@ const archiver = require('archiver');
     dirnameParts = __dirname.split("/")
     __dirname = dirnameParts.splice(dirnameParts - 2, 1).join("/");
   }
+  console.log(__dirname);
+  console.log(process.cwd());
   // Remove the dist folder if it already exists
   if (!await fsExists(joinPath(__dirname, '/../build'))) {
     await fsMkdir(joinPath(__dirname, '/../build'))
