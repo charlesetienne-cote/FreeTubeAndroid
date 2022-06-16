@@ -24,8 +24,8 @@ const archiver = require('archiver');
     try {
 
         // Remove the dist folder if it already exists
-        if (!await fsExists(path.resolve(__dirname, "/../build"))) {
-            await fsMkdir(path.resolve(__dirname, "/../build"));
+        if (!await fsExists(path.join(__dirname, "/../build"))) {
+            await fsMkdir(path.join(__dirname, "/../build"));
         }
         if (await fsExists(__dirname + "/../build/" + DIST_FOLDER_NAME)) {
             await fsRm(__dirname + "/../build/" + DIST_FOLDER_NAME, { recursive: true, force: true });
