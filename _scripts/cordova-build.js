@@ -124,7 +124,7 @@ const archiver = require('archiver');
         var browserifyConfig = {
             // Override Browserify's builtins for buffer/fs/path.
             builtins: Object.assign({}, require(path.join(distDirectory, 'node_modules/browserify/lib/builtins')), {
-                "buffer": require.resolve(path.join(wwwroot + "browserfs/dist/shims/buffer.js")),
+                "buffer": require.resolve(path.join(wwwroot, "browserfs/dist/shims/buffer.js")),
                 "fs": require.resolve(path.join(wwwroot, "browserfs/dist/shims/fs.js")),
                 "path": require.resolve(path.join(wwwroot, "browserfs/dist/shims/path.js"))
             }),
