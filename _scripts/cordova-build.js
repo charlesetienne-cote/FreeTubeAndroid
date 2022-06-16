@@ -72,7 +72,7 @@ const archiver = require('archiver');
       console.log(exception)
     }
   }
-  var buildDir = path.join(__dirname, '/../build/', DIST_FOLDER_NAME);
+  var buildDir = path.join(__dirname, '..', '/../build/', DIST_FOLDER_NAME);
   console.log(buildDir);
   var packageDir = path.join(__dirname, '..', 'build', DIST_FOLDER_NAME, 'package.json');
   console.log(packageDir);
