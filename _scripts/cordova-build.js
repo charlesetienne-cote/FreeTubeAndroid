@@ -71,11 +71,9 @@ const archiver = require('archiver');
       console.log(exception)
     }
   }
-  const sourcePackage = JSON.parse((await fsReadFile(path.join(__dirname, '/../', 'package.json'))).toString())
-  // This line is the reason for the redefinition of path.join
-  // on linux, this joins to /home/user/path-to-repo/path-to-repo/build/package.json
-  // on windows this joins to C:/Users/User/path-to-repo/build/package.json
-  const destinationPackage = JSON.parse((await fsReadFile(path.join(__dirname, "/../build/", DIST_FOLDER_NAME, '/package.json'))).toString())
+  const sourcePackage = JSON.parse((await fsReadFile(path.join(path.resolve(__dirname, '/../'), 'package.json'))).toString())
+
+  const destinationPackage = JSON.parse((await fsReadFile(path.join(path.resolve(__dirname, "/../build/"), DIST_FOLDER_NAME, '/package.json'))).toString())
   destinationPackage.name = 'io.freetubeapp.' + sourcePackage.name
   destinationPackage.displayName = sourcePackage.productName
   destinationPackage.version = sourcePackage.version
@@ -136,13 +134,13 @@ const archiver = require('archiver');
   }
   destinationPackage.browserify = browserifyConfig
   console.log('Writing package.json in cordova project')
-  await fsWriteFile(path.join(path.resolve(__dirname, '/../build/'), DIST_FOLDER_NAME, '/package.json'), JSON.stringify(destinationPackage, null, 2))
+  await fsWriteFile(path.join(path.normalize(__dirname, '/../build/'), DIST_FOLDER_NAME, '/package.json'), JSON.stringify(destinationPackage, null, 2))
 
   // Running browserify on the renderer to remove to allow app to run in browser frame
   console.log('Running browserify on cordova project')
   await exec('cd ' + path.join(__dirname, '/../build/', DIST_FOLDER_NAME) + ' && npx browserify www/renderer.js -o www/renderer.js')
 
-  let rendererContent = (await fsReadFile(path.join(path.resolve(__dirname, '/../build/'), DIST_FOLDER_NAME, '/', 'www/renderer.js'))).toString()
+  let rendererContent = (await fsReadFile(path.join(path.normalize(__dirname, '/../build/'), DIST_FOLDER_NAME, '/', 'www/renderer.js'))).toString()
   // The characters below ( and ) need to be escaped because they refer to the literal characters '(' and ')' instead of the regular expression formatting
   rendererContent = rendererContent.replace(/([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, 'fileSystem$2') // eslint-disable-line
   rendererContent = rendererContent.replace(/\)([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, ';fileSystem$2') // eslint-disable-line
