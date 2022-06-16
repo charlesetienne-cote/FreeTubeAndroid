@@ -36,6 +36,9 @@ const archiver = require('archiver');
             await fsRm(distDirectory, { recursive: true, force: true });
         }
 
+        var wwwroot = path.join(distDirectory, "www")
+        console.log("Using wwwroot: " + wwwroot)
+
         // Create the outline of the cordova project
         console.log("Creating cordova outline");
         var cordovaTemplateDirectory = path.join(sourceDirectory, "node_modules/cordova-template");
@@ -63,7 +66,6 @@ const archiver = require('archiver');
             await addNpmPackage("browserify");
             await addNpmPackage("https://github.com/jvilk/BrowserFS.git");
 
-            var wwwroot = path.join(distDirectory, "www")
             if (await fsExists(wwwroot)) {
                 await fsRm(wwwroot, { recursive: true, force: true });
             }
@@ -144,9 +146,9 @@ const archiver = require('archiver');
 
         // Running browserify on the renderer to remove to allow app to run in browser frame
         console.log("Running browserify on cordova project");
-        await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + "/" + " && npx browserify www/renderer.js -o www/renderer.js");
+        await exec("cd " + distDirectory + "/" + " && npx browserify www/renderer.js -o www/renderer.js");
 
-        var rendererContent = (await fsReadFile( __dirname + "/../build/" + DIST_FOLDER_NAME + "/" + "www/renderer.js")).toString();
+        var rendererContent = (await fsReadFile(path.join(wwwroot, "renderer.js"))).toString();
         rendererContent = rendererContent.replace(/([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, 'fileSystem$2');
         rendererContent = rendererContent.replace(/\)([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, ';fileSystem$2');
         rendererContent = rendererContent.replace(/(this.showOpenDialog)\(([^\(\)]*?)\)/g, "showFileLoadDialog($2);")
@@ -159,7 +161,7 @@ const archiver = require('archiver');
         // This enables channel view
         rendererContent = rendererContent.replaceAll("this.getChannelInfoInvidious(),this.getPlaylistsInvidious()}else this.getVideoInformationInvidious()", "this.getChannelInfoInvidious(),this.getPlaylistsInvidious()}else this.getChannelInfoInvidious(),this.getPlaylistsInvidious()");
         console.log("Setting up browserfs in the renderer");
-        await fsWriteFile( __dirname + "/../build/" + DIST_FOLDER_NAME + "/" + "www/renderer.js", `(async function () {
+        await fsWriteFile(path.join(wwwroot, "renderer.js"), `(async function () {
             ` + ((exportType === "cordova")?`
             var createControls = function (object = {}, success = function () {}) {
                 MusicControls.create(object, success);
@@ -524,11 +526,11 @@ const archiver = require('archiver');
         }());
         `);
         // Commenting out the electron exports because they will not exist in cordova
-        var content = (await fsReadFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/renderer.js")).toString();
+        var content = (await fsReadFile(path.join(wwwroot, "renderer.js"))).toString();
         content = content.toString().replace("module.exports = getElectronPath();", "// commenting out this line because it doesn't work in cordova\r\n// module.exports = getElectronPath();");
-        await fsWriteFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/renderer.js", content);
+        await fsWriteFile(path.join(wwwroot, "renderer.js"), content);
         
-        var indexContent = (await fsReadFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/index.html")).toString();
+        var indexContent = (await fsReadFile(path.join(wwwroot, "index.html"))).toString();
         indexContent = indexContent.replace("</title>", "</title><link rel=\"shortcut icon\" href=\"./_icons/icon.ico\" /><script src=\"browserfs/dist/browserfs.js\"></script>");
         if (exportType === "cordova") {
             indexContent = indexContent.replace("</title>", "</title><script src=\"cordova.js\"></script>");
@@ -536,13 +538,13 @@ const archiver = require('archiver');
         if (exportType === "browser") {
             indexContent = indexContent.replace('<link rel="manifest" href="static/manifest.json"/>', "<link rel=\"manifest\" href=\"manifest.webmanifest\" />");
         }
-        await fsWriteFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/index.html", indexContent);
+        await fsWriteFile(path.join(wwwroot, "index.html"), indexContent);
         // Copy the icons to the cordova directory
         console.log("Copying icons into cordova project");
-        await fsMkdir(__dirname + "/../build/" + DIST_FOLDER_NAME + "/res");
-        await fsMkdir(__dirname + "/../build/" + DIST_FOLDER_NAME + "/res/icon");
-        await fsCopy(__dirname + "/../_icons/.icon-set", __dirname + "/../build/" + DIST_FOLDER_NAME + "/res/icon/android", { recursive: true, force: true });
-        await fsCopy(__dirname + "/../_icons/icon.svg", __dirname + "/../build/" + DIST_FOLDER_NAME + "/res/icon/android/background.xml");
+        await fsMkdir(path.join(distDirectory, "res"));
+        await fsMkdir(path.join(distDirectory, "res/icon"));
+        await fsCopy(path.join(sourceDirectory, "_icons/.icon-set"), path.join(distDirectory, "res/icon/android"), { recursive: true, force: true });
+        await fsCopy(path.join(sourceDirectory, "_icons/icon.svg"), path.join(distDirectory, "res/icon/android/background.xml"));
         
         // Copy the values from the package.json into the config.xml
         var configAddon = `<platform name="android">
@@ -555,7 +557,7 @@ const archiver = require('archiver');
     </platform>
     <preference name="AndroidPersistentFileLocation" value="Compatibility" />
     <preference name="AllowInlineMediaPlayback" value="true"/>`;
-        var configXML = await parseXMLString(await fsReadFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/config.xml"));
+        var configXML = await parseXMLString(await fsReadFile(path.join(distDirectory, "config.xml")));
         configXML.widget.$.id = "io.freetubeapp." + sourcePackage.name;
         configXML.widget.$.version = sourcePackage.version;
         configXML.widget.author[0].$.email = sourcePackage.author.email;
@@ -565,24 +567,24 @@ const archiver = require('archiver');
         configXML.widget.description[0] = sourcePackage.description;
         var xmlString = createXMLStringFromObject(configXML);
         console.log("Writing config.xml to cordova project");
-        await fsWriteFile(__dirname + "/../build/" + DIST_FOLDER_NAME + "/config.xml", xmlString.replace("</widget>", configAddon + "</widget>"));
+        await fsWriteFile(path.join(distDirectory, "config.xml"), xmlString.replace("</widget>", configAddon + "</widget>"));
 
         // Adding export platforms to cordova
         console.log("Adding platforms to cordova project");
         if (exportType === "cordova") {
-            await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npx cordova platform add android");
+            await exec("cd " + distDirectory + " && npx cordova platform add android");
         }
-        await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npx cordova platform add browser");
+        await exec("cd " + distDirectory + " && npx cordova platform add browser");
         if (exportType === "cordova") {
             // Run the apk build
             console.log("Building apk file");
-            await exec("cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npx cordova build android");
+            await exec("cd " + distDirectory + " && npx cordova build android");
             // Copy the apk to the build dir
             console.log("Copying apk file to build directory");
-            await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/platforms/android/app/build/outputs/apk/debug/app-debug.apk", __dirname + "/../build/" + apkName);
+            await fsCopy(path.join(distDirectory, "platforms/android/app/build/outputs/apk/debug/app-debug.apk"), path.join(buildDirectory, apkName));
         } else if (exportType === "browser") {
             console.log("Copying output directory to build directory");
-            await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/", __dirname + "/../build/" + apkName, { recursive: true, force: true });
+            await fsCopy(wwwroot, path.join(buildDirectory, apkName), { recursive: true, force: true });
             var manifest = {
                 "background_color": "white",
                 "description": sourcePackage.description,
@@ -598,7 +600,7 @@ const archiver = require('archiver');
                 "short_name": sourcePackage.productName,
                 "start_url": "./index.html"
             };
-            await fsWriteFile(__dirname + "/../build/" + apkName + "/manifest.webmanifest",JSON.stringify(manifest, null, 2));
+            await fsWriteFile(path.join(buildDirectory, apkName, "manifest.webmanifest"), JSON.stringify(manifest, null, 2));
         }
     } catch (exception) {
         throw exception;
