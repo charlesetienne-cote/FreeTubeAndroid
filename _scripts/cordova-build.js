@@ -3,6 +3,8 @@ const DIST_FOLDER_NAME = 'android-dist'
 const path = require('path')
 const joinPath = function (...paths) {
     var joinedPath = path.join.apply(null, paths)
+    console.log(path.join(__dirname, "../build"))
+    console.log(path.join(__dirname, "/../build"))
     if (path.join(__dirname, "../build").indexOf(__dirname) !== -1) {
         // we are in bizzaro world
         // .. isn't
