@@ -2,7 +2,10 @@
 const DIST_FOLDER_NAME = 'android-dist'
 const path = require('path')
 const joinPath = function (...paths) {
-    return path.join.apply(null, paths)
+    var result = path.join.apply(null, paths)
+    console.log(__dirname);
+    console.log(path.join(__dirname, ".."));
+    console.log(path.join(__dirname, "..", ".."));
 }
 const fs = require('fs')
 const fse = require('fs-extra')
@@ -79,9 +82,9 @@ const archiver = require('archiver');
   console.log(buildDir);
   var packageDir = joinPath(__dirname, '..', 'build', DIST_FOLDER_NAME, 'package.json');
   console.log(packageDir);
-  const sourcePackage = JSON.parse((await fsReadFile(joinPath(process.cwd(), 'package.json'))).toString())
+  const sourcePackage = JSON.parse((await fsReadFile(joinPath(__dirname, '/../', 'package.json'))).toString())
 
-  const destinationPackage = JSON.parse((await fsReadFile(joinPath(process.cwd(), "build/", DIST_FOLDER_NAME, '/package.json'))).toString())
+  const destinationPackage = JSON.parse((await fsReadFile(joinPath(__dirname, "/../build/", DIST_FOLDER_NAME, '/package.json'))).toString())
   destinationPackage.name = 'io.freetubeapp.' + sourcePackage.name
   destinationPackage.displayName = sourcePackage.productName
   destinationPackage.version = sourcePackage.version
