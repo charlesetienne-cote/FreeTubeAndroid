@@ -2,7 +2,7 @@
 const DIST_FOLDER_NAME = 'android-dist'
 const path = require('path')
 const joinPath = function (...paths) {
-    var result = path.join.apply(null, paths)
+    var result = path.resolve.apply(null, paths)
     return result;
 }
 const fs = require('fs')
