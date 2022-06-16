@@ -2,7 +2,7 @@
 const DIST_FOLDER_NAME = 'android-dist'
 const path = require('path')
 const joinPath = function (...paths) {
-    var result = path.resolve.apply(null, paths)
+    var result = path.join.apply(null, paths)
     return result;
 }
 const fs = require('fs')
@@ -38,6 +38,10 @@ const archiver = require('archiver');
   console.log((await exec("pwd")).stdout)
   console.log((await exec("cd ..")).stdout)
   console.log((await exec("ls")).stdout)
+  console.log((await exec("pwd")).stdout)
+  console.log((await exec("cd ..")).stdout)
+  console.log((await exec("ls")).stdout)
+  console.log((await exec("pwd")).stdout)
   // Remove the dist folder if it already exists
   if (!await fsExists(joinPath(__dirname, '/../build'))) {
     await fsMkdir(joinPath(__dirname, '/../build'))
