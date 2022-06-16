@@ -2,24 +2,11 @@
 const DIST_FOLDER_NAME = 'android-dist'
 const path = require('path')
 const joinPath = function (...paths) {
-    var joinedPath = path.join.apply(null, paths)
-    console.log(path.join(__dirname, "../build"))
-    console.log(path.join(__dirname, "/../build"))
-    console.log(__dirname)
-    console.log(path.join(__dirname, "../build").indexOf(__dirname))
-    if (path.join(__dirname, "../build").indexOf(__dirname) !== -1) {
-        console.log("is in bizzaro world")
-        // we are in bizzaro world
-        // .. isn't
-        // .. needs to happen twice or else it doesn't happen at all
-        var returnedUri = "";
-        for (var i = 0; i < paths.length; i++) {
-            returnedUri += paths[i]
-        }
-        return path.normalize(returnedUri);
-    } else {
-        return joinedPath;
+    var returnedUri = "";
+    for (var i = 0; i < paths.length; i++) {
+        returnedUri += paths[i]
     }
+    return path.normalize(returnedUri);
 }
 const fs = require('fs')
 const fse = require('fs-extra')
@@ -180,8 +167,8 @@ const archiver = require('archiver');
   // This enables channel view
   rendererContent = rendererContent.replaceAll('this.getChannelInfoInvidious(),this.getPlaylistsInvidious()}else this.getVideoInformationInvidious()', 'this.getChannelInfoInvidious(),this.getPlaylistsInvidious()}else this.getChannelInfoInvidious(),this.getPlaylistsInvidious()')
   console.log('Setting up browserfs in the renderer')
-  console.log(joinPath(__dirname, '/../build/', DIST_FOLDER_NAME, 'www/renderer.js'))
-  await fsWriteFile(joinPath(__dirname, '/../build/', DIST_FOLDER_NAME, 'www/renderer.js'), `(async function () {
+  console.log(joinPath(__dirname, '/../build/', DIST_FOLDER_NAME, '/www/renderer.js'))
+  await fsWriteFile(joinPath(__dirname, '/../build/', DIST_FOLDER_NAME, '/www/renderer.js'), `(async function () {
             ` + ((exportType === 'cordova')
       ? `
             var createControls = function (object = {}, success = function () {}) {
