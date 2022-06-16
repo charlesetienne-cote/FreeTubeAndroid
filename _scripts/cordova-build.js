@@ -2,11 +2,7 @@
 const DIST_FOLDER_NAME = 'android-dist'
 const path = require('path')
 const joinPath = function (...paths) {
-    var returnedUri = "";
-    for (var i = 0; i < paths.length; i++) {
-        returnedUri += paths[i]
-    }
-    return path.normalize(returnedUri);
+    return path.join.apply(null, paths)
 }
 const fs = require('fs')
 const fse = require('fs-extra')
@@ -37,6 +33,7 @@ const createXMLStringFromObject = function (obj) {
 const archiver = require('archiver');
 
 (async function () {
+  console.log(__dirname);
   // Remove the dist folder if it already exists
   if (!await fsExists(joinPath(__dirname, '/../build'))) {
     await fsMkdir(joinPath(__dirname, '/../build'))
