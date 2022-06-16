@@ -71,8 +71,8 @@ const archiver = require('archiver');
       console.log(exception)
     }
   }
-  const sourcePackage = JSON.parse((await fsReadFile(path.join(__dirname, '/../package.json'))).toString())
-  const destinationPackage = JSON.parse((await fsReadFile(path.join(path.join(__dirname, '/../build/', DIST_FOLDER_NAME), '/package.json'))).toString())
+  const sourcePackage = JSON.parse((await fsReadFile(path.join(__dirname, '../', 'package.json'))).toString())
+  const destinationPackage = JSON.parse((await fsReadFile(path.join('build', DIST_FOLDER_NAME, '/package.json'))).toString())
   destinationPackage.name = 'io.freetubeapp.' + sourcePackage.name
   destinationPackage.displayName = sourcePackage.productName
   destinationPackage.version = sourcePackage.version
