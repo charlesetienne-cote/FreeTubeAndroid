@@ -27,6 +27,10 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: "yarn"
     - run: npm run ci
+
+    - name: Lint code
+      run: npm run lint
+
     - name: Get Version Number
       uses: nyaayaya/package-version@v1
       with:
@@ -65,9 +69,6 @@ jobs:
     - name: Install libarchive-tools
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
       run: sudo apt -y install libarchive-tools; echo "Version Number ${{ toJson(job) }} ${{ toJson(needs) }}"
-
-#    - name: Lint code
-#      run: npm run lint
 
     - name: Pack with Node.js ${{ matrix.node-version}}
       if: contains(matrix.runtime, 'x64')
