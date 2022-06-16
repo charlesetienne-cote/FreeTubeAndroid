@@ -44,6 +44,7 @@ const archiver = require('archiver');
     await fsCopy(path.join(__dirname, '/../node_modules/cordova-template'), path.join(__dirname, '/../build/', DIST_FOLDER_NAME), { recursive: true, force: true })
     console.log('Was able to recycle previously built outline')
   }
+
   if (!await fsExists(__dirname, '/../node_modules/cordova-template')) {
     await exec('cd ' + path.join(__dirname, '/../build/') + ' && npx cordova create ' + DIST_FOLDER_NAME)
     await exec('cd ' + path.join(__dirname, '/../build/', DIST_FOLDER_NAME) + ' && npx cordova plugin add cordova-plugin-background-mode')
@@ -71,7 +72,11 @@ const archiver = require('archiver');
       console.log(exception)
     }
   }
-  const sourcePackage = JSON.parse((await fsReadFile(path.join(path.resolve(__dirname, '/../'), 'package.json'))).toString())
+  var buildDir = path.join(__dirname, '/../build/', DIST_FOLDER_NAME);
+  console.log(buildDir);
+  var packageDir = path.join(__dirname, '..', 'build', DIST_FOLDER_NAME, 'package.json');
+  console.log(packageDir);
+  const sourcePackage = JSON.parse((await fsReadFile(path.join(__dirname, '/../', 'package.json'))).toString())
 
   const destinationPackage = JSON.parse((await fsReadFile(path.join(path.resolve(__dirname, "/../build/"), DIST_FOLDER_NAME, '/package.json'))).toString())
   destinationPackage.name = 'io.freetubeapp.' + sourcePackage.name
