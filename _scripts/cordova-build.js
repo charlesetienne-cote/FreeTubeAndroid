@@ -40,32 +40,33 @@ const archiver = require('archiver');
         console.log("Creating cordova outline");
         var cordovaTemplateDirectory = path.join(sourceDirectory, "node_modules/cordova-template");
         if (await fsExists(cordovaTemplateDirectory)) {
-            await fsCopy(cordovaTemplateDirectory, buildDirectory, { recursive: true, force: true });
+            await fsCopy(cordovaTemplateDirectory, distDirectory, { recursive: true, force: true });
             console.log("Was able to recycle previously built outline");
         }
-        if (!await fsExists(__dirname + "/../node_modules/cordova-template")) {
-            await exec("cd " + __dirname + "/../build/ && npx cordova create " + DIST_FOLDER_NAME);
-            await exec("cd " + __dirname + "/../build/"+ DIST_FOLDER_NAME + " && npx cordova plugin add cordova-plugin-background-mode" );
+        if (!await fsExists(cordovaTemplateDirectory)) {
+            await exec("cd " + buildDirectory + " && npx cordova create " + DIST_FOLDER_NAME);
+            await exec("cd " + buildDirectory + " && npx cordova plugin add cordova-plugin-background-mode" );
             console.log("Installed Background Mode Plugin");
-            await exec("cd " + __dirname + "/../build/"+ DIST_FOLDER_NAME + " && npx cordova plugin add cordova-plugin-theme-detection" );
+            await exec("cd " + buildDirectory + " && npx cordova plugin add cordova-plugin-theme-detection" );
             console.log("Installed Theme Detection Plugin");
-            await exec("cd " + __dirname + "/../build/"+ DIST_FOLDER_NAME + " && npx cordova plugin add cordova-plugin-advanced-background-mode" );
+            await exec("cd " + distDirectory + " && npx cordova plugin add cordova-plugin-advanced-background-mode" );
             console.log("Installed Advanced Background Mode Plugin");
-            await exec("cd " + __dirname + "/../build/"+ DIST_FOLDER_NAME + " && npx cordova plugin add cordova-plugin-media" );
+            await exec("cd " + distDirectory +" && npx cordova plugin add cordova-plugin-media" );
             console.log("Installed Cordova Media Plugin");
-            await exec("cd " + __dirname + "/../build/"+ DIST_FOLDER_NAME + " && npx cordova plugin add https://github.com/ghenry22/cordova-plugin-music-controls2.git" );
+            await exec("cd " + distDirectory + " && npx cordova plugin add https://github.com/ghenry22/cordova-plugin-music-controls2.git" );
             console.log("Installed Media Controls Plugin");
-            await exec("cd " + __dirname + "/../build/"+ DIST_FOLDER_NAME + " && npx cordova plugin add cordova-plugin-android-permissions" );
+            await exec("cd " + distDirectory + " && npx cordova plugin add cordova-plugin-android-permissions" );
             console.log("Installed File Permissions Plugin");
-            await exec(" cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npm install browserify --save-dev");
+            await exec(" cd " + distDirectory + " && npm install browserify --save-dev");
             console.log("Installed browserify");
-            await exec(" cd " + __dirname + "/../build/" + DIST_FOLDER_NAME + " && npm install https://github.com/jvilk/BrowserFS.git");
+            await exec(" cd " + distDirectory + " && npm install https://github.com/jvilk/BrowserFS.git");
             console.log("Installed browserfs");
-            if (await fsExists(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/")) {
-                await fsRm(__dirname + "/../build/" + DIST_FOLDER_NAME + "/www/", { recursive: true, force: true });
+            var wwwroot = path.join(distDirectory, "www")
+            if (await fsExists(wwwroot)) {
+                await fsRm(wwwroot, { recursive: true, force: true });
             }
             try {
-                await fsCopy(__dirname + "/../build/" + DIST_FOLDER_NAME, __dirname + "/../node_modules/cordova-template", { recursive: true, force: true });
+                await fsCopy(distDirectory, cordovaTemplateDirectory, { recursive: true, force: true });
             } catch (exception) {
                 console.log(exception);
             }
