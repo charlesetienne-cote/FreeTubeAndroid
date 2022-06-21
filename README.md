@@ -9,12 +9,20 @@ There is a web version of freetube exported with this repo available here:
 
 ```bash
     npm run pack
-    # This creates the cordova project, copies the dist folder, browserifies it, and replaces a bunch of functions with cordova equivalents
-    # After your first build, most of the build components will be recycled from that build.
+    # This creates the cordova project, 
+    # copies the dist folder, browserifies 
+    # it, and replaces a bunch of functions
+    # with cordova equivalents.
+    # After your first build, most of the
+    # build components will be recycled
+    # from that build.
     npm run build:cordova
-    # This opens up the cordova application in a web browser
+    # This opens up the cordova application 
+    # in a web browser
     npm run run:cordova browser
-    # This opens up the cordova application on an android device connected with debugging enabled
+    # This opens up the cordova application
+    # on an android device connected with 
+    # debugging enabled
     npm run run:cordova android
 ```
 
