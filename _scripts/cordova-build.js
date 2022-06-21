@@ -129,7 +129,13 @@ const archiver = require('archiver');
         reject(error)
       })
     })
-
+    try {
+      // Cleaning up the wwwroot directory
+      await fsRm(path.join(wwwroot, 'static'), { recursive: true, force: true })
+      await fsRm(path.join(wwwroot, 'web/static'), { recursive: true, force: true })
+    } catch (exception) {
+      console.warn(exception);
+    }
     console.log('Copying browserfs dist to cordova www folder')
     await fsCopy(path.join(distDirectory, 'node_modules/browserfs'), path.join(wwwroot, 'browserfs'), { recursive: true, force: true })
     const browserifyConfig = {
