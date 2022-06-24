@@ -73,6 +73,8 @@
   .infoArea
     grid-area: info
     position: relative
+    @-moz-document url-prefix()
+      max-width: calc(100vw - 24px)
 
     @media only screen and (min-width: 901px)
       position: sticky
