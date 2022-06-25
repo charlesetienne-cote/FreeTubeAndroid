@@ -1,9 +1,16 @@
 
-## Web Version:
+## How to install
 
-There is a web version of freetube exported with this repo available here:
+Currently, the best version of this app is the PWA because it has no issues with background play and receives continuous updates automatically. The APK can be finicky if you move the app into the background while the video is playing, and it doesn't automatically update.
+
+There is a PWA (progressive web app) available here:
 
 [https://marmadilemanteater.github.io/freetube/#/](https://marmadilemanteater.github.io/freetube/#/)
+
+There is an APK which can be downloaded here:
+
+[https://github.com/MarmadileManteater/FreeTubeCordova/releases](https://github.com/MarmadileManteater/FreeTubeCordova/releases)
+
 
 ## How to build and test:
 
