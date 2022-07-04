@@ -93,18 +93,9 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
       run: npm run build:cordova freetube browser
 
-    - name: Setup Zip Action
-      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
-      uses: montudor/action-zip@v1.0.0
-
-    - name: Zip output
-      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
-      run: zip -qq -r freetube-${{ steps.versionNumber.outputs.result }}.zip *
-      working-directory: build/freetube/
-
     - name: Upload Cordova HTML5 Artifact
       uses: actions/upload-artifact@v2
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
       with:
-        name: freetube-${{ steps.versionNumber.outputs.result }}.zip
-        path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
+        name: freetube-${{ steps.versionNumber.outputs.result }}-HTML5
+        path: build/freetube
