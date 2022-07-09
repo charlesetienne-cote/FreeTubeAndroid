@@ -75,6 +75,19 @@
           {{ $t("About.About") }}
         </p>
       </div>
+      <div
+          class="navOption mobileShow"
+          @click="navigate('settings')"
+        >
+          <font-awesome-icon
+            icon="sliders-h"
+            class="navIcon"
+            :class="applyNavIconExpand"
+          />
+          <p class="navLabel">
+            {{ $t("Settings.Settings") }}
+          </p>
+        </div>
     </div>
     <div
       class="navOption mobileShow"
@@ -91,7 +104,7 @@
     </div>
     <hr>
     <div
-      class="navOption mobileShow"
+      class="navOption mobileHidden"
       @click="navigate('settings')"
     >
       <font-awesome-icon
