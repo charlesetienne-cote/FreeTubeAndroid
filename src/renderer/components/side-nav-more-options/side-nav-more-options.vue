@@ -22,6 +22,26 @@
       class="moreOptionContainer"
     >
       <div
+        class="navOption mobileShow"
+        role="button"
+        tabindex="0"
+        :title="$t('Channels.Channels')"
+        @click="navigate('subscribedchannels')"
+      >
+          <font-awesome-icon
+            icon="list"
+            class="navIcon"
+            :class="applyNavIconExpand"
+            fixed-width
+          />
+        <p
+          v-if="!hideLabelsSideBar"
+          class="navLabel"
+        >
+          {{ $t("Channels.Channels") }}
+        </p>
+      </div>
+      <div
         v-if="!hideTrendingVideos"
         class="navOption"
         :title="$t('Trending.Trending')"
@@ -75,22 +95,6 @@
           {{ $t("About.About") }}
         </p>
       </div>
-      <div
-          class="navOption mobileShow"
-          @click="navigate('settings')"
-        >
-          <font-awesome-icon
-            icon="sliders-h"
-            class="navIcon"
-            :class="applyNavIconExpand"
-          />
-          <p
-            v-if="!hideLabelsSideBar"
-            class="navLabel"
-          >
-            {{ $t("Settings.Settings") }}
-          </p>
-        </div>
     </div>
     <div
       class="navOption mobileShow"

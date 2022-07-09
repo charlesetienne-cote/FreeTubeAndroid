@@ -33,7 +33,7 @@
         </p>
       </div>
       <div
-        class="navOption mobileShow"
+        class="navOption mobileHidden"
         role="button"
         tabindex="0"
         :title="$t('Channels.Channels')"
@@ -164,7 +164,7 @@
       </div>
       <hr>
       <div
-        class="navOption mobileHidden"
+        class="navOption mobileShow"
         role="button"
         tabindex="0"
         :title="$t('Settings.Settings')"
