@@ -81,8 +81,11 @@ jobs:
 
     - name: Fetch keystore from secrets
       run: |
-        cat <<EOF ${{ secrets.NIGHTLY_KEYSTORE }} EOF > nightly.keystore.asc
-        gpg -d --passphrase '${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}' --batch nightly.keystore.asc nightly.keystore
+         while read -r line;
+         do
+           echo "${line}" > nightly.keystore.asc
+         done <<< '${{ secrets.NIGHTLY_KEYSTORE }}'
+         gpg -d --passphrase '${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}' --batch nightly.keystore.asc nightly.keystore
 
     - name: Build APK with Cordova with Node.js ${{ matrix.node-version}}
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
