@@ -89,7 +89,7 @@ jobs:
 
     - name: Build APK with Cordova with Node.js ${{ matrix.node-version}}
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
-      run: npm run build:cordova freetube-${{ steps.versionNumber.outputs.result }}.apk ./nightly.keystore '${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}'
+      run: npm run build:cordova freetube-${{ steps.versionNumber.outputs.result }}.apk cordova ./nightly.keystore '${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}'
       
     - run: ls build/android-dist/platforms/android/app/build/outputs/apk/release/
 
