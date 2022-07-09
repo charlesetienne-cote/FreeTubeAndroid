@@ -661,6 +661,6 @@ const archiver = require('archiver');
       await fsWriteFile(path.join(buildDirectory, apkName, 'manifest.webmanifest'), JSON.stringify(manifest, null, 2))
     }
   } catch (exception) {
-    console.error(exception)
+    throw exception
   }
 }())
