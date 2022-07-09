@@ -82,11 +82,11 @@ jobs:
     - name: Fetch keystore from secrets
       run: |
         echo "${{ secrets.NIGHTLY_KEYSTORE }}" >> nightly.keystore.asc
-        gpg -d --passphrase "${{ secrets.production.NIGHTLY_KEYSTORE_PASSWORD }}" --batch nightly.keystore.asc nightly.keystore
+        gpg -d --passphrase "${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}" --batch nightly.keystore.asc nightly.keystore
 
     - name: Build APK with Cordova with Node.js ${{ matrix.node-version}}
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
-      run: npm run build:cordova freetube-${{ steps.versionNumber.outputs.result }}.apk ./nightly.keystore '${{ secrets.production.NIGHTLY_KEYSTORE_PASSWORD }}'
+      run: npm run build:cordova freetube-${{ steps.versionNumber.outputs.result }}.apk ./nightly.keystore '${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}'
 
     - name: Upload Cordova APK Artifact
       uses: actions/upload-artifact@v2
