@@ -18,7 +18,7 @@ jobs:
           os: ubuntu-18.04
 
     runs-on: ${{ matrix.os }}
-    environment: production
+    environment: development
 
     steps:
     - uses: actions/checkout@v2
@@ -83,13 +83,13 @@ jobs:
       run: |
          while read -r line;
          do
-           echo "${line}" >> nightly.keystore.asc
-         done <<< '${{ secrets.NIGHTLY_KEYSTORE }}'
-         gpg -d --passphrase '${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}' --batch nightly.keystore.asc >> nightly.keystore
+           echo "${line}" >> freetube.keystore.asc
+         done <<< '${{ secrets.KEYSTORE }}'
+         gpg -d --passphrase '${{ secrets.KEYSTORE_PASSWORD }}' --batch freetube.keystore.asc >> freetube.keystore
 
     - name: Build APK with Cordova with Node.js ${{ matrix.node-version}}
       if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
-      run: npm run build:cordova freetube-${{ steps.versionNumber.outputs.result }}.apk cordova ./nightly.keystore ${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}
+      run: npm run build:cordova freetube-${{ steps.versionNumber.outputs.result }}.apk cordova ./freetube.keystore ${{ secrets.KEYSTORE_PASSWORD }}
       
     - name: Upload Cordova APK Artifact
       uses: actions/upload-artifact@v2
