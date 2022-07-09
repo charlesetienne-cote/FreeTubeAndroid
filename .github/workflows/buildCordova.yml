@@ -83,7 +83,7 @@ jobs:
       run: |
          while read -r line;
          do
-           echo "${line}" > nightly.keystore.asc
+           echo "${line}" >> nightly.keystore.asc
          done <<< '${{ secrets.NIGHTLY_KEYSTORE }}'
          gpg -d --passphrase '${{ secrets.NIGHTLY_KEYSTORE_PASSWORD }}' --batch nightly.keystore.asc nightly.keystore
 
