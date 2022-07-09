@@ -84,7 +84,10 @@
             class="navIcon"
             :class="applyNavIconExpand"
           />
-          <p class="navLabel">
+          <p
+            v-if="!hideLabelsSideBar"
+            class="navLabel"
+          >
             {{ $t("Settings.Settings") }}
           </p>
         </div>
