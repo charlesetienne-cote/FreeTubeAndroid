@@ -619,14 +619,14 @@ const archiver = require('archiver');
           "android": {
             "debug": {
                 "keystore": "./freetubecordova.keystore",
-                "storePassword": "pass",
+                "storePassword": keystorePassphrase,
                 "alias": "freetubecordova",
                 "password" : keystorePassphrase,
                 "keystoreType": "jks"
             },
             "release": {
                 "keystore": "./freetubecordova.keystore",
-                "storePassword": "pass",
+                "storePassword": keystorePassphrase,
                 "alias": "freetubecordova",
                 "password" : keystorePassphrase,
                 "keystoreType": "jks"
