@@ -18,6 +18,7 @@ const fsExists = function (path) {
 const fsMkdir = util.promisify(fs.mkdir)
 const fsReadFile = util.promisify(fs.readFile)
 const fsWriteFile = util.promisify(fs.writeFile)
+const fsMove = util.promisify(fs.rename)
 const fsRm = util.promisify(fs.rm)
 const fsCopy = util.promisify(fse.cp)
 const exec = util.promisify(require('child_process').exec)
@@ -102,13 +103,20 @@ const archiver = require('archiver');
 
     let apkName = sourcePackage.name + '-' + sourcePackage.version + '.apk'
     let exportType = 'cordova'
+    let keystorePath = null//if null, don't sign the apk
+    let keystorePassphrase = null
     if (process.argv.length > 2) {
       apkName = process.argv[2]
     }
     if (process.argv.length > 3) {
       exportType = process.argv[3]
     }
-
+    if (process.argv.length > 4) {
+      keystorePath = process.argv[4]
+    }
+    if (process.argv.length > 5) {
+      keystorePassphrase = process.argv[5]
+    }
     const browserfsPath = path.join(distDirectory, 'www/browserfs')
     // Copy dist folder into cordova project;
     console.log('Copying dist output to cordova outline')
@@ -602,9 +610,33 @@ const archiver = require('archiver');
     }
     await exec('cd ' + distDirectory + ' && npx cordova platform add browser')
     if (exportType === 'cordova') {
+      let buildArguments = ''
+      if (keystorePassphrase !== null) {
+        // the apk needs to be signed
+        buildArguments = '--buildConfig'
+        await fsMove(keystorePath, path.join(distDirectory, 'freetubecordova.keystore'));
+        await fsWriteFile(path.join(distDirectory, 'build.json'), JSON.stringify({
+          "android": {
+            "debug": {
+                "keystore": "./freetubecordova.keystore",
+                "storePassword": "pass",
+                "alias": "freetubecordova",
+                "password" : keystorePassphrase,
+                "keystoreType": "jks"
+            },
+            "release": {
+                "keystore": "./freetubecordova.keystore",
+                "storePassword": "pass",
+                "alias": "freetubecordova",
+                "password" : keystorePassphrase,
+                "keystoreType": "jks"
+            }
+        }
+        }, null, 4));
+      }
       // Run the apk build
       console.log('Building apk file')
-      await exec('cd ' + distDirectory + ' && npx cordova build android')
+      await exec('cd ' + distDirectory + ' && npx cordova build android ' + buildArguments)
       // Copy the apk to the build dir
       console.log('Copying apk file to build directory')
       await fsCopy(path.join(distDirectory, 'platforms/android/app/build/outputs/apk/debug/app-debug.apk'), path.join(buildDirectory, apkName))
