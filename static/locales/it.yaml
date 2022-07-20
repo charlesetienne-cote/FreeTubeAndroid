@@ -165,6 +165,7 @@ Settings:
       Light: 'Chiaro'
       Dracula: 'Dracula'
       System Default: Predefinito del sistema
+      Catppuccin Mocha: Catppuccin moka
     Main Color Theme:
       Main Color Theme: 'Colore principale del tema'
       Red: 'Rosso'
@@ -190,6 +191,20 @@ Settings:
       Dracula Purple: 'Dracula viola'
       Dracula Red: 'Dracula rosso'
       Dracula Yellow: 'Dracula giallo'
+      Catppuccin Mocha Pink: Catppuccin moka rosa
+      Catppuccin Mocha Mauve: Catppuccin moka malva
+      Catppuccin Mocha Red: Catppuccin moka rosso
+      Catppuccin Mocha Maroon: Catppuccin moka marrone
+      Catppuccin Mocha Blue: Catppuccin moka blu
+      Catppuccin Mocha Green: Catppuccin moka verde
+      Catppuccin Mocha Sapphire: Catppuccin moka zaffiro
+      Catppuccin Mocha Yellow: Catppuccin moka giallo
+      Catppuccin Mocha Rosewater: Catppuccin moka all'acqua di rose
+      Catppuccin Mocha Flamingo: Catppuccin moka fenicottero
+      Catppuccin Mocha Lavender: Catppuccin moka lavanda
+      Catppuccin Mocha Peach: Catppuccin moka pesca
+      Catppuccin Mocha Teal: Catppuccin moka alzavola
+      Catppuccin Mocha Sky: Catppuccin moka cielo
     Secondary Color Theme: 'Colore secondario del tema'
         #* Main Color Theme
     UI Scale: Dimensioni interfaccia utente
@@ -851,7 +866,8 @@ Tooltips:
       il lettore esterno scelto tramite la variabile d'ambiente PATH. Se necessario,
       un percorso personalizzato può essere impostato qui.
     External Player: Scegliendo un lettore esterno sarà visualizzata sulla miniatura
-      un'icona per aprire il video nel lettore esterno .
+      un'icona per aprire il video nel lettore esterno (se la playlist lo supporta).
+      Attenzione, le impostazioni Invidious non influiscono sui lettori esterni.
     DefaultCustomArgumentsTemplate: '(Predefinito: $)'
   Privacy Settings:
     Remove Video Meta Files: Se abilitato, quando chiuderai la pagina di riproduzione
@@ -894,5 +910,5 @@ Channels:
   Search bar placeholder: Cerca canali
   Count: $ canale/i trovato/i.
   Empty: L'elenco dei tuoi canali è attualmente vuoto.
-  Unsubscribe Prompt: Sei sicuro di voler annullare l'iscrizione a "$"?
+  Unsubscribe Prompt: Sei sicuro/sicura di voler annullare l'iscrizione a «$»?
   Unsubscribe: Annulla l'iscrizione
