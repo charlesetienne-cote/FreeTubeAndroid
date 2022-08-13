@@ -181,6 +181,7 @@ const archiver = require('archiver');
     rendererContent = rendererContent.replace(/(this.showOpenDialog)\(([^\(\)]*?)\)/g, 'showFileLoadDialog($2);')
     rendererContent = rendererContent.replace(/(this.showSaveDialog)\(([^\(\)]*?)\)/g, 'showFileSaveDialog($2);')
     rendererContent = rendererContent.replace(/const store (= localforage.createInstance)/g, 'const store = window.dataStore $1')
+    rendererContent = rendererContent.replace(/{openExternalLink\({rootState:t},e\){/g, "{openExternalLink:window.openExternalLink,electronOpenExternalLink({rootState:t},e){")
     if (exportType === 'cordova') {
       rendererContent = rendererContent.replace(/this.invidiousGetVideoInformation\(this.videoId\).then\(/g, 'this.invidiousGetVideoInformation(this.videoId).then(updatePlayingVideo);this.invidiousGetVideoInformation\(this.videoId\).then(')
       rendererContent = rendererContent.replace('systemTheme:function(){return window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}', 'systemTheme:function () { return window.isDarkMode }')
@@ -546,6 +547,12 @@ const archiver = require('archiver');
                     return currentVideo;
                   }
               });
+              window.openExternalLink = function ({ rootState }, link) {
+                var a = document.createElement("a");
+                a.setAttribute("href", link);
+                a.setAttribute("target", "_blank");
+                a.click();
+              };
               ` + ((exportType === 'cordova')
         ? `
               window.isDarkMode = "light";
