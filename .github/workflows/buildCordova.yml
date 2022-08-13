@@ -42,24 +42,12 @@ jobs:
       id: versionNumber
       uses: actions/github-script@v3
       env:
-        IS_DEV: ${{ contains(github.ref, 'development') }}
-        IS_NIGHTLY: ${{ contains(github.ref, 'release') }}
-        IS_RELEASE: false
         VERSION_NUMBER_DEVELOPMENT: ${{ env.PACKAGE_VERSION }}-development-${{ github.run_number }}
-        VERSION_NUMBER_NIGHTLY: ${{ env.PACKAGE_VERSION }}-nightly-${{ github.run_number }}
-        VERSION_NUMBER_RELEASE: ${{ env.PACKAGE_VERSION }}-unofficial
       with:
         result-encoding: string
         script: |
-          if (${{ env.IS_DEV }}) {
-            return "${{ env.VERSION_NUMBER_NIGHTLY }}"
-          } else if (${{ env.IS_NIGHTLY }}) {
-            return "${{ env.VERSION_NIGHLY }}"
-          } else if (${{ env.IS_RELEASE }}) {
-           return "${{env.VERSION_NUMBER_RELEASE }}"
-          }
-        # script: if ${{ env.IS_DEV }} then echo ":token :set-output name=VERSION_NUMBER::${{ env.VERSION_NUMBER_NIGHTLY }}" else echo "::set-output name=VERSION_NUMBER::${{ env.VERSION_NUMBER }}" fi
-
+          return "${{ env.VERSION_NUMBER_DEVELOPMENT }}"
+          
     - name: Update package.json version
       uses: jossef/action-set-json-field@v1
       with:
