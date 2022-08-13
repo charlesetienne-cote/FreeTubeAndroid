@@ -187,6 +187,8 @@ const archiver = require('archiver');
     if (exportType === 'cordova') {
       rendererContent = rendererContent.replace(/this.invidiousGetVideoInformation\(this.videoId\).then\(/g, 'this.invidiousGetVideoInformation(this.videoId).then(updatePlayingVideo);this.invidiousGetVideoInformation\(this.videoId\).then(')
       rendererContent = rendererContent.replace('systemTheme:function(){return window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}', 'systemTheme:function () { return window.isDarkMode }')
+    } else {
+      rendererContent = rendererContent.replaceAll("createNewWindow:function(){", "createNewWindow: window.createNewWindow, electronNewWindow:function(){")
     }
     /* eslint-enable no-useless-escape */
     // This enables channel view
@@ -566,10 +568,17 @@ const archiver = require('archiver');
                     if (isDarkMode) {
                         window.isDarkMode = "dark";
                     }
-              }`
+              }
+              var removeNewWindowIconStyle = document.createElement('style');
+              removeNewWindowIconStyle.innerHTML = ".navNewWindowIcon { display: none !important; }" 
+              document.head.appendChild(removeNewWindowIconStyle);
+              `
         : `
               window.copyToClipboard = function (content) {
                 navigator.clipboard.writeText(content);
+              };
+              window.createNewWindow = function () {
+                window.open(window.location.pathname, "_blank")
               };
         `) + `
         ` + rendererContent + `
