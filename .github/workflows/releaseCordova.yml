@@ -46,9 +46,9 @@ jobs:
         result-encoding: string
         script: |
           if (${{ env.IS_DEV }}) {
-            return "${{ env.VERSION_NUMBER_NIGHTLY }}"
+            return "${{ env.VERSION_NUMBER_DEVELOPMENT }}"
           } else if (${{ env.IS_NIGHTLY }}) {
-            return "${{ env.VERSION_NIGHLY }}"
+            return "${{ env.VERSION_NUMBER_NIGHTLY }}"
           } else {
            return "${{env.VERSION_NUMBER_RELEASE }}"
           }
