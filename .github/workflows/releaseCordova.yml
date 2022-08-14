@@ -4,7 +4,7 @@
 name: Release Cordova
 on:
   push:
-    branches: [ release, '**-RC' ]
+    branches: [ release ]
 
 jobs:
   build:
@@ -37,20 +37,20 @@ jobs:
       id: versionNumber
       uses: actions/github-script@v3
       env:
-        IS_DEV: ${{ contains(github.ref, 'master') }}
-        IS_RC: ${{ contains(github.ref, 'release') }}
-        VERSION_NUMBER_NIGHTLY: ${{ env.PACKAGE_VERSION }}-development-${{ github.run_number }}
-        VERSION_NUMBER_RC: ${{ env.PACKAGE_VERSION }}-nightly-${{ github.run_number }}
-        VERSION_NUMBER: ${{ env.PACKAGE_VERSION }}
+        IS_DEV: ${{ contains(github.ref, 'development') }}
+        IS_NIGHTLY: ${{ contains(github.ref, 'release') }}
+        VERSION_NUMBER_DEVELOPMENT: ${{ env.PACKAGE_VERSION }}-development-${{ github.run_number }}
+        VERSION_NUMBER_NIGHTLY: ${{ env.PACKAGE_VERSION }}-nightly-${{ github.run_number }}
+        VERSION_NUMBER_RELEASE: ${{ env.PACKAGE_VERSION }}-unofficial
       with:
         result-encoding: string
         script: |
           if (${{ env.IS_DEV }}) {
+            return "${{ env.VERSION_NUMBER_DEVELOPMENT }}"
+          } else if (${{ env.IS_NIGHTLY }}) {
             return "${{ env.VERSION_NUMBER_NIGHTLY }}"
-          } else if (${{ env.IS_RC }}) {
-            return "${{ env.VERSION_NUMBER_RC }}"
           } else {
-           return "${{env.VERSION_NUMBER }}"
+           return "${{env.VERSION_NUMBER_RELEASE }}"
           }
         # script: if ${{ env.IS_DEV }} then echo ":token :set-output name=VERSION_NUMBER::${{ env.VERSION_NUMBER_NIGHTLY }}" else echo "::set-output name=VERSION_NUMBER::${{ env.VERSION_NUMBER }}" fi
 
@@ -116,6 +116,11 @@ jobs:
         name: freetube-${{ steps.versionNumber.outputs.result }}.zip
         path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
         
+    - name: Create release body
+      run: |
+        echo "Latest Commit Message: ${{ github.event.head_commit.message }}" >> release.txt
+        echo "" >> release.txt
+
     - name: Create Draft Release
       id: create_release
       uses: actions/create-release@v1
@@ -126,6 +131,7 @@ jobs:
         release_name: ${{ steps.versionNumber.outputs.result }}
         draft: true
         prerelease: false
+        body_path: release.txt
 
     - name: Upload HTML5 Artifact to Release
       uses: actions/upload-release-asset@v1.0.1
@@ -136,7 +142,6 @@ jobs:
         asset_path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
         asset_name: freetube-${{ steps.versionNumber.outputs.result }}-HTML5.zip
         asset_content_type: application/zip
-
 
     - name: Upload Android APK Artifact to Release
       uses: actions/upload-release-asset@v1.0.1

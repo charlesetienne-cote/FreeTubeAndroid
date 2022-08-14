@@ -72,6 +72,7 @@ const archiver = require('archiver');
       await addCordovaPlugin('cordova-plugin-media')
       await addCordovaPlugin('https://github.com/ghenry22/cordova-plugin-music-controls2.git')
       await addCordovaPlugin('cordova-plugin-android-permissions')
+      await addCordovaPlugin('cordova-clipboard')
 
       await addNpmPackage('browserify')
       await addNpmPackage('https://github.com/jvilk/BrowserFS.git')
@@ -181,9 +182,13 @@ const archiver = require('archiver');
     rendererContent = rendererContent.replace(/(this.showOpenDialog)\(([^\(\)]*?)\)/g, 'showFileLoadDialog($2);')
     rendererContent = rendererContent.replace(/(this.showSaveDialog)\(([^\(\)]*?)\)/g, 'showFileSaveDialog($2);')
     rendererContent = rendererContent.replace(/const store (= localforage.createInstance)/g, 'const store = window.dataStore $1')
+    rendererContent = rendererContent.replace(/{openExternalLink\({rootState:t},e\){/g, "{openExternalLink:window.openExternalLink,electronOpenExternalLink({rootState:t},e){")
+    rendererContent = rendererContent.replace(/navigator.clipboard.writeText\(/g, "window.copyToClipboard\(")
     if (exportType === 'cordova') {
       rendererContent = rendererContent.replace(/this.invidiousGetVideoInformation\(this.videoId\).then\(/g, 'this.invidiousGetVideoInformation(this.videoId).then(updatePlayingVideo);this.invidiousGetVideoInformation\(this.videoId\).then(')
       rendererContent = rendererContent.replace('systemTheme:function(){return window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}', 'systemTheme:function () { return window.isDarkMode }')
+    } else {
+      rendererContent = rendererContent.replaceAll("createNewWindow:function(){", "createNewWindow: window.createNewWindow, electronNewWindow:function(){")
     }
     /* eslint-enable no-useless-escape */
     // This enables channel view
@@ -546,16 +551,36 @@ const archiver = require('archiver');
                     return currentVideo;
                   }
               });
+              window.openExternalLink = function ({ rootState }, link) {
+                var a = document.createElement("a");
+                a.setAttribute("href", link);
+                a.setAttribute("target", "_blank");
+                a.click();
+              };
               ` + ((exportType === 'cordova')
         ? `
+              window.copyToClipboard = function (content) {
+                cordova.plugins.clipboard.copy(text);
+              };
               window.isDarkMode = "light";
               if (await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isAvailable(resolve, reject) }) ) {
                     var isDarkMode = await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isDarkModeEnabled(function (result) { resolve(result.value) },reject) });
                     if (isDarkMode) {
                         window.isDarkMode = "dark";
                     }
-              }`
-        : '') + `
+              }
+              var removeNewWindowIconStyle = document.createElement('style');
+              removeNewWindowIconStyle.innerHTML = ".navNewWindowIcon { display: none !important; }" 
+              document.head.appendChild(removeNewWindowIconStyle);
+              `
+        : `
+              window.copyToClipboard = function (content) {
+                navigator.clipboard.writeText(content);
+              };
+              window.createNewWindow = function () {
+                window.open(window.location.pathname, "_blank")
+              };
+        `) + `
         ` + rendererContent + `
         }());
         `)

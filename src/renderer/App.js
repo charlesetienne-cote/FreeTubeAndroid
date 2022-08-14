@@ -207,7 +207,9 @@ export default Vue.extend({
     checkForNewUpdates: function () {
       if (this.checkForUpdates) {
         const { version } = require('../../package.json')
-        const requestUrl = 'https://api.github.com/repos/freetubeapp/freetube/releases?per_page=1'
+        // For future reference, this is a change that is only for this repo.
+        // This is never meant to be integrated back upstream, for obvious reasons.
+        const requestUrl = 'https://api.github.com/repos/marmadilemanteater/freetube/releases?per_page=1'
 
         $.getJSON(requestUrl, (response) => {
           const tagName = response[0].tag_name
