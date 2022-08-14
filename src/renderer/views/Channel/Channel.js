@@ -292,7 +292,7 @@ export default Vue.extend({
         this.thumbnailUrl = channelThumbnailUrl
         this.updateSubscriptionDetails({ channelThumbnailUrl, channelName, channelId })
         this.channelDescription = autolinker.link(response.description)
-        this.relatedChannels = response.relatedChannels.items;
+        this.relatedChannels = response.relatedChannels.items
         this.relatedChannels.forEach(relatedChannel => {
           relatedChannel.thumbnail.map(thumbnail => {
             if (!thumbnail.url.includes('https')) {
@@ -414,8 +414,8 @@ export default Vue.extend({
         this.channelDescription = autolinker.link(response.description)
         this.relatedChannels = response.relatedChannels.map((channel) => {
           channel.authorThumbnails[channel.authorThumbnails.length - 1].url = channel.authorThumbnails[channel.authorThumbnails.length - 1].url.replace('https://yt3.ggpht.com', `${this.currentInvidiousInstance}/ggpht/`)
-          // 
-          channel.channelId = channel.authorId;
+          // Mapping authorId to channelId
+          channel.channelId = channel.authorId
           return channel
         })
         this.latestVideos = response.latestVideos
