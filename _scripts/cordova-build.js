@@ -184,6 +184,7 @@ const archiver = require('archiver');
     rendererContent = rendererContent.replace(/const store (= localforage.createInstance)/g, 'const store = window.dataStore $1')
     rendererContent = rendererContent.replace(/{openExternalLink\({rootState:t},e\){/g, "{openExternalLink:window.openExternalLink,electronOpenExternalLink({rootState:t},e){")
     rendererContent = rendererContent.replace(/navigator.clipboard.writeText\(/g, "window.copyToClipboard\(")
+    rendererContent = rendererContent.replace(/,async downloadMedia\({rootState:t,dispatch:e},{url:i,title:s,extension:n,fallingBackPath:a}\){/g,", downloadMedia(state, mediaFormat) { window.downloadExternalLink(state, mediaFormat.url); return new Promise(function (resolve, reject) {  resolve() }) }, async oldDownloadMedia({rootState:t,dispatch:e},{url:i,title:s,extension:n,fallingBackPath:a}){") 
     if (exportType === 'cordova') {
       rendererContent = rendererContent.replace(/this.invidiousGetVideoInformation\(this.videoId\).then\(/g, 'this.invidiousGetVideoInformation(this.videoId).then(updatePlayingVideo);this.invidiousGetVideoInformation\(this.videoId\).then(')
       rendererContent = rendererContent.replace('systemTheme:function(){return window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}', 'systemTheme:function () { return window.isDarkMode }')
@@ -557,6 +558,13 @@ const archiver = require('archiver');
                 a.setAttribute("target", "_blank");
                 a.click();
               };
+              window.downloadExternalLink = function ({ rootState }, link) {
+                var a = document.createElement("a");
+                a.setAttribute("href", link);
+                a.setAttribute("target", "_blank");
+                a.download = 'download';
+                a.click();
+              }
               ` + ((exportType === 'cordova')
         ? `
               window.copyToClipboard = function (content) {
