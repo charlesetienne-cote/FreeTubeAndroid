@@ -414,7 +414,6 @@ export default Vue.extend({
         this.channelDescription = autolinker.link(response.description)
         this.relatedChannels = response.relatedChannels.map((channel) => {
           channel.authorThumbnails[channel.authorThumbnails.length - 1].url = channel.authorThumbnails[channel.authorThumbnails.length - 1].url.replace('https://yt3.ggpht.com', `${this.currentInvidiousInstance}/ggpht/`)
-          // Mapping authorId to channelId
           channel.channelId = channel.authorId
           return channel
         })
@@ -614,7 +613,7 @@ export default Vue.extend({
           message: this.$t('Channel.Channel has been removed from your subscriptions')
         })
 
-        if (this.activeProfile === MAIN_PROFILE_ID) {
+        if (this.activeProfile._id === MAIN_PROFILE_ID) {
           // Check if a subscription exists in a different profile.
           // Remove from there as well.
           let duplicateSubscriptions = 0
@@ -659,7 +658,7 @@ export default Vue.extend({
           message: this.$t('Channel.Added channel to your subscriptions')
         })
 
-        if (this.activeProfile !== MAIN_PROFILE_ID) {
+        if (this.activeProfile._id !== MAIN_PROFILE_ID) {
           const index = primaryProfile.subscriptions.findIndex((channel) => {
             return channel.id === this.id
           })
