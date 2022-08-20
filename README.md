@@ -33,14 +33,6 @@ There is an APK which can be downloaded here:
     npm run run:cordova android
 ```
 
-## Quirks:
-  - Data exports (within settings) automatically go to:
-
-    /storage/emulated/0/Android/io.freetubeapp.freetube/
-    
-    I would love to have it go to a user selected directory, but it doesn't do that right now.
-  - Background play works as long as you pause the video before the app enters the background.
-
 #
 
 <p align="center" >
