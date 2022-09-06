@@ -592,6 +592,7 @@ Video:
     Upcoming: Premiere am
     Minutes: Minuten
     Minute: Minute
+    Less than a minute: Weniger als einer Minute
   Published on: Veröffentlicht am
   Publicationtemplate: vor $ %
 
@@ -674,6 +675,7 @@ Video:
     Mimetype: Medientyp
     Video statistics are not available for legacy videos: Videostatistiken sind für
       ältere Videos nicht verfügbar
+  Premieres in: Premieren in
 Videos:
   #& Sort By
   Sort By:
@@ -708,7 +710,7 @@ Share Playlist:
 #& Views
 Toggle Theatre Mode: Kinomodus umschalten
 Change Format:
-  Change Video Formats: Ändere Videoformat
+  Change Media Formats: Ändere Videoformat
   Use Dash Formats: DASH-Format benutzen
   Use Legacy Formats: Nutze Altformat
   Use Audio Formats: Nutze Audioformat
