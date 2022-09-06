@@ -6,7 +6,7 @@
       @click="openMoreOptions = !openMoreOptions"
     >
       <font-awesome-icon
-        icon="ellipsis-h"
+        :icon="['fas', 'ellipsis-h']"
         class="navIcon"
         :class="applyNavIconExpand"
       />
@@ -28,12 +28,12 @@
         :title="$t('Channels.Channels')"
         @click="navigate('subscribedchannels')"
       >
-          <font-awesome-icon
-            icon="list"
-            class="navIcon"
-            :class="applyNavIconExpand"
-            fixed-width
-          />
+        <font-awesome-icon
+          :icon="['fas', 'list']"
+          class="navIcon"
+          :class="applyNavIconExpand"
+          fixed-width
+        />
         <p
           v-if="!hideLabelsSideBar"
           class="navLabel"
@@ -49,7 +49,7 @@
         @click="navigate('trending')"
       >
         <font-awesome-icon
-          icon="fire"
+          :icon="['fas', 'fire']"
           class="navIcon"
           :class="applyNavIconExpand"
         />
@@ -67,7 +67,7 @@
         @click="navigate('popular')"
       >
         <font-awesome-icon
-          icon="users"
+          :icon="['fas', 'users']"
           class="navIcon"
           :class="applyNavIconExpand"
         />
@@ -84,7 +84,7 @@
         @click="navigate('about')"
       >
         <font-awesome-icon
-          icon="info-circle"
+          :icon="['fas', 'info-circle']"
           class="navIcon"
           :class="applyNavIconExpand"
         />
@@ -101,7 +101,7 @@
       @click="navigate('history')"
     >
       <font-awesome-icon
-        icon="history"
+        :icon="['fas', 'history']"
         class="navIcon"
         :class="applyNavIconExpand"
       />
@@ -115,7 +115,7 @@
       @click="navigate('settings')"
     >
       <font-awesome-icon
-        icon="sliders-h"
+        :icon="['fas', 'sliders-h']"
         class="navIcon"
         :class="applyNavIconExpand"
       />
@@ -128,7 +128,7 @@
       @click="navigate('about')"
     >
       <font-awesome-icon
-        icon="info-circle"
+        :icon="['fas', 'info-circle']"
         class="navIcon"
         :class="applyNavIconExpand"
       />
