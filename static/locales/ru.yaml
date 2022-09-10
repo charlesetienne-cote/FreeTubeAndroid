@@ -577,6 +577,7 @@ Video:
     Upcoming: 'Премьера'
     Minutes: Минут
     Minute: Минута
+    Less than a minute: Менее минуты
   Published on: 'Опубликовано'
   # $ is replaced with the number and % with the unit (days, hours, minutes...)
   Publicationtemplate: '$ % назад'
@@ -653,6 +654,7 @@ Video:
     Mimetype: MIME-типы
     Buffered: Буферизовано
   Premieres on: Премьеры
+  Premieres in: Премьеры в
 Videos:
   #& Sort By
   Sort By:
