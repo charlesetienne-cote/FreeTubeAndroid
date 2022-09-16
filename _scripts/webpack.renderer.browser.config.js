@@ -112,7 +112,7 @@ const config = {
   plugins: [
     new webpack.DefinePlugin({
       'process.env.PRODUCT_NAME': JSON.stringify(productName),
-      'process.env.IS_ELECTRON': true
+      'process.env.IS_ELECTRON': false
     }),
     new HtmlWebpackPlugin({
       excludeChunks: ['processTaskWorker'],

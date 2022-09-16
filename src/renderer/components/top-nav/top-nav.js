@@ -28,10 +28,6 @@ export default Vue.extend({
     }
   },
   computed: {
-    usingElectron: function () {
-      return this.$store.getters.getUsingElectron
-    },
-
     hideSearchBar: function () {
       return this.$store.getters.getHideSearchBar
     },
@@ -327,7 +323,7 @@ export default Vue.extend({
     },
 
     openInternalPath: function({ path, doCreateNewWindow, query = {} }) {
-      if (this.usingElectron && doCreateNewWindow) {
+      if (process.env.IS_ELECTRON && doCreateNewWindow) {
         const { ipcRenderer } = require('electron')
 
         // Combine current document path and new "hash" as new window startup URL
@@ -348,7 +344,7 @@ export default Vue.extend({
     },
 
     createNewWindow: function () {
-      if (this.usingElectron) {
+      if (process.env.IS_ELECTRON) {
         const { ipcRenderer } = require('electron')
         ipcRenderer.send(IpcChannels.CREATE_NEW_WINDOW)
       } else {

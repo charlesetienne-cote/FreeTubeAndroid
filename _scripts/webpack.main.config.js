@@ -1,6 +1,7 @@
 const path = require('path')
 const webpack = require('webpack')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
+const JsonMinimizerPlugin = require('json-minimizer-webpack-plugin')
 
 const { productName } = require('../package.json')
 
@@ -24,11 +25,14 @@ const config = {
         use: 'babel-loader',
         exclude: /node_modules/,
       },
-      {
-        test: /\.node$/,
-        loader: 'node-loader',
-      },
     ],
+  },
+  // webpack defaults to only optimising the production builds, so having this here is fine
+  optimization: {
+    minimizer: [
+      '...', // extend webpack's list instead of overwriting it
+      new JsonMinimizerPlugin()
+    ]
   },
   node: {
     __dirname: isDevMode,
@@ -44,6 +48,7 @@ const config = {
     filename: '[name].js',
     libraryTarget: 'commonjs2',
     path: path.join(__dirname, '../dist'),
+    publicPath: ''
   },
   resolve: {
     extensions: ['.js', '.json'],
@@ -71,22 +76,6 @@ if (isDevMode) {
             globOptions: {
               dot: true,
               ignore: ['**/.*', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
-            },
-          },
-          {
-            from: path.join(__dirname, '../_icons'),
-            to: path.join(__dirname, '../dist/_icons'),
-            globOptions: {
-              dot: true,
-              ignore: ['**/.*'],
-            },
-          },
-          {
-            from: path.join(__dirname, '../src/renderer/assets/img'),
-            to: path.join(__dirname, '../dist/images'),
-            globOptions: {
-              dot: true,
-              ignore: ['**/.*'],
             },
           },
       ]
