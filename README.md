@@ -15,7 +15,7 @@ There is an APK which can be downloaded here:
 ## How to build and test:
 
 ```bash
-    npm run pack
+    npm run pack:browser
     # This creates the cordova project, 
     # copies the dist folder, browserifies 
     # it, and replaces a bunch of functions
