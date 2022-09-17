@@ -18,6 +18,7 @@ const config = {
     workerSample: path.join(__dirname, '../src/utilities/workerSample.js'),
   },
   output: {
+    publicPath: '',
     libraryTarget: 'commonjs2',
     path: path.join(__dirname, '../dist'),
     filename: '[name].js',
@@ -29,10 +30,6 @@ const config = {
         test: /\.js$/,
         use: 'babel-loader',
         exclude: /node_modules/,
-      },
-      {
-        test: /\.node$/,
-        loader: 'node-loader',
       },
     ],
   },
