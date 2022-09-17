@@ -55,7 +55,8 @@ export default Vue.extend({
         '',
         'openLinkAfterPrompt',
         'doNothing'
-      ]
+      ],
+      usingElectron: process.env.IS_ELECTRON
     }
   },
   computed: {
