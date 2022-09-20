@@ -177,11 +177,12 @@ const archiver = require('archiver');
     // and they do not refer to a group
     // they refer to the literal characters '(' and ')'
     /* eslint-disable no-useless-escape */
+    // this is a POC, random changes to the codebase break these regex all the time
     rendererContent = rendererContent.replace(/([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, 'fileSystem$2')
     rendererContent = rendererContent.replace(/\)([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, ';fileSystem$2')
     rendererContent = rendererContent.replace(/(this.showOpenDialog)\(([^\(\)]*?)\)/g, 'showFileLoadDialog($2);')
     rendererContent = rendererContent.replace(/(this.showSaveDialog)\(([^\(\)]*?)\)/g, 'showFileSaveDialog($2);')
-    rendererContent = rendererContent.replace(/const store (= localforage.createInstance)/g, 'const store = window.dataStore $1')
+    rendererContent = rendererContent.replace(/([a-zA-Z]*)=([a-zA-Z]*\([1-9]*\))\.createInstance/g, '$1=window.dataStore=$2.createInstance')
     rendererContent = rendererContent.replace(/{openExternalLink\({/g, "{openExternalLink:window.openExternalLink,electronOpenExternalLink({")
     rendererContent = rendererContent.replace(/navigator.clipboard.writeText\(/g, "window.copyToClipboard\(")
     rendererContent = rendererContent.replace(/,async downloadMedia\({/g,", downloadMedia(state, mediaFormat) { window.downloadExternalLink(state, mediaFormat.url); return new Promise(function (resolve, reject) {  resolve() }) }, async oldDownloadMedia({") 
