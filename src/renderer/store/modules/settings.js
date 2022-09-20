@@ -162,8 +162,8 @@ const defaultSideEffectsTriggerId = settingId =>
 const state = {
   autoplayPlaylists: true,
   autoplayVideos: true,
-  backendFallback: true,
-  backendPreference: 'local',
+  backendFallback: process.env.IS_ELECTRON,
+  backendPreference: process.env.IS_ELECTRON ? 'local' : 'invidious',
   barColor: false,
   checkForBlogPosts: true,
   checkForUpdates: true,

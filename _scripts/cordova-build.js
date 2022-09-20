@@ -192,8 +192,6 @@ const archiver = require('archiver');
       rendererContent = rendererContent.replaceAll("createNewWindow:function(){", "createNewWindow: window.createNewWindow, electronNewWindow:function(){")
     }
     /* eslint-enable no-useless-escape */
-    // This enables channel view
-    rendererContent = rendererContent.replaceAll('this.getChannelInfoInvidious(),this.getPlaylistsInvidious()}else this.getVideoInformationInvidious()', 'this.getChannelInfoInvidious(),this.getPlaylistsInvidious()}else this.getChannelInfoInvidious(),this.getPlaylistsInvidious()')
     console.log('Setting up browserfs in the renderer')
     await fsWriteFile(path.join(wwwroot, 'renderer.js'), `(async function () {
             ` + ((exportType === 'cordova')
