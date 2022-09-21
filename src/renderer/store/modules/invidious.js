@@ -25,7 +25,6 @@ const actions = {
   async fetchInvidiousInstances({ commit }, payload) {
     const requestUrl = 'https://api.invidious.io/instances.json'
 
-    let response
     let instances = []
     try {
       const response = await fetch(requestUrl)
