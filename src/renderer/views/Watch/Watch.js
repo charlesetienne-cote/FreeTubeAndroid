@@ -14,6 +14,7 @@ import WatchVideoLiveChat from '../../components/watch-video-live-chat/watch-vid
 import WatchVideoPlaylist from '../../components/watch-video-playlist/watch-video-playlist.vue'
 import WatchVideoRecommendations from '../../components/watch-video-recommendations/watch-video-recommendations.vue'
 import FtAgeRestricted from '../../components/ft-age-restricted/ft-age-restricted.vue'
+import i18n from '../../i18n/index'
 
 export default Vue.extend({
   name: 'Watch',
@@ -160,6 +161,9 @@ export default Vue.extend({
     },
     theatrePossible: function () {
       return !this.hideRecommendedVideos || (!this.hideLiveChat && this.isLive) || this.watchingPlaylist
+    },
+    currentLocale: function () {
+      return i18n.locale.replace('_', '-')
     }
   },
   watch: {
@@ -267,7 +271,7 @@ export default Vue.extend({
           }
           try {
             // workaround for title localization
-            this.videoTitle = result.response.contents.twoColumnWatchNextResults.results.results.contents[0].videoPrimaryInfoRenderer.title.runs[0].text
+            this.videoTitle = result.response.contents.twoColumnWatchNextResults.results.results.contents[0].videoPrimaryInfoRenderer.title.runs.map(run => run.text).join('')
           } catch (err) {
             console.error('Failed to extract localised video title, falling back to the standard one.', err)
             // if the workaround for localization fails, this sets the title to the potentially non-localized value
@@ -298,8 +302,20 @@ export default Vue.extend({
           this.videoPublished = new Date(result.videoDetails.publishDate.replace('-', '/')).getTime()
           try {
             // workaround for description localization
-            const descriptionLines = result.response.contents.twoColumnWatchNextResults.results.results.contents[1].videoSecondaryInfoRenderer.description?.runs
-            this.videoDescription = descriptionLines?.map(line => line.text).join('') ?? ''
+            const descriptionRuns = result.response.contents.twoColumnWatchNextResults.results.results.contents[1].videoSecondaryInfoRenderer.description?.runs
+
+            if (!Array.isArray(descriptionRuns)) {
+              // eslint-disable-next-line no-throw-literal
+              throw ['not an array', descriptionRuns]
+            }
+
+            const fallbackDescription = result.player_response.videoDetails.shortDescription
+
+            // YouTube truncates links in the localised description
+            // so we need to fix them here, so that autolinker can do it's job properly later on
+            this.videoDescription = descriptionRuns
+              .map(run => this.processDescriptionPart(run, fallbackDescription))
+              .join('')
           } catch (err) {
             console.error('Failed to extract localised video description, falling back to the standard one.', err)
             // if the workaround for localization fails, this sets the description to the potentially non-localized value
@@ -354,7 +370,7 @@ export default Vue.extend({
             } else if (subCount >= 10000) {
               this.channelSubscriptionCountText = `${subCount / 1000}K`
             } else {
-              this.channelSubscriptionCountText = subCount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+              this.channelSubscriptionCountText = Intl.NumberFormat(this.currentLocale).format(subCount)
             }
           }
 
@@ -577,7 +593,7 @@ export default Vue.extend({
             message: `${errorMessage}: ${err}`,
             time: 10000,
             action: () => {
-              navigator.clipboard.writeText(err)
+              this.copyToClipboard({ content: err })
             }
           })
           console.log(err)
@@ -762,7 +778,7 @@ export default Vue.extend({
             message: `${errorMessage}: ${err.responseText}`,
             time: 10000,
             action: () => {
-              navigator.clipboard.writeText(err.responseText)
+              this.copyToClipboard({ content: err.responseText })
             }
           })
           console.log(err)
@@ -775,6 +791,56 @@ export default Vue.extend({
             this.isLoading = false
           }
         })
+    },
+
+    processDescriptionPart(part, fallbackDescription) {
+      const timestampRegex = /^([0-9]+:)?[0-9]+:[0-9]+$/
+
+      if (typeof part.navigationEndpoint === 'undefined' || part.navigationEndpoint === null || part.text.startsWith('#')) {
+        return part.text
+      }
+
+      if (part.navigationEndpoint.urlEndpoint) {
+        const urlWithTracking = part.navigationEndpoint.urlEndpoint.url
+        const url = new URL(urlWithTracking)
+
+        if (url.hostname === 'www.youtube.com' && url.pathname === '/redirect' && url.searchParams.has('q')) {
+          // remove utm tracking parameters
+          const realURL = new URL(url.searchParams.get('q'))
+
+          realURL.searchParams.delete('utm_source')
+          realURL.searchParams.delete('utm_medium')
+          realURL.searchParams.delete('utm_campaign')
+          realURL.searchParams.delete('utm_term')
+          realURL.searchParams.delete('utm_content')
+
+          return realURL.toString()
+        } else if (fallbackDescription.includes(urlWithTracking)) {
+          // this is probably a special YouTube URL like http://www.youtube.com/approachingnirvana
+          // only use it if it exists in the fallback description
+          // otherwise assume YouTube has changed it's tracking URLs and throw an error
+          return urlWithTracking
+        }
+
+        // eslint-disable-next-line no-throw-literal
+        throw `Failed to extract real URL from tracking URL: ${urlWithTracking}`
+      } else if (part.navigationEndpoint.watchEndpoint) {
+        if (timestampRegex.test(part.text)) {
+          return part.text
+        }
+        const watchEndpoint = part.navigationEndpoint.watchEndpoint
+
+        let videoURL = `https://www.youtube.com/watch?v=${watchEndpoint.videoId}`
+        if (watchEndpoint.startTimeSeconds !== 0) {
+          videoURL += `&t=${watchEndpoint.startTimeSeconds}s`
+        }
+        return videoURL
+      } else {
+        // Some YouTube URLs don't have the urlEndpoint so we handle them here
+
+        const path = part.navigationEndpoint.commandMetadata.webCommandMetadata.url
+        return `https://www.youtube.com${path}`
+      }
     },
 
     addToHistory: function (watchProgress) {
@@ -883,7 +949,7 @@ export default Vue.extend({
             message: `${errorMessage}: ${err}`,
             time: 10000,
             action: () => {
-              navigator.clipboard.writeText(err)
+              this.copyToClipboard({ content: err })
             }
           })
           console.log(err)
@@ -1264,35 +1330,36 @@ export default Vue.extend({
         const url = new URL(caption.baseUrl)
         url.searchParams.set('fmt', 'vtt')
 
-        $.get(url.toString(), response => {
-          // The character '#' needs to be percent-encoded in a (data) URI
-          // because it signals an identifier, which means anything after it
-          // is automatically removed when the URI is used as a source
-          let vtt = response.replace(/#/g, '%23')
+        fetch(url)
+          .then((response) => response.text())
+          .then((text) => {
+            // The character '#' needs to be percent-encoded in a (data) URI
+            // because it signals an identifier, which means anything after it
+            // is automatically removed when the URI is used as a source
+            let vtt = text.replace(/#/g, '%23')
 
-          // A lot of videos have messed up caption positions that need to be removed
-          // This can be either because this format isn't really used by YouTube
-          // or because it's expected for the player to be able to somehow
-          // wrap the captions so that they won't step outside its boundaries
-          //
-          // Auto-generated captions are also all aligned to the start
-          // so those instances must also be removed
-          // In addition, all aligns seem to be fixed to "start" when they do pop up in normal captions
-          // If it's prominent enough that people start to notice, it can be removed then
-          if (caption.kind === 'asr') {
-            vtt = vtt.replace(/ align:start| position:\d{1,3}%/g, '')
-          } else {
-            vtt = vtt.replace(/ position:\d{1,3}%/g, '')
-          }
+            // A lot of videos have messed up caption positions that need to be removed
+            // This can be either because this format isn't really used by YouTube
+            // or because it's expected for the player to be able to somehow
+            // wrap the captions so that they won't step outside its boundaries
+            //
+            // Auto-generated captions are also all aligned to the start
+            // so those instances must also be removed
+            // In addition, all aligns seem to be fixed to "start" when they do pop up in normal captions
+            // If it's prominent enough that people start to notice, it can be removed then
+            if (caption.kind === 'asr') {
+              vtt = vtt.replace(/ align:start| position:\d{1,3}%/g, '')
+            } else {
+              vtt = vtt.replace(/ position:\d{1,3}%/g, '')
+            }
 
-          caption.baseUrl = `data:${caption.type};${caption.charset},${vtt}`
-          resolve(caption)
-        }).fail((xhr, textStatus, error) => {
-          console.log(xhr)
-          console.log(textStatus)
-          console.log(error)
-          reject(error)
-        })
+            caption.baseUrl = `data:${caption.type};${caption.charset},${vtt}`
+            resolve(caption)
+          })
+          .catch((error) => {
+            console.error(error)
+            reject(error)
+          })
       }))
     },
 
@@ -1343,7 +1410,8 @@ export default Vue.extend({
       'getUserDataPath',
       'ytGetVideoInformation',
       'invidiousGetVideoInformation',
-      'updateSubscriptionDetails'
+      'updateSubscriptionDetails',
+      'copyToClipboard'
     ])
   }
 })
