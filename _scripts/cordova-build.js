@@ -567,7 +567,7 @@ const archiver = require('archiver');
               ` + ((exportType === 'cordova')
         ? `
               window.copyToClipboard = function (content) {
-                cordova.plugins.clipboard.copy(text);
+                cordova.plugins.clipboard.copy(content);
               };
               window.isDarkMode = "light";
               if (await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isAvailable(resolve, reject) }) ) {

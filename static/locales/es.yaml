@@ -189,6 +189,18 @@ Settings:
       Dracula Yellow: 'Drácula amarillo'
       Catppuccin Mocha Pink: Catppuccin Moca Rosa
       Catppuccin Mocha Mauve: Catppuccin Mocha Malva
+      Catppuccin Mocha Peach: Catppuccin Moka Melocotón
+      Catppuccin Mocha Green: Catpuccin Moca Verde
+      Catppuccin Mocha Yellow: Catpuccin Moca Amarillo
+      Catppuccin Mocha Red: Catppuccin Moka Rojo
+      Catppuccin Mocha Flamingo: Catppuccin Moka Flamenco
+      Catppuccin Mocha Maroon: Catppuccin Moka Granate
+      Catppuccin Mocha Teal: Catppuccin Moka Verde azulado
+      Catppuccin Mocha Rosewater: Catppuccin Moka Agua de Rosas
+      Catppuccin Mocha Sky: Catppuccin Moka Cielo
+      Catppuccin Mocha Sapphire: Catppuccin Moka Zafiro
+      Catppuccin Mocha Blue: Catpuccin Moka Azul
+      Catppuccin Mocha Lavender: Catppuccin Moka Lavanda
     Secondary Color Theme: 'Color secundario'
         #* Main Color Theme
     UI Scale: Escala de interfaz gráfica
@@ -360,6 +372,8 @@ Settings:
     Hide Playlists: Ocultar listas de reproducción
     Hide Video Description: Ocultar la descripción del vídeo
     Hide Comments: Ocultar los comentarios
+    Hide Live Streams: Ocultar retransmisiones en directo
+    Hide Sharing Actions: Ocultar acciones de uso compartido
   The app needs to restart for changes to take effect. Restart and apply change?: ¿Quieres
     reiniciar FreeTube ahora para aplicar los cambios?
   Proxy Settings:
@@ -391,6 +405,7 @@ Settings:
       Do Nothing: No hacer nada
       Skip Option: Omitir opción
       Auto Skip: Salto automático
+      Prompt To Skip: Solicitar que se omita
   External Player Settings:
     Custom External Player Arguments: Argumentos adicionales del reproductor
     Custom External Player Executable: Ruta alternativa del ejecutable del reproductor
@@ -406,10 +421,12 @@ Settings:
     Choose Path: Elegir ruta
     Download in app: Descargar en la aplicación
     Open in web browser: Abrir en el navegador web
+    Download Behavior: Comportamiento de la descarga
   Parental Control Settings:
     Hide Unsubscribe Button: Ocultar botón de anular suscripción
     Hide Search Bar: Ocultar barra de búsqueda
     Parental Control Settings: Ajustes del control para padres
+    Show Family Friendly Only: Mostrar solo apto para familias
 About:
   #On About page
   About: 'Acerca de'
@@ -635,13 +652,14 @@ Video:
   Save Video: Guardar el vídeo
   translated from English: traducido del inglés
   Sponsor Block category:
-    music offtopic: música fuera de tema
+    music offtopic: Música fuera de tema
     interaction: Interacción
     self-promotion: Auto promoción
-    outro: epílogo
+    outro: Epílogo
     intro: Introducción
     sponsor: Patrocinador
     recap: Recapitulación
+    filler: Relleno
   Skipped segment: Segmento saltado
   External Player:
     playlist: lista de reproducción
