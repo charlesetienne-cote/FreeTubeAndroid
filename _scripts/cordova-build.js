@@ -183,9 +183,6 @@ const archiver = require('archiver');
     rendererContent = rendererContent.replace(/(this.showOpenDialog)\(([^\(\)]*?)\)/g, 'showFileLoadDialog($2);')
     rendererContent = rendererContent.replace(/(this.showSaveDialog)\(([^\(\)]*?)\)/g, 'showFileSaveDialog($2);')
     rendererContent = rendererContent.replace(/([a-zA-Z]*)=([a-zA-Z]*\([1-9]*\))\.createInstance/g, '$1=window.dataStore=$2.createInstance')
-    rendererContent = rendererContent.replace(/{openExternalLink\({/g, "{openExternalLink:window.openExternalLink,electronOpenExternalLink({")
-    rendererContent = rendererContent.replace(/navigator.clipboard.writeText\(/g, "window.copyToClipboard\(")
-    rendererContent = rendererContent.replace(/,async downloadMedia\({/g,", downloadMedia(state, mediaFormat) { window.downloadExternalLink(state, mediaFormat.url); return new Promise(function (resolve, reject) {  resolve() }) }, async oldDownloadMedia({") 
     if (exportType === 'cordova') {
       rendererContent = rendererContent.replace(/this.invidiousGetVideoInformation\(this.videoId\).then\(/g, 'this.invidiousGetVideoInformation(this.videoId).then(updatePlayingVideo);this.invidiousGetVideoInformation\(this.videoId\).then(')
       rendererContent = rendererContent.replace('systemTheme:function(){return window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}', 'systemTheme:function () { return window.isDarkMode }')
@@ -551,24 +548,8 @@ const archiver = require('archiver');
                     return currentVideo;
                   }
               });
-              window.openExternalLink = function ({ rootState }, link) {
-                var a = document.createElement("a");
-                a.setAttribute("href", link);
-                a.setAttribute("target", "_blank");
-                a.click();
-              };
-              window.downloadExternalLink = function ({ rootState }, link) {
-                var a = document.createElement("a");
-                a.setAttribute("href", link);
-                a.setAttribute("target", "_blank");
-                a.download = 'download';
-                a.click();
-              }
               ` + ((exportType === 'cordova')
         ? `
-              window.copyToClipboard = function (content) {
-                cordova.plugins.clipboard.copy(content);
-              };
               window.isDarkMode = "light";
               if (await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isAvailable(resolve, reject) }) ) {
                     var isDarkMode = await new Promise(function (resolve, reject) { cordova.plugins.ThemeDetection.isDarkModeEnabled(function (result) { resolve(result.value) },reject) });
@@ -581,9 +562,6 @@ const archiver = require('archiver');
               document.head.appendChild(removeNewWindowIconStyle);
               `
         : `
-              window.copyToClipboard = function (content) {
-                navigator.clipboard.writeText(content);
-              };
               window.createNewWindow = function () {
                 window.open(window.location.pathname, "_blank")
               };
