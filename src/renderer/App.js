@@ -206,7 +206,7 @@ export default Vue.extend({
         const { version } = require('../../package.json')
         // For future reference, this is a change that is only for this repo.
         // This is never meant to be integrated back upstream, for obvious reasons.
-        const requestUrl = 'https://api.github.com/repos/marmadilemanteater/freetube/releases?per_page=1'
+        const requestUrl = 'https://api.github.com/repos/marmadilemanteater/freetubecordova/releases?per_page=1'
 
         fetch(requestUrl)
           .then((response) => response.json())
