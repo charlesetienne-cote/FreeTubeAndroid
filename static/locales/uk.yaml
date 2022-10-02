@@ -84,6 +84,9 @@ Subscriptions:
   Refresh Subscriptions: 'Оновити Підписки'
   Load More Videos: 'Завантажити більше відео'
   Error Channels: Канали з помилками
+  Disabled Automatic Fetching: Ви вимкнули автоматичне отримання підписок. Оновіть
+    підписки, щоб вони з'явились тут.
+  Empty Channels: Канали, на які ви підписалися, наразі не містять відео.
 Trending:
   Trending: 'Популярне'
   Trending Tabs: Популярні вкладки
@@ -291,6 +294,7 @@ Settings:
     Hide Videos on Watch: 'Ховати відео при перегляді'
     Fetch Feeds from RSS: 'Отримати канали з RSS'
     Manage Subscriptions: 'Керування підписками'
+    Fetch Automatically: Автоматично отримувати стрічку
   Distraction Free Settings:
     Distraction Free Settings: 'Налаштування зосередження'
     Hide Video Views: 'Сховати перегляди відео'
@@ -307,6 +311,7 @@ Settings:
     Hide Comments: Сховати коментарі
     Hide Sharing Actions: Сховати дії поширення
     Hide Live Streams: Сховати прямі трансляції
+    Hide Chapters: Сховати розділи
   Data Settings:
     Data Settings: 'Налаштування даних'
     Select Import Type: 'Оберіть тип імпорту'
@@ -620,6 +625,7 @@ Video:
     Ago: 'Тому'
     Upcoming: 'Прем''єри'
     Less than a minute: Менш як за хвилину
+    In less than a minute: Менше ніж за хвилину
   Published on: 'Опубліковано'
   # $ is replaced with the number and % with the unit (days, hours, minutes...)
   Publicationtemplate: '$ % тому'
@@ -677,6 +683,7 @@ Video:
     Video statistics are not available for legacy videos: Статистика відео недоступна
       для застарілих відео
   Premieres in: Прем'єри в
+  Premieres: Прем'єри
 Videos:
   #& Sort By
   Sort By:
@@ -799,6 +806,8 @@ Tooltips:
       ІР, але не надає дані, як-от тривалість відео або стан трансляції'
 
 # Toast Messages
+    Fetch Automatically: Якщо увімкнено, FreeTube автоматично отримуватиме вашу стрічку
+      підписок під час відкриття нового вікна та за перемикання профілю.
   Privacy Settings:
     Remove Video Meta Files: Якщо увімкнено, FreeTube автоматично видаляє метафайли,
       створені під час відтворення відео, коли сторінку перегляду закрито.
@@ -880,3 +889,13 @@ Channels:
   Unsubscribe: Відписатися
   Search bar placeholder: Пошук каналів
   Unsubscribed: $ вилучено з ваших підписок
+Clipboard:
+  Copy failed: Не вдалося скопіювати до буфера обміну
+  Cannot access clipboard without a secure connection: Неможливо отримати доступ до
+    буфера обміну без захищеного з'єднання
+Chapters:
+  Chapters: Розділи
+  'Chapters list visible, current chapter: {chapterName}': 'Список розділів видимий,
+    поточний розділ: {chapterName}'
+  'Chapters list hidden, current chapter: {chapterName}': 'Список розділів схований,
+    поточний розділ: {chapterName}'

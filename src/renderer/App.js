@@ -9,10 +9,10 @@ import FtPrompt from './components/ft-prompt/ft-prompt.vue'
 import FtButton from './components/ft-button/ft-button.vue'
 import FtToast from './components/ft-toast/ft-toast.vue'
 import FtProgressBar from './components/ft-progress-bar/ft-progress-bar.vue'
-import $ from 'jquery'
 import { marked } from 'marked'
 import Parser from 'rss-parser'
 import { IpcChannels } from '../constants'
+import packageDetails from '../../package.json'
 
 let ipcRenderer = null
 
@@ -51,9 +51,6 @@ export default Vue.extend({
     }
   },
   computed: {
-    isDev: function () {
-      return process.env.NODE_ENV === 'development'
-    },
     isOpen: function () {
       return this.$store.getters.getIsSideNavOpen
     },
@@ -149,7 +146,7 @@ export default Vue.extend({
     this.grabUserSettings().then(async () => {
       this.checkThemeSettings()
 
-      await this.fetchInvidiousInstances({ isDev: this.isDev })
+      await this.fetchInvidiousInstances()
       if (this.defaultInvidiousInstance === '') {
         await this.setRandomCurrentInvidiousInstance()
       }
@@ -163,6 +160,7 @@ export default Vue.extend({
           this.setupListenersToSyncWindows()
           this.activateKeyboardShortcuts()
           this.openAllLinksExternally()
+          this.enableSetSearchQueryText()
           this.enableOpenUrl()
           this.watchSystemTheme()
           await this.checkExternalPlayer()
@@ -199,10 +197,7 @@ export default Vue.extend({
 
     checkForNewUpdates: function () {
       if (this.checkForUpdates) {
-        const { version } = require('../../package.json')
-        // For future reference, this is a change that is only for this repo.
-        // This is never meant to be integrated back upstream, for obvious reasons.
-        const requestUrl = 'https://api.github.com/repos/marmadilemanteater/freetubecordova/releases?per_page=1'
+        const requestUrl = 'https://api.github.com/repos/freetubeapp/freetube/releases?per_page=1'
 
         fetch(requestUrl)
           .then((response) => response.json())
@@ -215,7 +210,7 @@ export default Vue.extend({
             const message = this.$t('Version $ is now available!  Click for more details')
             this.updateBannerMessage = message.replace('$', versionNumber)
 
-            const appVersion = version.split('.')
+            const appVersion = packageDetails.version.split('.')
             const latestVersion = versionNumber.split('.')
 
             if (parseInt(appVersion[0]) < parseInt(latestVersion[0])) {
@@ -260,7 +255,6 @@ export default Vue.extend({
 
     checkExternalPlayer: async function () {
       const payload = {
-        isDev: this.isDev,
         externalPlayer: this.externalPlayer
       }
       this.getExternalPlayerCmdArgumentsData(payload)
@@ -290,31 +284,33 @@ export default Vue.extend({
     },
 
     activateKeyboardShortcuts: function () {
-      $(document).on('keydown', this.handleKeyboardShortcuts)
-      $(document).on('mousedown', () => {
+      document.addEventListener('keydown', this.handleKeyboardShortcuts)
+      document.addEventListener('mousedown', () => {
         this.hideOutlines = true
       })
     },
 
     handleKeyboardShortcuts: function (event) {
       if (event.altKey) {
-        switch (event.code) {
+        switch (event.key) {
           case 'ArrowRight':
             this.$refs.topNav.historyForward()
             break
           case 'ArrowLeft':
             this.$refs.topNav.historyBack()
             break
-          case 'KeyD':
+          case 'D':
+          case 'd':
             this.$refs.topNav.focusSearch()
             break
         }
       }
-      switch (event.code) {
+      switch (event.key) {
         case 'Tab':
           this.hideOutlines = false
           break
-        case 'KeyL':
+        case 'L':
+        case 'l':
           if ((process.platform !== 'darwin' && event.ctrlKey) ||
             (process.platform === 'darwin' && event.metaKey)) {
             this.$refs.topNav.focusSearch()
@@ -324,22 +320,26 @@ export default Vue.extend({
     },
 
     openAllLinksExternally: function () {
-      $(document).on('click', 'a[href^="http"]', (event) => {
-        this.handleLinkClick(event)
+      const isExternalLink = (event) => event.target.tagName === 'A' && event.target.href.startsWith('http')
+
+      document.addEventListener('click', (event) => {
+        if (isExternalLink(event)) {
+          this.handleLinkClick(event)
+        }
       })
 
-      $(document).on('auxclick', 'a[href^="http"]', (event) => {
+      document.addEventListener('auxclick', (event) => {
         // auxclick fires for all clicks not performed with the primary button
         // only handle the link click if it was the middle button,
         // otherwise the context menu breaks
-        if (event.button === 1) {
+        if (isExternalLink(event) && event.button === 1) {
           this.handleLinkClick(event)
         }
       })
     },
 
     handleLinkClick: function (event) {
-      const el = event.currentTarget
+      const el = event.target
       event.preventDefault()
 
       // Check if it's a YouTube link
@@ -409,7 +409,8 @@ export default Vue.extend({
             this.openInternalPath({
               path,
               query,
-              doCreateNewWindow
+              doCreateNewWindow,
+              searchQueryText: searchQuery
             })
             break
           }
@@ -468,7 +469,7 @@ export default Vue.extend({
       })
     },
 
-    openInternalPath: function({ path, doCreateNewWindow, query = {} }) {
+    openInternalPath: function({ path, doCreateNewWindow, query = {}, searchQueryText = null }) {
       if (process.env.IS_ELECTRON && doCreateNewWindow) {
         const { ipcRenderer } = require('electron')
 
@@ -478,7 +479,8 @@ export default Vue.extend({
           `#${path}?${(new URLSearchParams(query)).toString()}`
         ].join('')
         ipcRenderer.send(IpcChannels.CREATE_NEW_WINDOW, {
-          windowStartupUrl: newWindowStartupURL
+          windowStartupUrl: newWindowStartupURL,
+          searchQueryText
         })
       } else {
         // Web
@@ -487,6 +489,16 @@ export default Vue.extend({
           query
         })
       }
+    },
+
+    enableSetSearchQueryText: function () {
+      ipcRenderer.on('updateSearchInputText', (event, searchQueryText) => {
+        if (searchQueryText) {
+          this.$refs.topNav.updateSearchInputText(searchQueryText)
+        }
+      })
+
+      ipcRenderer.send('searchInputHandlingReady')
     },
 
     enableOpenUrl: function () {

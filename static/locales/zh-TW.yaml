@@ -346,6 +346,7 @@ Settings:
     Hide Comments: 隱藏留言
     Hide Live Streams: 隱藏直播串流
     Hide Sharing Actions: 隱藏分享動作
+    Hide Chapters: 隱藏章節
   The app needs to restart for changes to take effect. Restart and apply change?: 此變更需要重啟讓修改生效。重啟並且套用變更?
   Proxy Settings:
     Error getting network information. Is your proxy configured properly?: 取得網路資訊時發生錯誤。您的代理伺服器設定正確嗎？
@@ -534,6 +535,7 @@ Video:
     Minutes: 分鐘
     Minute: 分鐘
     Less than a minute: 少於一分鐘
+    In less than a minute: 不到一分鐘內
   Published on: '發布於'
   # $ is replaced with the number and % with the unit (days, hours, minutes...)
   Publicationtemplate: '$ % 前'
@@ -612,6 +614,7 @@ Video:
     Video ID: 影片 ID
     Mimetype: 多媒體類型
   Premieres in: 首映於
+  Premieres: 首映
 Videos:
   #& Sort By
   Sort By:
@@ -808,3 +811,10 @@ Channels:
   Empty: 您的頻道清單目前為空。
   Unsubscribe Prompt: 您確定您想要從「$」取消訂閱嗎？
   Unsubscribed: $ 已從您的訂閱移除
+Clipboard:
+  Copy failed: 複製到剪貼簿失敗
+  Cannot access clipboard without a secure connection: 無法在沒有安全連線的情況下存取剪貼簿
+Chapters:
+  Chapters: 章節
+  'Chapters list visible, current chapter: {chapterName}': 章節清單可見，目前章節：{chapterName}
+  'Chapters list hidden, current chapter: {chapterName}': 章節清單已隱藏，目前章節：{chapterName}

@@ -4,7 +4,9 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
-
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const JsonMinimizerPlugin = require('json-minimizer-webpack-plugin')
+const ProcessLocalesPlugin = require('./ProcessLocalesPlugin')
 const { productName } = require('../package.json')
 
 const isDevMode = process.env.NODE_ENV === 'development'
@@ -25,7 +27,7 @@ const config = {
   output: {
     publicPath: '',
     libraryTarget: 'commonjs2',
-    path: path.join(__dirname, '../dist'),
+    path: path.join(__dirname, '../dist/web'),
     filename: '[name].js',
   },
   // webpack spits out errors while inlining ytpl and ytsr as
@@ -101,6 +103,9 @@ const config = {
   optimization: {
     minimizer: [
       '...', // extend webpack's list instead of overwriting it
+      new JsonMinimizerPlugin({
+        exclude: /\/locales\/.*\.json/
+      }),
       new CssMinimizerPlugin()
     ]
   },
@@ -150,6 +155,41 @@ if (isDevMode) {
   config.plugins.push(
     new webpack.DefinePlugin({
       __static: `"${path.join(__dirname, '../static').replace(/\\/g, '\\\\')}"`,
+    })
+  )
+} else {
+  const processLocalesPlugin = new ProcessLocalesPlugin({
+    compress: false,
+    inputDir: path.join(__dirname, '../static/locales'),
+    outputDir: 'static/locales',
+  })
+
+  config.plugins.push(
+    processLocalesPlugin,
+    new webpack.DefinePlugin({
+      'process.env.LOCALE_NAMES': JSON.stringify(processLocalesPlugin.localeNames)
+    }),
+    new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: path.join(__dirname, '../static/pwabuilder-sw.js'),
+            to: path.join(__dirname, '../dist/web/pwabuilder-sw.js'),
+          },
+          {
+            from: path.join(__dirname, '../static'),
+            to: path.join(__dirname, '../dist/web/static'),
+            globOptions: {
+              dot: true,
+              ignore: ['**/.*', '**/locales/**', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
+            },
+          },
+      ]
+    }),
+    // webpack doesn't get rid of js-yaml even though it isn't used in the production builds
+    // so we need to manually tell it to ignore any imports for `js-yaml`
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^js-yaml$/,
+      contextRegExp: /i18n$/
     })
   )
 }

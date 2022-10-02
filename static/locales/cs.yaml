@@ -41,7 +41,7 @@ Search / Go to URL: 'Hledat / Přejít na URL'
 Search Filters:
   Search Filters: 'Vyhledávací filtry'
   Sort By:
-    Sort By: 'Setřídit podle'
+    Sort By: 'Třídit dle'
     Most Relevant: 'Nejrelevantnější'
     Rating: 'Hodnocení'
     Upload Date: 'Datum nahrání'
@@ -84,6 +84,9 @@ Subscriptions:
   Refresh Subscriptions: 'Obnovit odběry'
   Load More Videos: 'Načíst více videí'
   Error Channels: Kanály s chybami
+  Empty Channels: Vaše odebírané kanály momentálně nemají žádná videa.
+  Disabled Automatic Fetching: Máte zakázané automatické získávání odběrů. Obnovte
+    odběry, abyste je zde mohli vidět.
 Trending:
   Trending: 'Trendy'
   Trending Tabs: Tabulka trendů
@@ -288,6 +291,7 @@ Settings:
     Hide Videos on Watch: 'Skrýt přehrané video'
     Fetch Feeds from RSS: 'Načíst kanály z RSS'
     Manage Subscriptions: 'Spravovat odebírané kanály'
+    Fetch Automatically: Automaticky načítat odběry
   Distraction Free Settings:
     Distraction Free Settings: 'Nastavení Režimu nerozptylování'
     Hide Video Views: 'Skrýt počet přehrání videa'
@@ -304,6 +308,7 @@ Settings:
     Hide Comments: Skrýt komentáře
     Hide Live Streams: Skrýt živé streamy
     Hide Sharing Actions: Skrýt akce sdílení
+    Hide Chapters: Skrýt kapitoly
   Data Settings:
     Data Settings: 'Nastavení dat'
     Select Import Type: 'Vybrat typ importu'
@@ -631,6 +636,7 @@ Video:
     Ago: 'Před'
     Upcoming: 'Premiéra'
     Less than a minute: Méně než minuta
+    In less than a minute: Za méně než minutu
   Published on: 'Publikováno'
   # $ is replaced with the number and % with the unit (days, hours, minutes...)
   Publicationtemplate: '$ %'
@@ -681,6 +687,7 @@ Video:
     Buffered: V mezipaměti
     Dropped / Total Frames: Vyřazené / Celkový počet snímků
   Premieres in: Premiéra za
+  Premieres: Premiéra
 Videos:
   #& Sort By
   Sort By:
@@ -804,6 +811,8 @@ Tooltips:
       IP, ale neposkytuje určité informace, jako je délka videa a podobně'
 
 # Toast Messages
+    Fetch Automatically: Při povolení tohoto nastavení bude FreeTube automaticky načítat
+      vaše odběry při otevření nového okna a při přepínání profilů.
   Privacy Settings:
     Remove Video Meta Files: Pokud je povoleno, FreeTube automaticky odstraní meta
       soubory vytvořené během přehrávání videa, když se stránka sledování zavře.
@@ -879,3 +888,13 @@ Channels:
   Unsubscribe: Zrušit odběr
 Screenshot Success: Snímek uložen jako „$“
 Screenshot Error: Snímek selhal. $
+Clipboard:
+  Cannot access clipboard without a secure connection: Nelze přistupovat ke schránce
+    bez zabezpečeného připojení
+  Copy failed: Kopírování do schránky selhalo
+Chapters:
+  'Chapters list visible, current chapter: {chapterName}': 'Seznam kapitol je viditelný,
+    současná kapitola: {chapterName}'
+  'Chapters list hidden, current chapter: {chapterName}': 'Seznam kapitol je skrytý,
+    současná kapitola: {chapterName}'
+  Chapters: Kapitoly

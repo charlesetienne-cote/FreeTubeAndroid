@@ -121,30 +121,8 @@ const archiver = require('archiver');
     const browserfsPath = path.join(distDirectory, 'www/browserfs')
     // Copy dist folder into cordova project;
     console.log('Copying dist output to cordova outline')
-    await fsCopy(path.join(sourceDirectory, 'dist'), wwwroot, { recursive: true, force: true })
+    await fsCopy(path.join(sourceDirectory, 'dist', 'web'), wwwroot, { recursive: true, force: true })
 
-    console.log('Write static archive for browserfs')
-    const staticArchive = archiver('zip')
-    const output = fs.createWriteStream(path.join(wwwroot, 'static.zip'))
-    staticArchive.pipe(output)
-    staticArchive.directory(path.join(wwwroot, 'static'), false)
-    staticArchive.finalize()
-    // Wait until finished making zip
-    await new Promise(function (resolve, reject) {
-      output.on('close', function () {
-        resolve()
-      })
-      output.on('error', function (error) {
-        reject(error)
-      })
-    })
-    try {
-      // Cleaning up the wwwroot directory
-      await fsRm(path.join(wwwroot, 'static'), { recursive: true, force: true })
-      await fsRm(path.join(wwwroot, 'web/static'), { recursive: true, force: true })
-    } catch (exception) {
-      console.warn(exception);
-    }
     console.log('Copying browserfs dist to cordova www folder')
     await fsCopy(path.join(distDirectory, 'node_modules/browserfs'), path.join(wwwroot, 'browserfs'), { recursive: true, force: true })
     const browserifyConfig = {
@@ -373,41 +351,6 @@ const archiver = require('archiver');
             }, 500);`
         : '') +
             `BrowserFS.install(window);
-            var staticData = await (await fetch('static.zip')).arrayBuffer();
-            // Configure the browserfs before the renderer code
-            await new Promise(function (resolve, reject) {
-                BrowserFS.configure({
-                    fs: "MountableFileSystem",
-                    options: {
-                        "/static": {
-                            fs: "ZipFS",
-                            options: {
-                                zipData: Buffer.from(staticData)
-                            }
-                        },
-                        "/www": {
-                            fs: "MountableFileSystem",
-                            options: {
-                                "/static": {
-                                    fs: "ZipFS",
-                                    options: {
-                                        zipData: Buffer.from(staticData)
-                                    }
-                                }
-                            }
-                        },
-                        "/uploads": {
-                            fs: "InMemory"
-                        }
-                    }
-                }, function(e) {
-                    if (e) {
-                    reject(e);
-                    } else {
-                    resolve();
-                    }
-                });
-            });
             var psuedoFileSystem = require("fs");
             window.fileSystem = {
                 writeFile: function (pathlike, content, cb) {
