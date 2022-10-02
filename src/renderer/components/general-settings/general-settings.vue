@@ -1,11 +1,7 @@
 <template>
-  <details>
-    <summary>
-      <h3>
-        {{ $t("Settings.General Settings.General Settings") }}
-      </h3>
-    </summary>
-    <hr>
+  <ft-settings-section
+    :title="$t('Settings.General Settings.General Settings')"
+  >
     <div class="switchColumnGrid">
       <div class="switchColumn">
         <ft-toggle-switch
@@ -98,7 +94,7 @@
     <div
       v-if="backendPreference === 'invidious' || backendFallback"
     >
-      <ft-flex-box class="generalSettingsFlexBox">
+      <ft-flex-box class="settingsFlexStart460px">
         <ft-input
           :placeholder="$t('Settings.General Settings.Current Invidious Instance')"
           :show-action-button="false"
@@ -143,7 +139,7 @@
         />
       </ft-flex-box>
     </div>
-  </details>
+  </ft-settings-section>
 </template>
 
 <script src="./general-settings.js" />
