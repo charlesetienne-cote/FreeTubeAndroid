@@ -3077,10 +3077,9 @@ electron-builder@^23.3.3:
     read-config-file "6.2.0"
     update-notifier "^5.1.0"
     yargs "^17.0.1"
-
-electron-context-menu@^3.5.0:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/electron-context-menu/-/electron-context-menu-3.5.0.tgz#f5d6df982e37555a77666bcecff59b094211b54a"
+electron-context-menu@^3.1.2:
+  version "3.1.2"
+  resolved "https://registry.npmjs.org/electron-context-menu/-/electron-context-menu-3.1.2.tgz"
   dependencies:
     cli-truncate "^2.1.0"
     electron-dl "^3.2.1"
@@ -7968,9 +7967,9 @@ yt-channel-info@^3.1.0:
   dependencies:
     axios "^0.27.2"
 
-yt-dash-manifest-generator@1.1.0:
-  version "1.1.0"
-  resolved "https://registry.npmjs.org/yt-dash-manifest-generator/-/yt-dash-manifest-generator-1.1.0.tgz"
+yt-dash-manifest-generator@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/yt-dash-manifest-generator/-/yt-dash-manifest-generator-2.0.0.tgz#1513dd1a8aa3e854f175f227e929943674cef478"
   dependencies:
     xml-js "^1.6.11"
     ytdl-core "^3.2.2"
