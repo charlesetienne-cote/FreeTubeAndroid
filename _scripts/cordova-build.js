@@ -75,7 +75,6 @@ const archiver = require('archiver');
       await addCordovaPlugin('cordova-clipboard')
 
       await addNpmPackage('browserify')
-      await addNpmPackage('https://github.com/jvilk/BrowserFS.git')
 
       if (await fsExists(wwwroot)) {
         await fsRm(wwwroot, { recursive: true, force: true })
@@ -118,30 +117,10 @@ const archiver = require('archiver');
     if (process.argv.length > 5) {
       keystorePassphrase = process.argv[5]
     }
-    const browserfsPath = path.join(distDirectory, 'www/browserfs')
     // Copy dist folder into cordova project;
     console.log('Copying dist output to cordova outline')
     await fsCopy(path.join(sourceDirectory, 'dist', 'web'), wwwroot, { recursive: true, force: true })
 
-    console.log('Copying browserfs dist to cordova www folder')
-    await fsCopy(path.join(distDirectory, 'node_modules/browserfs'), path.join(wwwroot, 'browserfs'), { recursive: true, force: true })
-    const browserifyConfig = {
-      // Override Browserify's builtins for buffer/fs/path.
-      builtins: Object.assign({}, require(path.join(distDirectory, 'node_modules/browserify/lib/builtins')), {
-        buffer: require.resolve(path.join(wwwroot, 'browserfs/dist/shims/buffer.js')),
-        fs: require.resolve(path.join(wwwroot, 'browserfs/dist/shims/fs.js')),
-        path: require.resolve(path.join(wwwroot, 'browserfs/dist/shims/path.js'))
-      }),
-      insertGlobalVars: {
-        // process, Buffer, and BrowserFS globals.
-        // BrowserFS global is not required if you include browserfs.js
-        // in a script tag.
-        process: function () { return "require('browserfs/dist/shims/process.js')" },
-        Buffer: function () { return "require('buffer').Buffer" },
-        BrowserFS: function() { return "require('" + browserfsPath + "')" }
-      }
-    }
-    destinationPackage.browserify = browserifyConfig
     console.log('Writing package.json in cordova project')
     await fsWriteFile(destinationPackageUri, JSON.stringify(destinationPackage, null, 2))
 
@@ -167,7 +146,7 @@ const archiver = require('archiver');
       rendererContent = rendererContent.replaceAll("createNewWindow:function(){", "createNewWindow: window.createNewWindow, electronNewWindow:function(){")
     }
     /* eslint-enable no-useless-escape */
-    console.log('Setting up browserfs in the renderer')
+    console.log('Setting up the renderer')
     await fsWriteFile(path.join(wwwroot, 'renderer.js'), `(async function () {
             ` + ((exportType === 'cordova')
         ? `
@@ -350,8 +329,7 @@ const archiver = require('archiver');
               
             }, 500);`
         : '') +
-            `BrowserFS.install(window);
-            var psuedoFileSystem = require("fs");
+            `
             window.fileSystem = {
                 writeFile: function (pathlike, content, cb) {
                     download(pathlike, content).then(cb);
@@ -359,21 +337,12 @@ const archiver = require('archiver');
                 writeFileSync: function (pathlike, content) {
                     download(pathlike, content);
                 },
-                readFile: function (pathlike, cb) {
-                    if (pathlike.startsWith("null/") || pathlike.startsWith("/null/")) {
-                        // If the pathlike starts with null, it mean we are trying to read from the localforage
-                        var pathParts = pathlike.split("/");
-                        var pathEnd = pathParts[pathParts.length - 1];
-                        dataStore.getItem(pathEnd, cb);
-                    } else {
-                        psuedoFileSystem.readFile(pathlike, cb);
-                    }
-                },
-                readFileSync: psuedoFileSystem.readFileSync,
-                readdirSync: psuedoFileSystem.readdirSync,
-                readdir: psuedoFileSystem.readdir,
-                exists: psuedoFileSystem.exists,
-                existsSync: psuedoFileSystem.existsSync
+                readFile: () => null,
+                readFileSync: () => null,
+                readdirSync: () => null,
+                readdir: () => null,
+                exists: () => null,
+                existsSync: () => null
             }
             
             function download(filename, textInput) {
@@ -489,7 +458,7 @@ const archiver = require('archiver');
     await fsWriteFile(path.join(wwwroot, 'renderer.js'), content)
 
     let indexContent = (await fsReadFile(path.join(wwwroot, 'index.html'))).toString()
-    indexContent = indexContent.replace('</title>', '</title><link rel="shortcut icon" href="./_icons/icon.ico" /><script src="browserfs/dist/browserfs.js"></script>')
+    indexContent = indexContent.replace('</title>', '</title><link rel="shortcut icon" href="./_icons/icon.ico" />')
     if (exportType === 'cordova') {
       indexContent = indexContent.replace('</title>', '</title><script src="cordova.js"></script>')
     }
