@@ -206,7 +206,6 @@ export default Vue.extend({
 
     handlePreferredApiBackend: function (backend) {
       this.updateBackendPreference(backend)
-      console.log(backend)
 
       if (backend === 'local') {
         this.updateForceLocalBackendForLegacy(false)

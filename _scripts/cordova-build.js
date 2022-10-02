@@ -180,7 +180,6 @@ const archiver = require('archiver');
     // this is a POC, random changes to the codebase break these regex all the time
     rendererContent = rendererContent.replace(/([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, 'fileSystem$2')
     rendererContent = rendererContent.replace(/\)([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, ';fileSystem$2')
-    rendererContent = rendererContent.replace(/(this.showOpenDialog)\(([^\(\)]*?)\)/g, 'showFileLoadDialog($2);')
     rendererContent = rendererContent.replace(/(this.showSaveDialog)\(([^\(\)]*?)\)/g, 'showFileSaveDialog($2);')
     rendererContent = rendererContent.replace(/([a-zA-Z]*)=([a-zA-Z]*\([1-9]*\))\.createInstance/g, '$1=window.dataStore=$2.createInstance')
     if (exportType === 'cordova') {
@@ -509,34 +508,6 @@ const archiver = require('archiver');
                     fileDialogObject.filePath = fileDialogObject.options.defaultPath;
                     resolve(fileDialogObject);
                 });
-              };
-              window.showFileLoadDialog = function (fileDialogObject) {
-                  return new Promise(function (resolve, reject) {
-                      // If opening a file
-                      if (fileDialogObject.properties.indexOf("openFile") !== -1) {
-                          var fileInput = document.createElement("input");
-                          fileInput.setAttribute("type", "file");
-                          fileInput.onchange = function() {
-                              try {
-                                var reader = new FileReader();
-                                reader.onload = function (theFile) {
-                                    psuedoFileSystem.writeFile("/uploads/" + fileInput.files[0].name, theFile.currentTarget.result, function (error) {
-                                        if (error) {
-                                            reject(error);
-                                        } else {
-                                            resolve({ filePaths: ["/uploads/" + fileInput.files[0].name] });
-                                        }
-                                    })
-                                }
-                                reader.readAsText(fileInput.files[0]);
-                              }
-                              catch (exception) {
-                                  reject(exception);
-                              }
-                          }
-                          fileInput.click();
-                      }
-                  });
               };
               window.play = function () {
                   if (currentVideo !== null) {
