@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import { mapActions } from 'vuex'
+import FtSettingsSection from '../ft-settings-section/ft-settings-section.vue'
 import FtCard from '../ft-card/ft-card.vue'
 import FtSelect from '../ft-select/ft-select.vue'
 import FtToggleSwitch from '../ft-toggle-switch/ft-toggle-switch.vue'
@@ -10,6 +11,7 @@ import FtPrompt from '../ft-prompt/ft-prompt.vue'
 export default Vue.extend({
   name: 'ThemeSettings',
   components: {
+    'ft-settings-section': FtSettingsSection,
     'ft-card': FtCard,
     'ft-select': FtSelect,
     'ft-toggle-switch': FtToggleSwitch,
@@ -107,6 +109,9 @@ export default Vue.extend({
         const colorName = colorVal.replace(/([A-Z])/g, ' $1').trim()
         return this.$t(`Settings.Theme Settings.Main Color Theme.${colorName}`)
       })
+    },
+    usingElectron: function () {
+      return process.env.IS_ELECTRON
     }
   },
   mounted: function () {
@@ -137,9 +142,7 @@ export default Vue.extend({
       this.updateDisableSmoothScrolling(
         this.disableSmoothScrollingToggleValue
       ).then(() => {
-        // FIXME: No electron safeguard
         const { ipcRenderer } = require('electron')
-
         ipcRenderer.send('relaunchRequest')
       })
     },

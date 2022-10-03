@@ -9,7 +9,6 @@ import { IpcChannels, DBActions, SyncEvents } from '../constants'
 import baseHandlers from '../datastores/handlers/base'
 
 if (process.argv.includes('--version')) {
-  console.log(`v${app.getVersion()}`)
   app.exit()
 } else {
   runApp()
@@ -27,6 +26,13 @@ function runApp() {
         click: () => {
           browserWindow.webContents.send('showVideoStatistics')
         }
+      },
+      {
+        label: 'Open in a New Window',
+        visible: parameters.linkURL.includes((new URL(browserWindow.webContents.getURL())).origin),
+        click: () => {
+          createWindow({ replaceMainWindow: false, windowStartupUrl: parameters.linkURL, showWindowNow: true })
+        }
       }
     ]
   })
@@ -38,11 +44,6 @@ function runApp() {
 
   let mainWindow
   let startupUrl
-
-  // CORS somehow gets re-enabled in Electron v9.0.4
-  // This line disables it.
-  // This line can possible be removed if the issue is fixed upstream
-  app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors')
 
   app.commandLine.appendSwitch('enable-accelerated-video-decode')
   app.commandLine.appendSwitch('enable-file-cookies')
@@ -165,11 +166,17 @@ function runApp() {
       require('vue-devtools').install()
       /* eslint-enable */
     } catch (err) {
-      console.log(err)
+      console.error(err)
     }
   }
 
-  async function createWindow({ replaceMainWindow = true, windowStartupUrl = null, showWindowNow = false } = { }) {
+  async function createWindow(
+    {
+      replaceMainWindow = true,
+      windowStartupUrl = null,
+      showWindowNow = false,
+      searchQueryText = null
+    } = { }) {
     // Syncing new window background to theme choice.
     const windowBackground = await baseHandlers.settings._findTheme().then(({ value }) => {
       switch (value) {
@@ -188,7 +195,7 @@ function runApp() {
           return nativeTheme.shouldUseDarkColors ? '#212121' : '#f1f1f1'
       }
     }).catch((error) => {
-      console.log(error)
+      console.error(error)
       // Default to nativeTheme settings if nothing is found.
       return nativeTheme.shouldUseDarkColors ? '#212121' : '#f1f1f1'
     })
@@ -251,7 +258,6 @@ function runApp() {
 
     const boundsDoc = await baseHandlers.settings._findBounds()
     if (typeof boundsDoc?.value === 'object') {
-      console.log({ boundsDoc })
       const { maximized, fullScreen, ...bounds } = boundsDoc.value
       const allDisplaysSummaryWidth = screen
         .getAllDisplays()
@@ -302,6 +308,12 @@ function runApp() {
         .replace(/\\/g, '\\\\')
     }
 
+    if (typeof searchQueryText === 'string' && searchQueryText.length > 0) {
+      ipcMain.once('searchInputHandlingReady', () => {
+        newWindow.webContents.send('updateSearchInputText', searchQueryText)
+      })
+    }
+
     // Show when loaded
     newWindow.once('ready-to-show', () => {
       if (newWindow.isVisible()) {
@@ -341,8 +353,6 @@ function runApp() {
         // Which raises "Object has been destroyed" error
         mainWindow = allWindows[0]
       }
-
-      console.log('closed')
     })
   }
 
@@ -394,7 +404,6 @@ function runApp() {
   })
 
   ipcMain.on(IpcChannels.ENABLE_PROXY, (_, url) => {
-    console.log(url)
     session.defaultSession.setProxy({
       proxyRules: url
     })
@@ -448,11 +457,12 @@ function runApp() {
     return powerSaveBlocker.start('prevent-display-sleep')
   })
 
-  ipcMain.on(IpcChannels.CREATE_NEW_WINDOW, (_e, { windowStartupUrl = null } = { }) => {
+  ipcMain.on(IpcChannels.CREATE_NEW_WINDOW, (_e, { windowStartupUrl = null, searchQueryText = null } = { }) => {
     createWindow({
       replaceMainWindow: false,
       showWindowNow: true,
-      windowStartupUrl: windowStartupUrl
+      windowStartupUrl: windowStartupUrl,
+      searchQueryText: searchQueryText
     })
   })
 

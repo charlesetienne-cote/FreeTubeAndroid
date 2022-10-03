@@ -3,7 +3,6 @@ import { mapActions } from 'vuex'
 import FtInput from '../ft-input/ft-input.vue'
 import FtSearchFilters from '../ft-search-filters/ft-search-filters.vue'
 import FtProfileSelector from '../ft-profile-selector/ft-profile-selector.vue'
-import $ from 'jquery'
 import debounce from 'lodash.debounce'
 import ytSuggest from 'youtube-suggest'
 
@@ -19,7 +18,7 @@ export default Vue.extend({
   data: () => {
     return {
       component: this,
-      windowWidth: 0,
+      showSearchContainer: true,
       showFilters: false,
       searchFilterValueChanged: false,
       historyIndex: 1,
@@ -77,12 +76,8 @@ export default Vue.extend({
     }
   },
   mounted: function () {
-    const appWidth = $(window).width()
-
-    if (appWidth <= 680) {
-      const searchContainer = $('.searchContainer').get(0)
-
-      searchContainer.style.display = 'none'
+    if (window.innerWidth <= 680) {
+      this.showSearchContainer = false
     }
 
     // Store is not up-to-date when the component mounts, so we use timeout.
@@ -92,33 +87,21 @@ export default Vue.extend({
       }
     }, 0)
 
-    window.addEventListener('resize', function (event) {
-      const width = event.srcElement.innerWidth
-      const searchContainer = $('.searchContainer').get(0)
-
-      if (width > 680) {
-        searchContainer.style.display = ''
-      } else if (!navigator.userAgent.match(/Mobile|Windows Phone|Lumia|Android|webOS|iPhone|iPod|Blackberry|PlayBook|BB10|Opera Mini|\bCrMo\/|Opera Mobi/i)) {
-        searchContainer.style.display = 'none'
-      }
+    window.addEventListener('resize', () => {
+      this.showSearchContainer = window.innerWidth > 680
     })
 
     this.debounceSearchResults = debounce(this.getSearchSuggestions, 200)
   },
   methods: {
     goToSearch: async function (query, { event }) {
-      const appWidth = $(window).width()
       const doCreateNewWindow = event && event.shiftKey
 
-      if (appWidth <= 680) {
-        const searchContainer = $('.searchContainer').get(0)
-        searchContainer.blur()
-        if (!navigator.userAgent.match(/Mobile|Windows Phone|Lumia|Android|webOS|iPhone|iPod|Blackberry|PlayBook|BB10|Opera Mini|\bCrMo\/|Opera Mobi/i)) {
-          searchContainer.style.display = 'none'
-        }
+      if (window.innerWidth <= 680) {
+        this.$refs.searchContainer.blur()
+        this.showSearchContainer = false
       } else {
-        const searchInput = $('.searchInput input').get(0)
-        searchInput.blur()
+        this.searchInput.blur()
       }
 
       this.getYoutubeUrlInfo(query).then((result) => {
@@ -157,7 +140,8 @@ export default Vue.extend({
             this.openInternalPath({
               path: `/search/${encodeURIComponent(searchQuery)}`,
               query,
-              doCreateNewWindow
+              doCreateNewWindow,
+              searchQueryText: searchQuery
             })
             break
           }
@@ -196,7 +180,8 @@ export default Vue.extend({
                 type: this.searchSettings.type,
                 duration: this.searchSettings.duration
               },
-              doCreateNewWindow
+              doCreateNewWindow,
+              searchQueryText: query
             })
           }
         }
@@ -207,7 +192,9 @@ export default Vue.extend({
     },
 
     focusSearch: function () {
-      this.searchInput.focus()
+      if (!this.hideSearchBar) {
+        this.searchInput.focus()
+      }
     },
 
     getSearchSuggestionsDebounce: function (query) {
@@ -255,9 +242,9 @@ export default Vue.extend({
       this.invidiousAPICall(searchPayload).then((results) => {
         this.searchSuggestionsDataList = results.suggestions
       }).catch((err) => {
-        console.log(err)
+        console.error(err)
         if (this.backendFallback) {
-          console.log(
+          console.error(
             'Error gettings search suggestions.  Falling back to Local API'
           )
           this.getSearchSuggestionsLocal(query)
@@ -266,14 +253,7 @@ export default Vue.extend({
     },
 
     toggleSearchContainer: function () {
-      const searchContainer = $('.searchContainer').get(0)
-
-      if (searchContainer.style.display === 'none') {
-        searchContainer.style.display = ''
-      } else {
-        searchContainer.style.display = 'none'
-      }
-
+      this.showSearchContainer = !this.showSearchContainer
       this.showFilters = false
     },
 
@@ -284,8 +264,8 @@ export default Vue.extend({
     navigateHistory: function() {
       if (!this.isForwardOrBack) {
         this.historyIndex = window.history.length
-        $('#historyArrowBack').removeClass('fa-arrow-left')
-        $('#historyArrowForward').addClass('fa-arrow-right')
+        this.$refs.historyArrowBack.classList.remove('fa-arrow-left')
+        this.$refs.historyArrowForward.classList.add('fa-arrow-right')
       } else {
         this.isForwardOrBack = false
       }
@@ -297,9 +277,9 @@ export default Vue.extend({
 
       if (this.historyIndex > 1) {
         this.historyIndex--
-        $('#historyArrowForward').removeClass('fa-arrow-right')
+        this.$refs.historyArrowForward.classList.remove('fa-arrow-right')
         if (this.historyIndex === 1) {
-          $('#historyArrowBack').addClass('fa-arrow-left')
+          this.$refs.historyArrowBack.classList.add('fa-arrow-left')
         }
       }
     },
@@ -310,10 +290,10 @@ export default Vue.extend({
 
       if (this.historyIndex < window.history.length) {
         this.historyIndex++
-        $('#historyArrowBack').removeClass('fa-arrow-left')
+        this.$refs.historyArrowBack.classList.remove('fa-arrow-left')
 
         if (this.historyIndex === window.history.length) {
-          $('#historyArrowForward').addClass('fa-arrow-right')
+          this.$refs.historyArrowForward.classList.add('fa-arrow-right')
         }
       }
     },
@@ -322,7 +302,7 @@ export default Vue.extend({
       this.$store.commit('toggleSideNav')
     },
 
-    openInternalPath: function({ path, doCreateNewWindow, query = {} }) {
+    openInternalPath: function({ path, doCreateNewWindow, query = {}, searchQueryText = null }) {
       if (process.env.IS_ELECTRON && doCreateNewWindow) {
         const { ipcRenderer } = require('electron')
 
@@ -332,7 +312,8 @@ export default Vue.extend({
           `#${path}?${(new URLSearchParams(query)).toString()}`
         ].join('')
         ipcRenderer.send(IpcChannels.CREATE_NEW_WINDOW, {
-          windowStartupUrl: newWindowStartupURL
+          windowStartupUrl: newWindowStartupURL,
+          searchQueryText
         })
       } else {
         // Web
@@ -356,6 +337,9 @@ export default Vue.extend({
     },
     hideFilters: function () {
       this.showFilters = false
+    },
+    updateSearchInputText: function(text) {
+      this.$refs.searchInput.updateInputData(text)
     },
     ...mapActions([
       'showToast',

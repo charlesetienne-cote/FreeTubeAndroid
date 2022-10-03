@@ -75,7 +75,6 @@ const archiver = require('archiver');
       await addCordovaPlugin('cordova-clipboard')
 
       await addNpmPackage('browserify')
-      await addNpmPackage('https://github.com/jvilk/BrowserFS.git')
 
       if (await fsExists(wwwroot)) {
         await fsRm(wwwroot, { recursive: true, force: true })
@@ -118,52 +117,10 @@ const archiver = require('archiver');
     if (process.argv.length > 5) {
       keystorePassphrase = process.argv[5]
     }
-    const browserfsPath = path.join(distDirectory, 'www/browserfs')
     // Copy dist folder into cordova project;
     console.log('Copying dist output to cordova outline')
-    await fsCopy(path.join(sourceDirectory, 'dist'), wwwroot, { recursive: true, force: true })
+    await fsCopy(path.join(sourceDirectory, 'dist', 'web'), wwwroot, { recursive: true, force: true })
 
-    console.log('Write static archive for browserfs')
-    const staticArchive = archiver('zip')
-    const output = fs.createWriteStream(path.join(wwwroot, 'static.zip'))
-    staticArchive.pipe(output)
-    staticArchive.directory(path.join(wwwroot, 'static'), false)
-    staticArchive.finalize()
-    // Wait until finished making zip
-    await new Promise(function (resolve, reject) {
-      output.on('close', function () {
-        resolve()
-      })
-      output.on('error', function (error) {
-        reject(error)
-      })
-    })
-    try {
-      // Cleaning up the wwwroot directory
-      await fsRm(path.join(wwwroot, 'static'), { recursive: true, force: true })
-      await fsRm(path.join(wwwroot, 'web/static'), { recursive: true, force: true })
-    } catch (exception) {
-      console.warn(exception);
-    }
-    console.log('Copying browserfs dist to cordova www folder')
-    await fsCopy(path.join(distDirectory, 'node_modules/browserfs'), path.join(wwwroot, 'browserfs'), { recursive: true, force: true })
-    const browserifyConfig = {
-      // Override Browserify's builtins for buffer/fs/path.
-      builtins: Object.assign({}, require(path.join(distDirectory, 'node_modules/browserify/lib/builtins')), {
-        buffer: require.resolve(path.join(wwwroot, 'browserfs/dist/shims/buffer.js')),
-        fs: require.resolve(path.join(wwwroot, 'browserfs/dist/shims/fs.js')),
-        path: require.resolve(path.join(wwwroot, 'browserfs/dist/shims/path.js'))
-      }),
-      insertGlobalVars: {
-        // process, Buffer, and BrowserFS globals.
-        // BrowserFS global is not required if you include browserfs.js
-        // in a script tag.
-        process: function () { return "require('browserfs/dist/shims/process.js')" },
-        Buffer: function () { return "require('buffer').Buffer" },
-        BrowserFS: function() { return "require('" + browserfsPath + "')" }
-      }
-    }
-    destinationPackage.browserify = browserifyConfig
     console.log('Writing package.json in cordova project')
     await fsWriteFile(destinationPackageUri, JSON.stringify(destinationPackage, null, 2))
 
@@ -180,7 +137,6 @@ const archiver = require('archiver');
     // this is a POC, random changes to the codebase break these regex all the time
     rendererContent = rendererContent.replace(/([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, 'fileSystem$2')
     rendererContent = rendererContent.replace(/\)([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, ';fileSystem$2')
-    rendererContent = rendererContent.replace(/(this.showOpenDialog)\(([^\(\)]*?)\)/g, 'showFileLoadDialog($2);')
     rendererContent = rendererContent.replace(/(this.showSaveDialog)\(([^\(\)]*?)\)/g, 'showFileSaveDialog($2);')
     rendererContent = rendererContent.replace(/([a-zA-Z]*)=([a-zA-Z]*\([1-9]*\))\.createInstance/g, '$1=window.dataStore=$2.createInstance')
     if (exportType === 'cordova') {
@@ -190,7 +146,7 @@ const archiver = require('archiver');
       rendererContent = rendererContent.replaceAll("createNewWindow:function(){", "createNewWindow: window.createNewWindow, electronNewWindow:function(){")
     }
     /* eslint-enable no-useless-escape */
-    console.log('Setting up browserfs in the renderer')
+    console.log('Setting up the renderer')
     await fsWriteFile(path.join(wwwroot, 'renderer.js'), `(async function () {
             ` + ((exportType === 'cordova')
         ? `
@@ -373,43 +329,7 @@ const archiver = require('archiver');
               
             }, 500);`
         : '') +
-            `BrowserFS.install(window);
-            var staticData = await (await fetch('static.zip')).arrayBuffer();
-            // Configure the browserfs before the renderer code
-            await new Promise(function (resolve, reject) {
-                BrowserFS.configure({
-                    fs: "MountableFileSystem",
-                    options: {
-                        "/static": {
-                            fs: "ZipFS",
-                            options: {
-                                zipData: Buffer.from(staticData)
-                            }
-                        },
-                        "/www": {
-                            fs: "MountableFileSystem",
-                            options: {
-                                "/static": {
-                                    fs: "ZipFS",
-                                    options: {
-                                        zipData: Buffer.from(staticData)
-                                    }
-                                }
-                            }
-                        },
-                        "/uploads": {
-                            fs: "InMemory"
-                        }
-                    }
-                }, function(e) {
-                    if (e) {
-                    reject(e);
-                    } else {
-                    resolve();
-                    }
-                });
-            });
-            var psuedoFileSystem = require("fs");
+            `
             window.fileSystem = {
                 writeFile: function (pathlike, content, cb) {
                     download(pathlike, content).then(cb);
@@ -417,21 +337,12 @@ const archiver = require('archiver');
                 writeFileSync: function (pathlike, content) {
                     download(pathlike, content);
                 },
-                readFile: function (pathlike, cb) {
-                    if (pathlike.startsWith("null/") || pathlike.startsWith("/null/")) {
-                        // If the pathlike starts with null, it mean we are trying to read from the localforage
-                        var pathParts = pathlike.split("/");
-                        var pathEnd = pathParts[pathParts.length - 1];
-                        dataStore.getItem(pathEnd, cb);
-                    } else {
-                        psuedoFileSystem.readFile(pathlike, cb);
-                    }
-                },
-                readFileSync: psuedoFileSystem.readFileSync,
-                readdirSync: psuedoFileSystem.readdirSync,
-                readdir: psuedoFileSystem.readdir,
-                exists: psuedoFileSystem.exists,
-                existsSync: psuedoFileSystem.existsSync
+                readFile: () => null,
+                readFileSync: () => null,
+                readdirSync: () => null,
+                readdir: () => null,
+                exists: () => null,
+                existsSync: () => null
             }
             
             function download(filename, textInput) {
@@ -510,34 +421,6 @@ const archiver = require('archiver');
                     resolve(fileDialogObject);
                 });
               };
-              window.showFileLoadDialog = function (fileDialogObject) {
-                  return new Promise(function (resolve, reject) {
-                      // If opening a file
-                      if (fileDialogObject.properties.indexOf("openFile") !== -1) {
-                          var fileInput = document.createElement("input");
-                          fileInput.setAttribute("type", "file");
-                          fileInput.onchange = function() {
-                              try {
-                                var reader = new FileReader();
-                                reader.onload = function (theFile) {
-                                    psuedoFileSystem.writeFile("/uploads/" + fileInput.files[0].name, theFile.currentTarget.result, function (error) {
-                                        if (error) {
-                                            reject(error);
-                                        } else {
-                                            resolve({ filePaths: ["/uploads/" + fileInput.files[0].name] });
-                                        }
-                                    })
-                                }
-                                reader.readAsText(fileInput.files[0]);
-                              }
-                              catch (exception) {
-                                  reject(exception);
-                              }
-                          }
-                          fileInput.click();
-                      }
-                  });
-              };
               window.play = function () {
                   if (currentVideo !== null) {
                       currentVideo.play();
@@ -575,7 +458,7 @@ const archiver = require('archiver');
     await fsWriteFile(path.join(wwwroot, 'renderer.js'), content)
 
     let indexContent = (await fsReadFile(path.join(wwwroot, 'index.html'))).toString()
-    indexContent = indexContent.replace('</title>', '</title><link rel="shortcut icon" href="./_icons/icon.ico" /><script src="browserfs/dist/browserfs.js"></script>')
+    indexContent = indexContent.replace('</title>', '</title><link rel="shortcut icon" href="./_icons/icon.ico" />')
     if (exportType === 'cordova') {
       indexContent = indexContent.replace('</title>', '</title><script src="cordova.js"></script>')
     }

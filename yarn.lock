@@ -967,11 +967,6 @@
     "minimatch" "^3.0.4"
     "strip-json-comments" "^3.1.1"
 
-"@evilmartians/lefthook@^1.0.5":
-  "integrity" "sha512-5C/AD937A6jz4mdBLAKXIeYVkxvLmPWxlv1YWfuHcIwZ2wp4W3z1Htjjtp+7gtO41CoCycIJcaxLfwaAsbS6qA=="
-  "resolved" "https://registry.npmjs.org/@evilmartians/lefthook/-/lefthook-1.1.1.tgz"
-  "version" "1.1.1"
-
 "@fortawesome/fontawesome-common-types@^0.2.36":
   "integrity" "sha512-a/7BiSgobHAgBWeN7N0w+lAhInrGxksn13uK7231n2m8EDPE3BMCl9NZLTGrj9ZXfCmC6LM0QLqXidIizVQ6yg=="
   "resolved" "https://registry.npmjs.org/@fortawesome/fontawesome-common-types/-/fontawesome-common-types-0.2.36.tgz"
@@ -3554,10 +3549,10 @@
     "update-notifier" "^5.1.0"
     "yargs" "^17.0.1"
 
-"electron-context-menu@^3.1.2":
-  "integrity" "sha512-nNzu4w14n7mOR+4cLjRC9cEFqGUsAY76seOm0sw3f4OxEfX/d75m7HYekyp5b+0m7Ixy2KN/Mrljw1zLmpyV2w=="
-  "resolved" "https://registry.npmjs.org/electron-context-menu/-/electron-context-menu-3.1.2.tgz"
-  "version" "3.1.2"
+"electron-context-menu@^3.5.0":
+  "integrity" "sha512-z4agpok6YnXlGFs66zU9EBFft4llUFJ41NYFEMMS0fnprMKBztJUCHBA6LMAqJgjabfqsYC7kxlvjvepxodOqg=="
+  "resolved" "https://registry.npmjs.org/electron-context-menu/-/electron-context-menu-3.5.0.tgz"
+  "version" "3.5.0"
   dependencies:
     "cli-truncate" "^2.1.0"
     "electron-dl" "^3.2.1"
@@ -5605,6 +5600,23 @@
   "version" "1.0.1"
   dependencies:
     "readable-stream" "^2.0.5"
+
+"lefthook-windows-x64@1.1.1":
+  "integrity" "sha512-zOI1iCnc5U7LS7nHj2raneeviSYHLXzgksrV7Ain+W1F6bYpS+1k5PqCQuLfEspsQYfJGiJo1SeueIcoIzqtiQ=="
+  "resolved" "https://registry.npmjs.org/lefthook-windows-x64/-/lefthook-windows-x64-1.1.1.tgz"
+  "version" "1.1.1"
+
+"lefthook@^1.1.1":
+  "integrity" "sha512-IRhJHWEwLlN+FHJnIBamgaIcr53C4iskN+uZ3yzqhoFcaO7kWtmzW3DIPCB48mzlCIOFnjfPvVLX0SyPdkWQCw=="
+  "resolved" "https://registry.npmjs.org/lefthook/-/lefthook-1.1.1.tgz"
+  "version" "1.1.1"
+  optionalDependencies:
+    "lefthook-darwin-arm64" "1.1.1"
+    "lefthook-darwin-x64" "1.1.1"
+    "lefthook-linux-arm64" "1.1.1"
+    "lefthook-linux-x64" "1.1.1"
+    "lefthook-windows-arm64" "1.1.1"
+    "lefthook-windows-x64" "1.1.1"
 
 "levn@^0.4.1":
   "integrity" "sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ=="
@@ -9287,10 +9299,10 @@
   dependencies:
     "axios" "^0.27.2"
 
-"yt-dash-manifest-generator@1.1.0":
-  "integrity" "sha512-kLYeroH5LmdlvoRf4PrYyzgR5+tFaB1COSsLOjKHPnDvHQ+0Vp+c258TYR0WQp2RNpW57DYci9WG3O8+b1FQzQ=="
-  "resolved" "https://registry.npmjs.org/yt-dash-manifest-generator/-/yt-dash-manifest-generator-1.1.0.tgz"
-  "version" "1.1.0"
+"yt-dash-manifest-generator@2.0.0":
+  "integrity" "sha512-U0f+kxJS3ZJj3n50g6n98+Rrbj/Ypl1uY39QEIpcj3wCp2w4Gs/pGEOYYMbipvKtTH2+wRwx44CksvxXrwX7SQ=="
+  "resolved" "https://registry.npmjs.org/yt-dash-manifest-generator/-/yt-dash-manifest-generator-2.0.0.tgz"
+  "version" "2.0.0"
   dependencies:
     "xml-js" "^1.6.11"
     "ytdl-core" "^3.2.2"

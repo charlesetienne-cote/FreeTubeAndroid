@@ -8,6 +8,7 @@ import FtCard from '../../components/ft-card/ft-card.vue'
 import FtElementList from '../../components/ft-element-list/ft-element-list.vue'
 import FtVideoPlayer from '../../components/ft-video-player/ft-video-player.vue'
 import WatchVideoInfo from '../../components/watch-video-info/watch-video-info.vue'
+import WatchVideoChapters from '../../components/watch-video-chapters/watch-video-chapters.vue'
 import WatchVideoDescription from '../../components/watch-video-description/watch-video-description.vue'
 import WatchVideoComments from '../../components/watch-video-comments/watch-video-comments.vue'
 import WatchVideoLiveChat from '../../components/watch-video-live-chat/watch-video-live-chat.vue'
@@ -15,6 +16,8 @@ import WatchVideoPlaylist from '../../components/watch-video-playlist/watch-vide
 import WatchVideoRecommendations from '../../components/watch-video-recommendations/watch-video-recommendations.vue'
 import FtAgeRestricted from '../../components/ft-age-restricted/ft-age-restricted.vue'
 import i18n from '../../i18n/index'
+
+const isDev = process.env.NODE_ENV === 'development'
 
 export default Vue.extend({
   name: 'Watch',
@@ -24,6 +27,7 @@ export default Vue.extend({
     'ft-element-list': FtElementList,
     'ft-video-player': FtVideoPlayer,
     'watch-video-info': WatchVideoInfo,
+    'watch-video-chapters': WatchVideoChapters,
     'watch-video-description': WatchVideoDescription,
     'watch-video-comments': WatchVideoComments,
     'watch-video-live-chat': WatchVideoLiveChat,
@@ -61,6 +65,8 @@ export default Vue.extend({
       videoLikeCount: 0,
       videoDislikeCount: 0,
       videoLengthSeconds: 0,
+      videoChapters: [],
+      videoCurrentChapterIndex: 0,
       channelName: '',
       channelThumbnail: '',
       channelId: '',
@@ -86,9 +92,6 @@ export default Vue.extend({
     }
   },
   computed: {
-    isDev: function () {
-      return process.env.NODE_ENV === 'development'
-    },
     historyCache: function () {
       return this.$store.getters.getHistoryCache
     },
@@ -164,6 +167,9 @@ export default Vue.extend({
     },
     currentLocale: function () {
       return i18n.locale.replace('_', '-')
+    },
+    hideChapters: function () {
+      return this.$store.getters.getHideChapters
     }
   },
   watch: {
@@ -245,8 +251,6 @@ export default Vue.extend({
 
       this.ytGetVideoInformation(this.videoId)
         .then(async result => {
-          console.log(result)
-
           const playabilityStatus = result.player_response.playabilityStatus
           if (playabilityStatus.status === 'UNPLAYABLE') {
             const errorScreen = playabilityStatus.errorScreen.playerErrorMessageRenderer
@@ -284,7 +288,6 @@ export default Vue.extend({
           if ('id' in result.videoDetails.author) {
             this.channelId = result.player_response.videoDetails.channelId
             this.channelName = result.videoDetails.author.name
-            console.log(result)
             if (result.videoDetails.author.thumbnails.length > 0) {
               this.channelThumbnail = result.videoDetails.author.thumbnails[0].url
             }
@@ -374,6 +377,34 @@ export default Vue.extend({
             }
           }
 
+          const chapters = []
+          if (!this.hideChapters) {
+            const rawChapters = result.response.playerOverlays.playerOverlayRenderer.decoratedPlayerBarRenderer?.decoratedPlayerBarRenderer.playerBar?.multiMarkersPlayerBarRenderer.markersMap.find(m => m.key === 'DESCRIPTION_CHAPTERS')?.value.chapters
+            if (rawChapters) {
+              for (const { chapterRenderer } of rawChapters) {
+                const start = chapterRenderer.timeRangeStartMillis / 1000
+
+                chapters.push({
+                  title: chapterRenderer.title.simpleText,
+                  timestamp: this.formatSecondsAsTimestamp(start),
+                  startSeconds: start,
+                  endSeconds: 0,
+                  thumbnail: chapterRenderer.thumbnail.thumbnails[0].url
+                })
+              }
+
+              this.addChaptersEndSeconds(chapters, result.videoDetails.lengthSeconds)
+
+              // prevent vue from adding reactivity which isn't needed
+              // as the chapter objects are read-only after this anyway
+              // the chapters are checked for every timeupdate event that the player emits
+              // this should lessen the performance and memory impact of the chapters
+              chapters.forEach(Object.freeze)
+            }
+          }
+          // only set this at the end so that there is only a single update to the view
+          this.videoChapters = chapters
+
           if ((this.isLive && this.isLiveContent) && !this.isUpcoming) {
             this.enableLegacyFormat()
 
@@ -415,40 +446,47 @@ export default Vue.extend({
 
             if (typeof startTimestamp !== 'undefined') {
               const upcomingTimestamp = new Date(result.videoDetails.liveBroadcastDetails.startTimestamp)
-              this.upcomingTimestamp = upcomingTimestamp.toLocaleString()
+              const timestampOptions = {
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+              }
+              if (new Date().getFullYear() < upcomingTimestamp.getFullYear()) {
+                Object.defineProperty(timestampOptions, 'year', {
+                  value: 'numeric'
+                })
+              }
+              this.upcomingTimestamp = Intl.DateTimeFormat(this.currentLocale, timestampOptions).format(upcomingTimestamp)
 
               let upcomingTimeLeft = upcomingTimestamp - new Date()
 
               // Convert from ms to second to minute
               upcomingTimeLeft = (upcomingTimeLeft / 1000) / 60
-              let timeUnitI18nPartialKey = 'Minute'
+              let timeUnit = 'minute'
 
               // Youtube switches to showing time left in minutes at 120 minutes remaining
               if (upcomingTimeLeft > 120) {
                 upcomingTimeLeft = upcomingTimeLeft / 60
-                timeUnitI18nPartialKey = 'Hour'
+                timeUnit = 'hour'
               }
 
-              if (timeUnitI18nPartialKey === 'Hour' && upcomingTimeLeft > 24) {
+              if (timeUnit === 'hour' && upcomingTimeLeft > 24) {
                 upcomingTimeLeft = upcomingTimeLeft / 24
-                timeUnitI18nPartialKey = 'Day'
+                timeUnit = 'day'
               }
 
               // Value after decimal not to be displayed
               // e.g. > 2 days = display as `2 days`
               upcomingTimeLeft = Math.floor(upcomingTimeLeft)
-              if (upcomingTimeLeft !== 1) {
-                timeUnitI18nPartialKey = timeUnitI18nPartialKey + 's'
-              }
-              const timeUnitTranslated = this.$t(`Video.Published.${timeUnitI18nPartialKey}`).toLowerCase()
 
               // Displays when less than a minute remains
               // Looks better than `Premieres in x seconds`
               if (upcomingTimeLeft < 1) {
-                this.upcomingTimeLeft = this.$t('Video.Published.Less than a minute').toLowerCase()
+                this.upcomingTimeLeft = this.$t('Video.Published.In less than a minute').toLowerCase()
               } else {
                 // TODO a I18n entry for time format might be needed here
-                this.upcomingTimeLeft = `${upcomingTimeLeft} ${timeUnitTranslated}`
+                this.upcomingTimeLeft = new Intl.RelativeTimeFormat(this.currentLocale).format(upcomingTimeLeft, timeUnit)
               }
             } else {
               this.upcomingTimestamp = null
@@ -596,7 +634,7 @@ export default Vue.extend({
               this.copyToClipboard({ content: err })
             }
           })
-          console.log(err)
+          console.error(err)
           if (this.backendPreference === 'local' && this.backendFallback && !err.toString().includes('private')) {
             this.showToast({
               message: this.$t('Falling back to Invidious API')
@@ -618,8 +656,6 @@ export default Vue.extend({
 
       this.invidiousGetVideoInformation(this.videoId)
         .then(result => {
-          console.log(result)
-
           if (result.error) {
             throw new Error(result.error)
           }
@@ -681,6 +717,48 @@ export default Vue.extend({
               this.thumbnail = result.videoThumbnails[0].url
               break
           }
+
+          const chapters = []
+          if (!this.hideChapters) {
+            // HH:MM:SS Text
+            // MM:SS Text
+            // HH:MM:SS - Text // separator is one of '-', '–', '•', '—'
+            // MM:SS - Text
+            // HH:MM:SS - HH:MM:SS - Text // end timestamp is ignored, separator is one of '-', '–', '—'
+            // HH:MM - HH:MM - Text // end timestamp is ignored
+            const chapterMatches = result.description.matchAll(/^(?<timestamp>((?<hours>[0-9]+):)?(?<minutes>[0-9]+):(?<seconds>[0-9]+))(\s*[-–—]\s*(?:[0-9]+:)?[0-9]+:[0-9]+)?\s+([-–•—]\s*)?(?<title>.+)$/gm)
+
+            for (const { groups } of chapterMatches) {
+              let start = 60 * Number(groups.minutes) + Number(groups.seconds)
+
+              if (groups.hours) {
+                start += 3600 * Number(groups.hours)
+              }
+
+              // replace previous chapter with current one if they have an identical start time
+              if (chapters.length > 0 && chapters[chapters.length - 1].startSeconds === start) {
+                chapters.pop()
+              }
+
+              chapters.push({
+                title: groups.title.trim(),
+                timestamp: groups.timestamp,
+                startSeconds: start,
+                endSeconds: 0
+              })
+            }
+
+            if (chapters.length > 0) {
+              this.addChaptersEndSeconds(chapters, result.lengthSeconds)
+
+              // prevent vue from adding reactivity which isn't needed
+              // as the chapter objects are read-only after this anyway
+              // the chapters are checked for every timeupdate event that the player emits
+              // this should lessen the performance and memory impact of the chapters
+              chapters.forEach(Object.freeze)
+            }
+          }
+          this.videoChapters = chapters
 
           if (this.isLive) {
             this.showLegacyPlayer = true
@@ -773,6 +851,7 @@ export default Vue.extend({
           this.isLoading = false
         })
         .catch(err => {
+          console.error(err)
           const errorMessage = this.$t('Invidious API Error (Click to copy)')
           this.showToast({
             message: `${errorMessage}: ${err.responseText}`,
@@ -781,7 +860,7 @@ export default Vue.extend({
               this.copyToClipboard({ content: err.responseText })
             }
           })
-          console.log(err)
+          console.error(err)
           if (this.backendPreference === 'invidious' && this.backendFallback) {
             this.showToast({
               message: this.$t('Falling back to Local API')
@@ -843,6 +922,30 @@ export default Vue.extend({
       }
     },
 
+    addChaptersEndSeconds: function (chapters, videoLengthSeconds) {
+      for (let i = 0; i < chapters.length - 1; i++) {
+        chapters[i].endSeconds = chapters[i + 1].startSeconds
+      }
+      chapters.at(-1).endSeconds = videoLengthSeconds
+    },
+
+    updateCurrentChapter: function () {
+      const chapters = this.videoChapters
+      const currentSeconds = this.getTimestamp()
+      const currentChapterStart = chapters[this.videoCurrentChapterIndex].startSeconds
+
+      if (currentSeconds !== currentChapterStart) {
+        let i = currentSeconds < currentChapterStart ? 0 : this.videoCurrentChapterIndex
+
+        for (; i < chapters.length; i++) {
+          if (currentSeconds < chapters[i].endSeconds) {
+            this.videoCurrentChapterIndex = i
+            break
+          }
+        }
+      }
+    },
+
     addToHistory: function (watchProgress) {
       const videoData = {
         videoId: this.videoId,
@@ -882,8 +985,6 @@ export default Vue.extend({
       const historyIndex = this.historyCache.findIndex((video) => {
         return video.videoId === this.videoId
       })
-
-      console.log(historyIndex)
 
       if (!this.isLive) {
         if (this.timestamp) {
@@ -952,7 +1053,7 @@ export default Vue.extend({
               this.copyToClipboard({ content: err })
             }
           })
-          console.log(err)
+          console.error(err)
           if (!process.env.IS_ELECTRON || (this.backendPreference === 'local' && this.backendFallback)) {
             this.showToast({
               message: this.$t('Falling back to Invidious API')
@@ -1098,6 +1199,7 @@ export default Vue.extend({
 
       clearTimeout(this.playNextTimeout)
       clearInterval(this.playNextCountDownIntervalId)
+      this.videoChapters = []
 
       this.handleWatchProgress()
 
@@ -1126,7 +1228,7 @@ export default Vue.extend({
 
       if (this.removeVideoMetaFiles) {
         const userData = await this.getUserDataPath()
-        if (this.isDev) {
+        if (isDev) {
           const dashFileLocation = `static/dashFiles/${videoId}.xml`
           const vttFileLocation = `static/storyboards/${videoId}.vtt`
           // only delete the file it actually exists
@@ -1151,14 +1253,14 @@ export default Vue.extend({
     },
 
     handleVideoError: function (error) {
-      console.log(error)
+      console.error(error)
       if (this.isLive) {
         return
       }
 
       if (error.code === 4) {
         if (this.activeFormat === 'dash') {
-          console.log(
+          console.warn(
             'Unable to play dash formats.  Reverting to legacy formats...'
           )
           this.enableLegacyFormat()
@@ -1173,7 +1275,7 @@ export default Vue.extend({
       const userData = await this.getUserDataPath()
       let fileLocation
       let uriSchema
-      if (this.isDev) {
+      if (isDev) {
         fileLocation = `static/dashFiles/${this.videoId}.xml`
         uriSchema = `dashFiles/${this.videoId}.xml`
         // if the location does not exist, writeFileSync will not create the directory, so we have to do that manually
@@ -1254,7 +1356,7 @@ export default Vue.extend({
 
         // Dev mode doesn't have access to the file:// schema, so we access
         // storyboards differently when run in dev
-        if (this.isDev) {
+        if (isDev) {
           fileLocation = `static/storyboards/${this.videoId}.vtt`
           uriSchema = `storyboards/${this.videoId}.vtt`
           // if the location does not exist, writeFileSync will not create the directory, so we have to do that manually
@@ -1400,6 +1502,38 @@ export default Vue.extend({
 
     updateTitle: function () {
       document.title = `${this.videoTitle} - FreeTube`
+    },
+
+    formatSecondsAsTimestamp(time) {
+      if (time === 0) {
+        return '0:00'
+      }
+
+      let hours = 0
+
+      if (time >= 3600) {
+        hours = Math.floor(time / 3600)
+        time = time - hours * 3600
+      }
+
+      let minutes = Math.floor(time / 60)
+      if (minutes < 10 && hours > 0) {
+        minutes = '0' + minutes
+      }
+
+      let seconds = time - minutes * 60
+      if (seconds < 10) {
+        seconds = '0' + seconds
+      }
+
+      let timestamp = ''
+      if (hours > 0) {
+        timestamp = hours + ':' + minutes + ':' + seconds
+      } else {
+        timestamp = minutes + ':' + seconds
+      }
+
+      return timestamp
     },
 
     ...mapActions([

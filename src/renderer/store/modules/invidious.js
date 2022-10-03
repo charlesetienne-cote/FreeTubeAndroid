@@ -1,4 +1,3 @@
-import $ from 'jquery'
 import fs from 'fs'
 
 const state = {
@@ -22,7 +21,7 @@ const getters = {
 }
 
 const actions = {
-  async fetchInvidiousInstances({ commit }, payload) {
+  async fetchInvidiousInstances({ commit }) {
     const requestUrl = 'https://api.invidious.io/instances.json'
 
     let instances = []
@@ -45,13 +44,16 @@ const actions = {
       })
     } catch (err) {
       console.error(err)
+    }
+    // If the invidious instance fetch isn't returning anything interpretable
+    if (instances.length === 0) {
       // Starts fallback strategy: read from static file
       // And fallback to hardcoded entry(s) if static file absent
       const fileName = 'invidious-instances.json'
       /* eslint-disable-next-line */
-      const fileLocation = payload.isDev ? './static/' : `${__dirname}/static/`
+      const fileLocation = process.env.NODE_ENV === 'development' ? './static/' : `${__dirname}/static/`
       if (fs.existsSync(`${fileLocation}${fileName}`)) {
-        console.log('reading static file for invidious instances')
+        console.warn('reading static file for invidious instances')
         const fileData = fs.readFileSync(`${fileLocation}${fileName}`)
         instances = JSON.parse(fileData).map((entry) => {
           return entry.url
@@ -64,7 +66,6 @@ const actions = {
         ]
       }
     }
-
     commit('setInvidiousInstancesList', instances)
   },
 
@@ -76,7 +77,7 @@ const actions = {
 
   invidiousAPICall({ commit, state }, payload) {
     return new Promise((resolve, reject) => {
-      const requestUrl = state.currentInvidiousInstance + '/api/v1/' + payload.resource + '/' + payload.id + '?' + $.param(payload.params)
+      const requestUrl = state.currentInvidiousInstance + '/api/v1/' + payload.resource + '/' + payload.id + '?' + new URLSearchParams(payload.params).toString()
 
       fetch(requestUrl)
         .then((response) => response.json())
@@ -108,8 +109,7 @@ const actions = {
       dispatch('invidiousAPICall', payload).then((response) => {
         resolve(response)
       }).catch((xhr) => {
-        console.log('found an error')
-        console.log(xhr)
+        console.error(xhr)
         commit('toggleIsGetChannelInfoRunning')
         reject(xhr)
       })
@@ -121,8 +121,7 @@ const actions = {
       dispatch('invidiousAPICall', payload).then((response) => {
         resolve(response)
       }).catch((xhr) => {
-        console.log('found an error')
-        console.log(xhr)
+        console.error(xhr)
         commit('toggleIsGetChannelInfoRunning')
         reject(xhr)
       })
@@ -140,8 +139,7 @@ const actions = {
       dispatch('invidiousAPICall', payload).then((response) => {
         resolve(response)
       }).catch((xhr) => {
-        console.log('found an error')
-        console.log(xhr)
+        console.error(xhr)
         reject(xhr)
       })
     })

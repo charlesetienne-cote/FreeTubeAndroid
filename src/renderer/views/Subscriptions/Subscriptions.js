@@ -28,7 +28,8 @@ export default Vue.extend({
       isLoading: false,
       dataLimit: 100,
       videoList: [],
-      errorChannels: []
+      errorChannels: [],
+      attemptedFetch: false
     }
   },
   computed: {
@@ -86,6 +87,9 @@ export default Vue.extend({
 
     hideLiveStreams: function() {
       return this.$store.getters.getHideLiveStreams
+    },
+    fetchSubscriptionsAutomatically: function() {
+      return this.$store.getters.getFetchSubscriptionsAutomatically
     }
   },
   watch: {
@@ -120,10 +124,12 @@ export default Vue.extend({
       }
 
       this.isLoading = false
-    } else {
+    } else if (this.fetchSubscriptionsAutomatically) {
       setTimeout(async () => {
         this.getSubscriptions()
       }, 300)
+    } else {
+      this.isLoading = false
     }
   },
   methods: {
@@ -149,6 +155,7 @@ export default Vue.extend({
       this.isLoading = true
       this.updateShowProgressBar(true)
       this.setProgressBarPercentage(0)
+      this.attemptedFetch = true
 
       let videoList = []
       let channelCount = 0
@@ -230,8 +237,13 @@ export default Vue.extend({
           }
         }))
         this.isLoading = false
-      } else {
+      } else if (this.fetchSubscriptionsAutomatically) {
         this.getSubscriptions()
+      } else if (this.activeProfile._id === this.profileSubscriptions.activeProfile) {
+        this.videoList = this.profileSubscriptions.videoList
+      } else {
+        this.videoList = []
+        this.attemptedFetch = false
       }
     },
 
@@ -254,7 +266,7 @@ export default Vue.extend({
 
           resolve(videos)
         }).catch((err) => {
-          console.log(err)
+          console.error(err)
           const errorMessage = this.$t('Local API Error (Click to copy)')
           this.showToast({
             message: `${errorMessage}: ${err}`,
@@ -313,7 +325,7 @@ export default Vue.extend({
 
           resolve(items)
         }).catch((err) => {
-          console.log(err)
+          console.error(err)
           if (err.toString().match(/404/)) {
             this.errorChannels.push(channel)
             resolve([])
@@ -365,7 +377,7 @@ export default Vue.extend({
             return video
           })))
         }).catch((err) => {
-          console.log(err)
+          console.error(err)
           const errorMessage = this.$t('Invidious API Error (Click to copy)')
           this.showToast({
             message: `${errorMessage}: ${err.responseText}`,
@@ -416,7 +428,7 @@ export default Vue.extend({
             return video
           })))
         }).catch((err) => {
-          console.log(err)
+          console.error(err)
           const errorMessage = this.$t('Invidious API Error (Click to copy)')
           this.showToast({
             message: `${errorMessage}: ${err}`,

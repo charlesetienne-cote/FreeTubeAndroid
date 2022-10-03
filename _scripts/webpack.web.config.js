@@ -6,6 +6,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const JsonMinimizerPlugin = require('json-minimizer-webpack-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
+const ProcessLocalesPlugin = require('./ProcessLocalesPlugin')
 
 const { productName } = require('../package.json')
 
@@ -106,7 +107,9 @@ const config = {
   optimization: {
     minimizer: [
       '...', // extend webpack's list instead of overwriting it
-      new JsonMinimizerPlugin(),
+      new JsonMinimizerPlugin({
+        exclude: /\/locales\/.*\.json/
+      }),
       new CssMinimizerPlugin()
     ]
   },
@@ -161,7 +164,17 @@ if (isDevMode) {
     })
   )
 } else {
+  const processLocalesPlugin = new ProcessLocalesPlugin({
+    compress: false,
+    inputDir: path.join(__dirname, '../static/locales'),
+    outputDir: 'static/locales',
+  })
+
   config.plugins.push(
+    processLocalesPlugin,
+    new webpack.DefinePlugin({
+      'process.env.LOCALE_NAMES': JSON.stringify(processLocalesPlugin.localeNames)
+    }),
     new CopyWebpackPlugin({
         patterns: [
           {
@@ -173,10 +186,16 @@ if (isDevMode) {
             to: path.join(__dirname, '../dist/web/static'),
             globOptions: {
               dot: true,
-              ignore: ['**/.*', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
+              ignore: ['**/.*', '**/locales/**', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
             },
           },
       ]
+    }),
+    // webpack doesn't get rid of js-yaml even though it isn't used in the production builds
+    // so we need to manually tell it to ignore any imports for `js-yaml`
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^js-yaml$/,
+      contextRegExp: /i18n$/
     })
   )
 }

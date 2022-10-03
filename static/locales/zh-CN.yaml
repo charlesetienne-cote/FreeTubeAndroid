@@ -75,6 +75,8 @@ Subscriptions:
     强制RSS已防止速率限制
   Load More Videos: 加载更多视频
   Error Channels: 有错误的频道
+  Disabled Automatic Fetching: 你仅用了自动订阅获取。刷新订阅在此处看到它们。
+  Empty Channels: 你订阅的频道当前没有任何视频。
 Trending:
   Trending: '热门'
   Trending Tabs: 流行标签
@@ -257,6 +259,7 @@ Settings:
     Export Subscriptions: '导出订阅'
     How do I import my subscriptions?: '如何导入我的订阅？'
     Fetch Feeds from RSS: 从RSS摘取推送
+    Fetch Automatically: 自动抓取订阅源
   Advanced Settings:
     Advanced Settings: '高级设置'
     Enable Debug Mode (Prints data to the console): '允许调试模式（打印数据在控制板）'
@@ -344,6 +347,7 @@ Settings:
     Hide Sharing Actions: 隐藏分享操作
     Hide Comments: 隐藏评论
     Hide Video Description: 隐藏视频描述
+    Hide Chapters: 隐藏章节
   The app needs to restart for changes to take effect. Restart and apply change?: 应用需要重启让修改生效。重启以应用修改？
   Proxy Settings:
     Proxy Protocol: 代理协议
@@ -523,6 +527,7 @@ Video:
     Minutes: 分钟
     Minute: 分钟
     Less than a minute: 不到一分钟
+    In less than a minute: 不到一分钟
   Published on: '发布于'
   # $ is replaced with the number and % with the unit (days, hours, minutes...)
   Publicationtemplate: '$ % 之前'
@@ -602,6 +607,7 @@ Video:
   translated from English: 从英语翻译而来
   Skipped segment: 跳过片段
   Premieres in: 首映于
+  Premieres: 首映
 Videos:
   #& Sort By
   Sort By:
@@ -740,6 +746,7 @@ This video is unavailable because of missing formats. This can happen due to cou
 Tooltips:
   Subscription Settings:
     Fetch Feeds from RSS: 启用后，FreeTube将使用RSS而非默认方式来取得您的订阅推送。RSS更快而且可避免IP封锁，但不提供某些信息，如影片长度与即时状态
+    Fetch Automatically: 开启后，打开新窗口和切换配置文件时，FreeTube 会自动抓取你的订阅源。
   Player Settings:
     Default Video Format: 设置播放视频时使用的格式。DASH 格式可以播放更高质量的视频。 传统格式限制为最大 720p，但使用较少的带宽。
       音频格式是纯音频流。
@@ -798,3 +805,10 @@ Channels:
   Empty: 你的频道列表当前为空。
   Unsubscribed: 从你的订阅里删除了 $
   Unsubscribe Prompt: 你确定你要取消订阅 "$" 吗？
+Clipboard:
+  Copy failed: 未能复制到剪贴板
+  Cannot access clipboard without a secure connection: 没有安全连接无法访问剪贴板
+Chapters:
+  Chapters: 章节
+  'Chapters list visible, current chapter: {chapterName}': 章节列表可见，当前章节：{chapterName}
+  'Chapters list hidden, current chapter: {chapterName}': 章节列表隐藏，当前章节：{chapterName}
