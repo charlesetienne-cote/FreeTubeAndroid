@@ -2,15 +2,10 @@ import fs from 'fs'
 
 const state = {
   currentInvidiousInstance: '',
-  invidiousInstancesList: null,
-  isGetChannelInfoRunning: false
+  invidiousInstancesList: null
 }
 
 const getters = {
-  getIsGetChannelInfoRunning(state) {
-    return state.isGetChannelInfoRunning
-  },
-
   getCurrentInvidiousInstance(state) {
     return state.currentInvidiousInstance
   },
@@ -98,8 +93,6 @@ const actions = {
 
   invidiousGetChannelInfo({ commit, dispatch }, channelId) {
     return new Promise((resolve, reject) => {
-      commit('toggleIsGetChannelInfoRunning')
-
       const payload = {
         resource: 'channels',
         id: channelId,
@@ -110,7 +103,6 @@ const actions = {
         resolve(response)
       }).catch((xhr) => {
         console.error(xhr)
-        commit('toggleIsGetChannelInfoRunning')
         reject(xhr)
       })
     })
@@ -122,7 +114,6 @@ const actions = {
         resolve(response)
       }).catch((xhr) => {
         console.error(xhr)
-        commit('toggleIsGetChannelInfoRunning')
         reject(xhr)
       })
     })
@@ -147,10 +138,6 @@ const actions = {
 }
 
 const mutations = {
-  toggleIsGetChannelInfoRunning(state) {
-    state.isGetChannelInfoRunning = !state.isGetChannelInfoRunning
-  },
-
   setCurrentInvidiousInstance(state, value) {
     state.currentInvidiousInstance = value
   },
