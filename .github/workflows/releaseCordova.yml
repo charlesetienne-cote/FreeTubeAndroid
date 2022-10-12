@@ -118,7 +118,7 @@ jobs:
         
     - name: Create release body
       run: |
-        echo "Latest Commit Message: ${{ github.event.head_commit.message }}" >> release.txt
+        echo "${{ github.event.head_commit.message }}" >> release.txt
         echo "" >> release.txt
 
     - name: Create Draft Release
