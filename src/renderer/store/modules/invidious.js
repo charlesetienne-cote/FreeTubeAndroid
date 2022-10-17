@@ -24,12 +24,7 @@ const actions = {
       const response = await fetch(requestUrl)
       const json = await response.json()
       instances = json.filter((instance) => {
-        if (window.BrowserFS !== undefined) { // if not in electron
-          if (!instance[1].cors) { // if cors is not enabled
-            return false
-          }
-        }
-        if (instance[0].includes('.onion') || instance[0].includes('.i2p')) {
+        if (instance[0].includes('.onion') || instance[0].includes('.i2p') || !instance[1].api || (!process.env.IS_ELECTRON && !instance[1].cors)) {
           return false
         } else {
           return true
@@ -56,8 +51,8 @@ const actions = {
       } else {
         console.error('unable to read static file for invidious instances')
         instances = [
-          'https://invidious.snopyta.org',
-          'https://invidious.kavin.rocks/'
+          'https://invidious.sethforprivacy.com',
+          'https://invidious.namazso.eu'
         ]
       }
     }
@@ -70,7 +65,7 @@ const actions = {
     commit('setCurrentInvidiousInstance', instanceList[randomIndex])
   },
 
-  invidiousAPICall({ commit, state }, payload) {
+  invidiousAPICall({ state }, payload) {
     return new Promise((resolve, reject) => {
       const requestUrl = state.currentInvidiousInstance + '/api/v1/' + payload.resource + '/' + payload.id + '?' + new URLSearchParams(payload.params).toString()
 
@@ -82,11 +77,6 @@ const actions = {
         .catch((error) => {
           console.error('Invidious API error', requestUrl, error)
           reject(error)
-          if (window.BrowserFS !== undefined) { // if not in electron
-            const instanceList = state.invidiousInstancesList
-            const randomIndex = Math.floor(Math.random() * instanceList.length)
-            commit('setCurrentInvidiousInstance', instanceList[randomIndex])
-          }
         })
     })
   },
