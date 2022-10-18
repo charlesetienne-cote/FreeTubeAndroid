@@ -13,6 +13,7 @@ import { marked } from 'marked'
 import Parser from 'rss-parser'
 import { IpcChannels } from '../constants'
 import packageDetails from '../../package.json'
+import { showToast } from './helpers/utils'
 
 let ipcRenderer = null
 
@@ -237,8 +238,7 @@ export default Vue.extend({
           const latestPubDate = new Date(latestBlog.pubDate)
 
           if (lastAppWasRunning === null || latestPubDate > lastAppWasRunning) {
-            const message = this.$t('A new blog is now available, $. Click to view more')
-            this.blogBannerMessage = message.replace('$', latestBlog.title)
+            this.blogBannerMessage = this.$t('A new blog is now available, {blogTitle}. Click to view more', { blogTitle: latestBlog.title })
             this.latestBlogUrl = latestBlog.link
             this.showBlogBanner = true
           }
@@ -349,9 +349,7 @@ export default Vue.extend({
         })
       } else if (this.externalLinkHandling === 'doNothing') {
         // Let user know opening external link is disabled via setting
-        this.showToast({
-          message: this.$t('External link opening has been disabled in the general settings')
-        })
+        showToast(this.$t('External link opening has been disabled in the general settings'))
       } else if (this.externalLinkHandling === 'openLinkAfterPrompt') {
         // Storing the URL is necessary as
         // there is no other way to pass the URL to click callback
@@ -417,9 +415,7 @@ export default Vue.extend({
               message = this.$t(message)
             }
 
-            this.showToast({
-              message: message
-            })
+            showToast(message)
             break
           }
 
@@ -446,9 +442,7 @@ export default Vue.extend({
               message = this.$t(message)
             }
 
-            this.showToast({
-              message: message
-            })
+            showToast(message)
           }
         }
       })
@@ -529,7 +523,6 @@ export default Vue.extend({
     ]),
 
     ...mapActions([
-      'showToast',
       'openExternalLink',
       'grabUserSettings',
       'grabAllProfiles',

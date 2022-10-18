@@ -118,7 +118,7 @@
         v-if="defaultInvidiousInstance !== ''"
         class="center"
       >
-        {{ $t('Settings.General Settings.The currently set default instance is $').replace('$', defaultInvidiousInstance) }}
+        {{ $t('Settings.General Settings.The currently set default instance is {instance}', { instance: defaultInvidiousInstance }) }}
       </p>
       <template v-else>
         <p class="center">
