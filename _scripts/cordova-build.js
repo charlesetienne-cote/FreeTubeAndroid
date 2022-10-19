@@ -137,7 +137,7 @@ const archiver = require('archiver');
     // this is a POC, random changes to the codebase break these regex all the time
     rendererContent = rendererContent.replace(/([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, 'fileSystem$2')
     rendererContent = rendererContent.replace(/\)([^(){}?.;:=,`&]*?)\(\)(\.(readFile|readFileSync|readdirSync|writeFileSync|writeFile|existsSync)\((.[^\)]*)\))/g, ';fileSystem$2')
-    rendererContent = rendererContent.replace(/(this.showSaveDialog)\(([^\(\)]*?)\)/g, 'showFileSaveDialog($2);')
+    //rendererContent = rendererContent.replace(/(this.showSaveDialog)\(([^\(\)]*?)\)/g, 'showFileSaveDialog($2);')
     rendererContent = rendererContent.replace(/([a-zA-Z]*)=([a-zA-Z]*\([1-9]*\))\.createInstance/g, '$1=window.dataStore=$2.createInstance')
     if (exportType === 'cordova') {
       rendererContent = rendererContent.replace(/this.invidiousGetVideoInformation\(this.videoId\).then\(/g, 'this.invidiousGetVideoInformation(this.videoId).then(updatePlayingVideo);this.invidiousGetVideoInformation\(this.videoId\).then(')
@@ -415,12 +415,6 @@ const archiver = require('archiver');
         : '') + `
                 });
               }
-              window.showFileSaveDialog = function (fileDialogObject) {
-                return new Promise(function (resolve, reject) {
-                    fileDialogObject.filePath = fileDialogObject.options.defaultPath;
-                    resolve(fileDialogObject);
-                });
-              };
               window.play = function () {
                   if (currentVideo !== null) {
                       currentVideo.play();

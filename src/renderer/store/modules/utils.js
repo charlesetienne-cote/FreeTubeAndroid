@@ -4,7 +4,7 @@ import path from 'path'
 import i18n from '../../i18n/index'
 
 import { IpcChannels } from '../../../constants'
-import { showToast } from '../../helpers/utils'
+import { openExternalLink, showToast } from '../../helpers/utils'
 
 const state = {
   isSideNavOpen: false,
@@ -117,15 +117,6 @@ async function invokeIRC(context, IRCtype, webCbk, payload = null) {
 }
 
 const actions = {
-  openExternalLink (_, url) {
-    if (process.env.IS_ELECTRON) {
-      const ipcRenderer = require('electron').ipcRenderer
-      ipcRenderer.send(IpcChannels.OPEN_EXTERNAL_LINK, url)
-    } else {
-      window.open(url, '_blank')
-    }
-  },
-
   replaceFilenameForbiddenChars(_, filenameOriginal) {
     let filenameNew = filenameOriginal
     let forbiddenChars = {}
@@ -168,13 +159,9 @@ const actions = {
    * @param {string} messageOnError the message to be displayed as a toast when the copy fails (optional)
    */
   async copyToClipboard ({ dispatch }, { content, messageOnSuccess, messageOnError }) {
-    let clipboardAPI = navigator.clipboard?.writeText.bind(navigator.clipboard)
-    if (window.cordova !== undefined) {
-      clipboardAPI = window.cordova.plugins.clipboard.copy
-    }
-    if (clipboardAPI !== undefined && window.isSecureContext) {
+    if (navigator.clipboard !== undefined && window.isSecureContext) {
       try {
-        await clipboardAPI(content)
+        await navigator.clipboard.writeText(content)
         if (messageOnSuccess !== undefined) {
           showToast(messageOnSuccess)
         }
@@ -197,7 +184,7 @@ const actions = {
     let folderPath = rootState.settings.downloadFolderPath
 
     if (!process.env.IS_ELECTRON) {
-      dispatch('openExternalLink', url)
+      openExternalLink(url)
       return
     }
 
@@ -329,7 +316,7 @@ const actions = {
         }
         fileInput.onchange = () => {
           const files = Array.from(fileInput.files)
-          resolve({ canceled: false, files })
+          resolve({ canceled: false, files, filePaths: files.map(({ name }) => { return name }) })
           delete fileInput.onchange
         }
         const listenForEnd = () => {
@@ -350,9 +337,63 @@ const actions = {
     return await invokeIRC(context, IpcChannels.SHOW_OPEN_DIALOG, webCbk, options)
   },
 
+  /**
+   * Write to a file picked out from the `showSaveDialog` picker
+   * @param {Object} response the response from `showSaveDialog`
+   * @param {String} content the content to be written to the file selected by the dialog
+   */
+  async writeFileFromDialog (context, { response, content }) {
+    if (process.env.IS_ELECTRON) {
+      return await new Promise((resolve, reject) => {
+        const { filePath } = response
+        fs.writeFile(filePath, content, (error) => {
+          if (error) {
+            reject(error)
+          } else {
+            resolve()
+          }
+        })
+      })
+    } else {
+      if ('showOpenFilePicker' in window) {
+        const { handle } = response
+        const writableStream = await handle.createWritable()
+        await writableStream.write(content)
+        await writableStream.close()
+      } else {
+        // If the native filesystem api is not available,
+        const { filePath } = response
+        const filename = filePath.split('/').at(-1)
+        const a = document.createElement('a')
+        const url = URL.createObjectURL(new Blob([content], { type: 'application/octet-stream' }))
+        a.setAttribute('href', url)
+        a.setAttribute('download', encodeURI(filename))
+        a.click()
+      }
+    }
+  },
+
   async showSaveDialog (context, options) {
-    // TODO: implement showSaveDialog web compatible callback
-    const webCbk = () => null
+    const webCbk = async () => {
+      // If the native filesystem api is available
+      if ('showSaveFilePicker' in window) {
+        return {
+          canceled: false,
+          handle: await window.showSaveFilePicker({
+            suggestedName: options.defaultPath.split('/').at(-1),
+            types: options?.filters[0]?.extensions?.map((extension) => {
+              return {
+                accept: {
+                  'application/octet-stream': '.' + extension
+                }
+              }
+            })
+          })
+        }
+      } else {
+        return { canceled: false, filePath: options.defaultPath }
+      }
+    }
     return await invokeIRC(context, IpcChannels.SHOW_SAVE_DIALOG, webCbk, options)
   },
 
