@@ -168,10 +168,11 @@ export function showToast(message, time = null, action = null) {
    * @param {string} messageOnSuccess the message to be displayed as a toast when the copy succeeds (optional)
    * @param {string} messageOnError the message to be displayed as a toast when the copy fails (optional)
    */
-export async function copyToClipboard ({ dispatch }, { content, messageOnSuccess, messageOnError }) {
+export async function copyToClipboard (content, { messageOnSuccess, messageOnError }) {
   let clipboardAPI = navigator.clipboard?.writeText.bind(navigator.clipboard)
   if (window.cordova !== undefined) {
-    clipboardAPI = window.cordova.plugins.clipboard.copy
+    // Convert the callbacks to promise notation
+    clipboardAPI = (content) => { return new Promise((resolve, reject) => { window.cordova.plugins.clipboard.copy(content, resolve, reject) }) }
   }
   if (clipboardAPI !== undefined && window.isSecureContext) {
     try {
