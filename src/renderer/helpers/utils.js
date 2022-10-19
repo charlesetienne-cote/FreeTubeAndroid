@@ -168,16 +168,20 @@ export function showToast(message, time = null, action = null) {
    * @param {string} messageOnSuccess the message to be displayed as a toast when the copy succeeds (optional)
    * @param {string} messageOnError the message to be displayed as a toast when the copy fails (optional)
    */
-export async function copyToClipboard(content, { messageOnSuccess = null, messageOnError = null }) {
-  if (navigator.clipboard !== undefined && window.isSecureContext) {
+export async function copyToClipboard ({ dispatch }, { content, messageOnSuccess, messageOnError }) {
+  let clipboardAPI = navigator.clipboard?.writeText.bind(navigator.clipboard)
+  if (window.cordova !== undefined) {
+    clipboardAPI = window.cordova.plugins.clipboard.copy
+  }
+  if (clipboardAPI !== undefined && window.isSecureContext) {
     try {
-      await navigator.clipboard.writeText(content)
-      if (messageOnSuccess !== null) {
+      await clipboardAPI(content)
+      if (messageOnSuccess !== undefined) {
         showToast(messageOnSuccess)
       }
     } catch (error) {
       console.error(`Failed to copy ${content} to clipboard`, error)
-      if (messageOnError !== null) {
+      if (messageOnError !== undefined) {
         showToast(`${messageOnError}: ${error}`, 5000)
       } else {
         showToast(`${i18n.t('Clipboard.Copy failed')}: ${error}`, 5000)
