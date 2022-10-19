@@ -71,6 +71,7 @@ const archiver = require('archiver');
       await addCordovaPlugin('cordova-plugin-advanced-background-mode')
       await addCordovaPlugin('cordova-plugin-media')
       await addCordovaPlugin('https://github.com/ghenry22/cordova-plugin-music-controls2.git')
+      await addCordovaPlugin('cordova-plugin-save-dialog')
       await addCordovaPlugin('cordova-plugin-android-permissions')
       await addCordovaPlugin('cordova-clipboard')
 
@@ -156,21 +157,20 @@ const archiver = require('archiver');
                 var addListener = function (type, funct) {
                     var listenerTypes = Object.keys(listeners);
                     if (listenerTypes.indexOf(type) === -1) {
-                    listeners[type] = [];
+                      listeners[type] = [];
                     }
                     listeners[type].push(funct);
                 }
                 var triggerListeners = function (type, value) {
                     var listenerTypes = Object.keys(listeners);
                     if (listenerTypes.indexOf(type) !== -1) {
-                    for (var i = 0; i < listeners[type].length; i++) {
-                        var listener = listeners[type][i];
-                        listener(value);
-                    }
+                      for (var i = 0; i < listeners[type].length; i++) {
+                          var listener = listeners[type][i];
+                          listener(value);
+                      }
                     }
                 }
                 function events(action) {
-
                     const message = JSON.parse(action).message;
                     switch(message) {
                     case 'music-controls-next':
@@ -329,102 +329,17 @@ const archiver = require('archiver');
               
             }, 500);`
         : '') +
-            `
-            window.fileSystem = {
-                writeFile: function (pathlike, content, cb) {
-                    download(pathlike, content).then(cb);
-                },
-                writeFileSync: function (pathlike, content) {
-                    download(pathlike, content);
-                },
-                readFile: () => null,
-                readFileSync: () => null,
-                readdirSync: () => null,
-                readdir: () => null,
-                exists: () => null,
-                existsSync: () => null
-            }
-            
-            function download(filename, textInput) {
-                if (filename === undefined) {
-                    try {
-                        JSON.parse(textInput);
-                        // if it can be parsed into json
-                        filename = "export.json";
-                    } catch {
-                        try {
-                            JSON.parse(textInput.split("\\n")[0]);
-                            // if a line can be parsed, it is probably that weird db format
-                            filename = "export.db";
-                        } catch {
-                            
-                        }
-                    }
+            `  
+            window.play = function () {
+                if (currentVideo !== null) {
+                    currentVideo.play();
                 }
-                return new Promise(function (resolve, reject) {
-                    var fileNameArray = filename.split("/");
-                    filename = fileNameArray[fileNameArray.length - 1];
-                    // Run both methods because each will only work in their respective environments
-                    var element = document.createElement('a');
-                    var url = URL.createObjectURL(new Blob([textInput], {type: "application/octet-stream"}));
-                    element.setAttribute("href", url);
-                    if (filename === undefined) {
-                    try {
-                        JSON.parse(textInput);
-                        // if it can be parsed into json
-                        filename = "export.json";
-                    } catch {
-                        filename = "export"
-                    }
-                    }
-                    var uri = encodeURI(filename);
-                    element.setAttribute('download', filename);
-                    document.body.appendChild(element);
-                    element.click();
-                    document.body.removeChild(element);
-                    ` + ((exportType === 'cordova')
-        ? `
-                    function whenHasPermission () {
-                    window.requestFileSystem(LocalFileSystem.PERSISTENT, 10000, function (fs) {
-                        window.resolveLocalFileSystemURL(cordova.file.externalApplicationStorageDirectory, function (dir) {
-                        dir.getFile(filename, { create: true, exclusive: false}, function (fileEntry) {
-                            fileEntry.createWriter(function (fileWriter) {
-                            fileWriter.onerror = console.error;
-                            fileWriter.onwriteend = console.log;
-                            fileWriter.write(textInput);
-                            resolve();
-                            });
-                        }, reject);
-                        });
-
-                    });
-                    }
-                    var permissions = cordova.plugins.permissions;
-                    permissions.hasPermission(permissions.WRITE_EXTERNAL_STORAGE, function (status) {
-                    if (!status.hasPermission) {
-                        permissions.requestPermission(permissions.WRITE_EXTERNAL_STORAGE, function (status) {
-                        if( status.hasPermission ) {
-                            whenHasPermission();
-                        }
-                        }, reject);
-                    } else {
-                        whenHasPermission();
-                    }
-                    }, reject);
-                    `
-        : '') + `
-                });
-              }
-              window.play = function () {
-                  if (currentVideo !== null) {
-                      currentVideo.play();
-                  }
-              };
-              Object.defineProperty(window, 'player', {
-                  get: function () {
-                    return currentVideo;
-                  }
-              });
+            };
+            Object.defineProperty(window, 'player', {
+                get: function () {
+                  return currentVideo;
+                }
+            });
               ` + ((exportType === 'cordova')
         ? `
               window.isDarkMode = "light";

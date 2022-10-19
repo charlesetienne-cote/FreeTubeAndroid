@@ -305,7 +305,7 @@ const actions = {
 
   async showOpenDialog (context, options) {
     const webCbk = () => {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const fileInput = document.createElement('input')
         fileInput.setAttribute('type', 'file')
         if (window.cordova === undefined) { // accept is way more finicky in cordova land
@@ -343,7 +343,17 @@ const actions = {
    * @param {String} content the content to be written to the file selected by the dialog
    */
   async writeFileFromDialog (context, { response, content }) {
-    if (process.env.IS_ELECTRON) {
+    if (window.cordova !== undefined) {
+      return new Promise((resolve, reject) => {
+        const { filePath } = response
+        const blob = new Blob([content], { type: 'application/octet-stream' })
+        window.cordova.plugins.saveDialog.saveFile(blob, filePath).then(() => {
+          resolve()
+        }).catch(reason => {
+          reject(reason)
+        })
+      })
+    } else if (process.env.IS_ELECTRON) {
       return await new Promise((resolve, reject) => {
         const { filePath } = response
         fs.writeFile(filePath, content, (error) => {
