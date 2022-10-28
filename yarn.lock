@@ -7134,10 +7134,9 @@ npm-registry-fetch@^11.0.0:
     minizlib "^2.0.0"
     npm-package-arg "^8.0.0"
 
-npm-run-all@^4.1.5:
+"npm-run-all@https://github.com/MarmadileManteater/npm-run-all.git":
   version "4.1.5"
-  resolved "https://registry.yarnpkg.com/npm-run-all/-/npm-run-all-4.1.5.tgz#04476202a15ee0e2e214080861bff12a51d98fba"
-  integrity sha512-Oo82gJDAVcaMdi3nuoKFavkIHBRVqQ1qvMb+9LHk/cF4P6B2m8aP04hGf7oL6wZ9BuGwX1onlLhpuoofSyoQDQ==
+  resolved "https://github.com/MarmadileManteater/npm-run-all.git#ce10de0cd61e959686baddd46ada83d8eb75dd24"
   dependencies:
     ansi-styles "^3.2.1"
     chalk "^2.4.1"
