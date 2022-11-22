@@ -70,7 +70,7 @@ const archiver = require('archiver');
       await addCordovaPlugin('cordova-plugin-theme-detection')
       await addCordovaPlugin('cordova-plugin-advanced-background-mode')
       await addCordovaPlugin('cordova-plugin-media')
-      await addCordovaPlugin('https://github.com/ghenry22/cordova-plugin-music-controls2.git')
+      await addCordovaPlugin('cordova-plugin-music-controls2@3.0.5')
       await addCordovaPlugin('cordova-plugin-save-dialog')
       await addCordovaPlugin('cordova-plugin-android-permissions')
       await addCordovaPlugin('cordova-clipboard')
@@ -151,6 +151,25 @@ const archiver = require('archiver');
     await fsWriteFile(path.join(wwwroot, 'renderer.js'), `(async function () {
             ` + ((exportType === 'cordova')
         ? `
+          (() => {
+            Object.defineProperties(Array.prototype, {
+              at: {
+                value(index) {
+                  if (this.length > index) {
+                    if (index >= 0) {
+                      return this[index]
+                    } else {
+                      if (this.length + index >= 0) {
+                        if (this.length + index < this.length) {
+                          return this[this.length + index]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            })
+          })();
             var createControls = function (object = {}, success = function () {}) {
                 MusicControls.create(object, success);
                 var listeners = {};
@@ -206,7 +225,7 @@ const archiver = require('archiver');
                         triggerListeners(message);
                         // Do something
                         break;
-                
+
                     // Headset events (Android only)
                     // All media button events are listed below
                     case 'music-controls-media-button' :
@@ -323,13 +342,13 @@ const archiver = require('archiver');
                   video.onpause = function () {
                     MusicControls.updateIsPlaying(false);
                   }
-                  
+
                 }
               }
-              
+
             }, 500);`
         : '') +
-            `  
+            `
             window.play = function () {
                 if (currentVideo !== null) {
                     currentVideo.play();
@@ -350,7 +369,7 @@ const archiver = require('archiver');
                     }
               }
               var removeNewWindowIconStyle = document.createElement('style');
-              removeNewWindowIconStyle.innerHTML = ".navNewWindowIcon { display: none !important; }" 
+              removeNewWindowIconStyle.innerHTML = ".navNewWindowIcon { display: none !important; }"
               document.head.appendChild(removeNewWindowIconStyle);
               `
         : `
@@ -415,7 +434,7 @@ const archiver = require('archiver');
       let buildArguments = ''
       if (keystorePassphrase !== null) {
         // the apk needs to be signed
-        buildArguments = '--buildConfig'
+        buildArguments = '--buildConfig --warning-mode-all'
         await fsMove(keystorePath, path.join(distDirectory, 'freetubecordova.keystore'));
         await fsWriteFile(path.join(distDirectory, 'build.json'), JSON.stringify({
           "android": {
