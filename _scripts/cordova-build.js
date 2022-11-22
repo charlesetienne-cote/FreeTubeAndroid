@@ -151,6 +151,25 @@ const archiver = require('archiver');
     await fsWriteFile(path.join(wwwroot, 'renderer.js'), `(async function () {
             ` + ((exportType === 'cordova')
         ? `
+          (() => {
+            Object.defineProperties(Array.prototype, {
+              at: {
+                value(index) {
+                  if (this.length > index) {
+                    if (index >= 0) {
+                      return this[index]
+                    } else {
+                      if (this.length + index >= 0) {
+                        if (this.length + index < this.length) {
+                          return this[this.length + index]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            })
+          })();
             var createControls = function (object = {}, success = function () {}) {
                 MusicControls.create(object, success);
                 var listeners = {};
@@ -206,7 +225,7 @@ const archiver = require('archiver');
                         triggerListeners(message);
                         // Do something
                         break;
-                
+
                     // Headset events (Android only)
                     // All media button events are listed below
                     case 'music-controls-media-button' :
@@ -415,7 +434,7 @@ const archiver = require('archiver');
       let buildArguments = ''
       if (keystorePassphrase !== null) {
         // the apk needs to be signed
-        buildArguments = '--buildConfig'
+        buildArguments = '--buildConfig --warning-mode-all'
         await fsMove(keystorePath, path.join(distDirectory, 'freetubecordova.keystore'));
         await fsWriteFile(path.join(distDirectory, 'build.json'), JSON.stringify({
           "android": {
