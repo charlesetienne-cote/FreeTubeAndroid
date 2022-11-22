@@ -70,7 +70,7 @@ const archiver = require('archiver');
       await addCordovaPlugin('cordova-plugin-theme-detection')
       await addCordovaPlugin('cordova-plugin-advanced-background-mode')
       await addCordovaPlugin('cordova-plugin-media')
-      await addCordovaPlugin('https://github.com/ghenry22/cordova-plugin-music-controls2.git')
+      await addCordovaPlugin('cordova-plugin-music-controls2@3.0.5')
       await addCordovaPlugin('cordova-plugin-save-dialog')
       await addCordovaPlugin('cordova-plugin-android-permissions')
       await addCordovaPlugin('cordova-clipboard')
@@ -323,13 +323,13 @@ const archiver = require('archiver');
                   video.onpause = function () {
                     MusicControls.updateIsPlaying(false);
                   }
-                  
+
                 }
               }
-              
+
             }, 500);`
         : '') +
-            `  
+            `
             window.play = function () {
                 if (currentVideo !== null) {
                     currentVideo.play();
@@ -350,7 +350,7 @@ const archiver = require('archiver');
                     }
               }
               var removeNewWindowIconStyle = document.createElement('style');
-              removeNewWindowIconStyle.innerHTML = ".navNewWindowIcon { display: none !important; }" 
+              removeNewWindowIconStyle.innerHTML = ".navNewWindowIcon { display: none !important; }"
               document.head.appendChild(removeNewWindowIconStyle);
               `
         : `
