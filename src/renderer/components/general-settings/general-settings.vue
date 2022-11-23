@@ -11,7 +11,6 @@
           @change="updateCheckForUpdates"
         />
         <ft-toggle-switch
-          v-if="usingElectron"
           :label="$t('Settings.General Settings.Fallback to Non-Preferred Backend on Failure')"
           :default-value="backendFallback"
           :compact="true"
@@ -36,7 +35,6 @@
     </div>
     <div class="switchGrid">
       <ft-select
-        v-if="usingElectron"
         :placeholder="$t('Settings.General Settings.Preferred API Backend.Preferred API Backend')"
         :value="backendPreference"
         :select-names="backendNames"
