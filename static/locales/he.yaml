@@ -211,6 +211,7 @@ Settings:
     Expand Side Bar by Default: תפריט צד מורחב כברירת מחדל
     Disable Smooth Scrolling: השבתת גלילה חלקה
     Hide Side Bar Labels: הסתרת התוויות בסרגל הצד
+    Hide FreeTube Header Logo: הסתרת הלוגו התחתון של FreeTube
   Player Settings:
     Player Settings: 'הגדרת נגן'
     Force Local Backend for Legacy Formats: 'כפיית המנגנון לניגון בפורמטים ישנים'
@@ -375,6 +376,7 @@ Settings:
     Hide Comments: הסתרת הערות
     Hide Video Description: הסתרת תיאור וידאו
     Hide Chapters: הסתרת פרקים
+    Hide Upcoming Premieres: הסתרת בכורות קרובות
   The app needs to restart for changes to take effect. Restart and apply change?: צריך
     להפעיל את היישומון מחדש כדי שהשינויים ייכנסו לתוקף. להפעיל מחדש ולהחיל את השינוי?
   Proxy Settings:
