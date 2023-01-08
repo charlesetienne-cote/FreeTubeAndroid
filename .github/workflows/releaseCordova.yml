@@ -140,7 +140,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: build/freetube/freetube-${{ steps.versionNumber.outputs.result }}.zip
-        asset_name: freetube-${{ steps.versionNumber.outputs.result }}-HTML5.zip
+        asset_name: freetube-${{ steps.versionNumber.outputs.result }}-pwa.zip
         asset_content_type: application/zip
 
     - name: Upload Android APK Artifact to Release
@@ -150,7 +150,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: build/freetube-${{ steps.versionNumber.outputs.result }}.apk
-        asset_name: freetube-${{ steps.versionNumber.outputs.result }}.apk
+        asset_name: freetube-${{ steps.versionNumber.outputs.result }}-android.apk
         asset_content_type: application/apk
 
     - uses: eregon/publish-release@v1
