@@ -413,8 +413,15 @@ const archiver = require('archiver');
     <preference name="AndroidPersistentFileLocation" value="Compatibility" />
     <preference name="AllowInlineMediaPlayback" value="true"/>`
     const configXML = await parseXMLString(await fsReadFile(path.join(distDirectory, 'config.xml')))
-    configXML.widget.$.id = 'io.freetubeapp.' + sourcePackage.name
+    configXML.widget.$.id = `io.freetubeapp.${sourcePackage.name}`
     configXML.widget.$.version = sourcePackage.version
+    const sourcePackageParts = sourcePackage.version.split('-')
+    const [major, minor, patch, build] = sourcePackageParts[0].split('.')
+    // Seperate environments by ID instead of version code
+    if (sourcePackageParts.length > 1) {
+      configXML.widget.$.id += `.${sourcePackageParts[1]}`
+    }
+    configXML.widget.$['android-versionCode'] = `${major * 10000000 + minor * 100000 + patch * 1000 + build}`
     configXML.widget.author[0].$.email = sourcePackage.author.email
     configXML.widget.author[0]._ = sourcePackage.author.name
     configXML.widget.author[0].$.href = sourcePackage.author.url
@@ -482,6 +489,7 @@ const archiver = require('archiver');
       await fsWriteFile(path.join(buildDirectory, apkName, 'manifest.webmanifest'), JSON.stringify(manifest, null, 2))
     }
   } catch (exception) {
+    const g = 'see not useless'
     throw exception
   }
 }())
