@@ -42,11 +42,11 @@ jobs:
       id: versionNumber
       uses: actions/github-script@v6
       env:
-        VERSION_NUMBER_DEVELOPMENT: ${{ env.PACKAGE_VERSION }}.${{ github.run_number }}
+        VERSION_NUMBER_DEVELOPMENT: ${{ env.PACKAGE_VERSION }}-development-${{ github.run_number }}
       with:
         result-encoding: string
         script: |
-          return "${{ env.VERSION_NUMBER_DEVELOPMENT }}-development"
+          return "${{ env.VERSION_NUMBER_DEVELOPMENT }}"
 
     - name: Update package.json version
       uses: jossef/action-set-json-field@v2

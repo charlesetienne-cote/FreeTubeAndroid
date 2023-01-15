@@ -416,10 +416,14 @@ const archiver = require('archiver');
     configXML.widget.$.id = `io.freetubeapp.${sourcePackage.name}`
     configXML.widget.$.version = sourcePackage.version
     const sourcePackageParts = sourcePackage.version.split('-')
-    const [major, minor, patch, build] = sourcePackageParts[0].split('.')
-    // Seperate environments by ID instead of version code
+    const [major, minor, patch] = sourcePackageParts[0].split('.')
+    let build = 0
     if (sourcePackageParts.length > 1) {
+      // Seperate environments by ID instead of version code
       configXML.widget.$.id += `.${sourcePackageParts[1]}`
+    }
+    if (sourcePackageParts.length > 2) {
+      build = sourcePackageParts[2]
     }
     configXML.widget.$['android-versionCode'] = `${major * 10000000 + minor * 100000 + patch * 1000 + build}`
     configXML.widget.author[0].$.email = sourcePackage.author.email
