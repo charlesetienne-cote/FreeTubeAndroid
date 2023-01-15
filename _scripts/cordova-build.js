@@ -422,9 +422,10 @@ const archiver = require('archiver');
       // Seperate environments by ID instead of version code
       configXML.widget.$.id += `.${sourcePackageParts[1]}`
     }
-    if (sourcePackageParts.length > 2) {
+    // disable environment based package id
+    /* if (sourcePackageParts.length > 2) {
       build = sourcePackageParts[2]
-    }
+    } */
     configXML.widget.$['android-versionCode'] = `${major * 10000000 + minor * 100000 + patch * 1000 + build}`
     configXML.widget.author[0].$.email = sourcePackage.author.email
     configXML.widget.author[0]._ = sourcePackage.author.name
