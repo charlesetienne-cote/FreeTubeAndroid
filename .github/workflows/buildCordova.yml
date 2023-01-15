@@ -41,12 +41,12 @@ jobs:
     - name: Set Version Number Variable
       id: versionNumber
       uses: actions/github-script@v6
+      env:
+        VERSION_NUMBER_DEVELOPMENT: ${{ env.PACKAGE_VERSION }}.${{ github.run_number }}
       with:
         result-encoding: string
         script: |
-          const [ packageVersion, runNumber ] = ["${{ env.PACKAGE_VERSION }}", "${{ github.run_number }}"]
-          const [ major, minor, patch ] = packageVersion.split(".")
-          return `${major * 10000000 + minor * 100000 + patch * 1000 + runNumber}`
+          return "${{ env.VERSION_NUMBER_DEVELOPMENT }}"
 
     - name: Update package.json version
       uses: jossef/action-set-json-field@v2
