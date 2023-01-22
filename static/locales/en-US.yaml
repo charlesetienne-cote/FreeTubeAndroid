@@ -237,6 +237,7 @@ Settings:
     Enable Theatre Mode by Default: Enable Theatre Mode by Default
     Scroll Volume Over Video Player: Scroll Volume Over Video Player
     Scroll Playback Rate Over Video Player: Scroll Playback Rate Over Video Player
+    Skip by Scrolling Over Video Player: Skip by Scrolling Over Video Player
     Display Play Button In Video Player: Display Play Button In Video Player
     Enter Fullscreen on Display Rotate: Enter Fullscreen on Display Rotate
     Next Video Interval: Next Video Interval
@@ -322,10 +323,13 @@ Settings:
     Hide Active Subscriptions: Hide Active Subscriptions
     Hide Video Description: Hide Video Description
     Hide Comments: Hide Comments
+    Display Titles Without Excessive Capitalisation: Display Titles Without Excessive Capitalisation
     Hide Live Streams: Hide Live Streams
     Hide Upcoming Premieres: Hide Upcoming Premieres
     Hide Sharing Actions: Hide Sharing Actions
     Hide Chapters: Hide Chapters
+    Hide Channels: Hide Videos From Channels
+    Hide Channels Placeholder: Channel Name or ID
   Data Settings:
     Data Settings: Data Settings
     Select Import Type: Select Import Type
@@ -414,6 +418,21 @@ Settings:
     Experimental Settings: Experimental Settings
     Warning: These settings are experimental, they make cause crashes while enabled. Making backups is highly recommended. Use at your own risk!
     Replace HTTP Cache: Replace HTTP Cache
+  Password Dialog:
+    Password: Password
+    Enter Password To Unlock: Enter password to unlock settings
+    Password Incorrect: Password Incorrect
+    Unlock: Unlock
+  Password Settings:
+    Password Settings: Password Settings
+    Set Password To Prevent Access: Set a password to prevent access to settings
+    Set Password: Set Password
+    Remove Password: Remove Password
+  Cordova Settings:
+    Cordova Settings:
+      Cordova Settings
+    Disable Background Notification:
+      Disable notification when app in background
 About:
   #On About page
   About: About
@@ -552,6 +571,7 @@ Video:
   # As in a Live Video
   Premieres on: Premieres on
   Premieres: Premieres
+  Upcoming: Upcoming
   Live: Live
   Live Now: Live Now
   Live Chat: Live Chat
@@ -565,6 +585,8 @@ Video:
   'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': Live
     Chat is currently not supported with the Invidious API.  A direct connection to
     YouTube is required.
+  Show Super Chat Comment: Show Super Chat Comment
+  Scroll to Bottom: Scroll to Bottom
   Download Video: Download Video
   video only: video only
   audio only: audio only
@@ -714,6 +736,7 @@ Comments:
   Sort by: Sort by
   Top comments: Top comments
   Newest first: Newest First
+  View {replyCount} replies: View {replyCount} replies
   # Context: View 10 Replies, View 1 Reply, View 1 Reply from Owner, View 2 Replies from Owner and others
   View: View
   Hide: Hide
@@ -728,6 +751,7 @@ Comments:
   No more comments available: No more comments available
   Pinned by: Pinned by
   Member: Member
+  Hearted: Hearted
 Up Next: Up Next
 
 #Tooltips
@@ -763,6 +787,7 @@ Tooltips:
       hold the Control key (Command Key on Mac) and scroll the mouse wheel forwards or backwards to control
       the playback rate. Press and hold the Control key (Command Key on Mac) and left click the mouse
       to quickly return to the default playback rate (1x unless it has been changed in the settings).
+    Skip by Scrolling Over Video Player: Use the scroll wheel to skip through the video, MPV style.
   External Player Settings:
     External Player: Choosing an external player will display an icon, for opening the
       video (playlist if supported) in the external player, on the thumbnail. Warning, Invidious settings do not affect external players.
@@ -774,6 +799,9 @@ Tooltips:
     Custom External Player Arguments: Any custom command line arguments, separated by semicolons (';'),
       you want to be passed to the external player.
     DefaultCustomArgumentsTemplate: "(Default: '{defaultCustomArguments}')"
+  Distraction Free Settings:
+    Hide Channels: Enter a channel name or channel ID to hide all videos, playlists and the channel itself from appearing in search or trending.
+       The channel name entered must be a complete match and is case sensitive.
   Subscription Settings:
     Fetch Feeds from RSS: When enabled, FreeTube will use RSS instead of its default
       method for grabbing your subscription feed. RSS is faster and prevents IP blocking,
@@ -785,7 +813,9 @@ Tooltips:
       when the watch page is closed.
   Experimental Settings:
     Replace HTTP Cache: Disables Electron's disk based HTTP cache and enables a custom in-memory image cache. Will lead to increased RAM usage.
-
+  Cordova Settings:
+    Disable Background Notification:
+      Disables the "FreeTube is running" background notificiation. Beware, disabling this notification may cause Android to close the app when it is in the background.
 # Toast Messages
 Local API Error (Click to copy): Local API Error (Click to copy)
 Invidious API Error (Click to copy): Invidious API Error (Click to copy)
@@ -825,3 +855,4 @@ Screenshot Error: Screenshot failed. {error}
 
 Yes: Yes
 No: No
+Ok: Ok

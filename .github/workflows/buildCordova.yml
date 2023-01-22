@@ -9,66 +9,79 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        node-version: [16.x]
-        runtime: [ linux-x64 ]
-        include:
-        - runtime: linux-x64
-          os: ubuntu-18.04
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     environment: development
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
+    - uses: actions/checkout@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v3
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 16.x
         cache: "yarn"
-    - run: npm run ci
+    - name: 🧶 Yarn install
+      run: yarn ci
 
-    - name: Lint code
-      run: npm run lint
+    - name: 🔍Lint code
+      run: yarn lint
 
-    - name: Get Version Number
-      uses: nyaayaya/package-version@v1
-      with:
-        path: 'package.json'
-        follow-symlinks: false
+    - name: 📚Read package.json
+      id: pkg
+      uses: jaywcjlove/github-action-package@v1.3.0
 
     - name: Set Version Number Variable
       id: versionNumber
       uses: actions/github-script@v6
-      env:
-        VERSION_NUMBER_DEVELOPMENT: ${{ env.PACKAGE_VERSION }}-development-${{ github.run_number }}
       with:
         result-encoding: string
         script: |
-          return "${{ env.VERSION_NUMBER_DEVELOPMENT }}"
+          return '${{ steps.pkg.outputs.version }}-nightly-${{ github.run_number }}'
+    - name: Set App ID Variable
+      id: appId
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          return '${{ steps.pkg.outputs.name }}.nightly'
 
-    - name: Update package.json version
-      uses: jossef/action-set-json-field@v2
+    - name: ⬆ Update package.json version
+      uses: jossef/action-set-json-field@v2.1
       with:
         file: package.json
         field: version
         value: ${{ steps.versionNumber.outputs.result }}
 
+    - name: ⬆ Update package.json app environment
+      uses: jossef/action-set-json-field@v2.1
+      with:
+        file: package.json
+        field: name
+        value: ${{ steps.appId.outputs.result }}
 
-    - name: Install libarchive-tools
-      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
-      run: sudo apt -y install libarchive-tools; echo "Version Number ${{ toJson(job) }} ${{ toJson(needs) }}"
 
-    - name: Pack with Node.js ${{ matrix.node-version}}
-      if: contains(matrix.runtime, 'x64')
-      run: npm run pack:browser
+    - name: ⬆ Update package.json product name
+      uses: jossef/action-set-json-field@v2.1
+      with:
+        file: package.json
+        field: productName
+        value: ${{ steps.pkg.outputs.productName }} Nightly
 
-    - name: Setup Android SDK Tools
-      if: contains(matrix.runtime, 'x64')
+    - name: 📦 Pack for 🕸web with Node.js
+      run: yarn pack:web
+
+    - name: 📡 Upload PWA Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: freetube-${{ steps.versionNumber.outputs.result }}-PWA
+        path: dist/web
+
+    - name: 🚧 Setup Android SDK Tools
       uses: android-actions/setup-android@v2.0.9
 
-    - name: Fetch keystore from secrets
+    - name: 📦 Pack for 📱Android with Node.js & Cordova
+      run: yarn pack:cordova
+
+    - name: 🦴 Fetch keystore from secrets
       run: |
          while read -r line;
          do
@@ -76,24 +89,11 @@ jobs:
          done <<< '${{ secrets.KEYSTORE }}'
          gpg -d --passphrase '${{ secrets.KEYSTORE_PASSWORD }}' --batch freetube.keystore.asc >> freetube.keystore
 
-    - name: Build APK with Cordova with Node.js ${{ matrix.node-version}}
-      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
-      run: npm run build:cordova freetube-${{ steps.versionNumber.outputs.result }}.apk cordova ./freetube.keystore ${{ secrets.KEYSTORE_PASSWORD }}
+    - name: 👷‍♀️ Build APK with Cordova with Node.js
+      run: yarn build:cordova freetube-${{ steps.versionNumber.outputs.result }}.apk ./freetube.keystore ${{ secrets.KEYSTORE_PASSWORD }}
 
-    - name: Upload Cordova APK Artifact
+    - name: 📡 Upload Cordova APK Artifact
       uses: actions/upload-artifact@v3
-      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
       with:
-        name: freetube-${{ steps.versionNumber.outputs.result }}.apk
-        path: build/freetube-${{ steps.versionNumber.outputs.result }}.apk
-
-    - name: Build HTML5 with Node.js ${{ matrix.node-version}}
-      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
-      run: npm run build:cordova freetube browser
-
-    - name: Upload Cordova HTML5 Artifact
-      uses: actions/upload-artifact@v3
-      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
-      with:
-        name: freetube-${{ steps.versionNumber.outputs.result }}-HTML5
-        path: build/freetube
+        name: freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
+        path: dist/freetube-${{ steps.versionNumber.outputs.result }}.apk

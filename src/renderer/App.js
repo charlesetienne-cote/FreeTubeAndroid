@@ -1,4 +1,4 @@
-import Vue from 'vue'
+import Vue, { defineComponent } from 'vue'
 import { mapActions, mapMutations } from 'vuex'
 import { ObserveVisibility } from 'vue-observe-visibility'
 import FtFlexBox from './components/ft-flex-box/ft-flex-box.vue'
@@ -13,12 +13,13 @@ import { marked } from 'marked'
 import { IpcChannels } from '../constants'
 import packageDetails from '../../package.json'
 import { openExternalLink, openInternalPath, showToast } from './helpers/utils'
+import cordova from 'cordova'
 
 let ipcRenderer = null
 
 Vue.directive('observe-visibility', ObserveVisibility)
 
-export default Vue.extend({
+export default defineComponent({
   name: 'App',
   components: {
     FtFlexBox,
@@ -76,10 +77,10 @@ export default Vue.extend({
       if (this.$route.meta.title !== 'Channel' && this.$route.meta.title !== 'Watch') {
         let title =
         this.$route.meta.path === '/home'
-          ? process.env.PRODUCT_NAME
-          : `${this.$t(this.$route.meta.title)} - ${process.env.PRODUCT_NAME}`
+          ? packageDetails.productName
+          : `${this.$t(this.$route.meta.title)} - ${packageDetails.productName}`
         if (!title) {
-          title = process.env.PRODUCT_NAME
+          title = packageDetails.productName
         }
         return title
       } else {
@@ -143,6 +144,17 @@ export default Vue.extend({
     this.setWindowTitle()
   },
   mounted: function () {
+    if (process.env.IS_CORDOVA) {
+      const { backgroundMode } = cordova.plugins
+      backgroundMode.setDefaults({
+        title: 'FreeTube'
+      })
+      backgroundMode.enable()
+      backgroundMode.on('activate', () => {
+        // By default android wants to pause videos in the background, this disables that "optimization"
+        backgroundMode.disableWebViewOptimizations()
+      })
+    }
     this.grabUserSettings().then(async () => {
       this.checkThemeSettings()
 
@@ -154,20 +166,30 @@ export default Vue.extend({
       this.grabAllProfiles(this.$t('Profile.All Channels')).then(async () => {
         this.grabHistory()
         this.grabAllPlaylists()
-
+        this.watchSystemTheme()
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) { // if the window was unfocused, the system theme might have changed
+            this.watchSystemTheme()
+          }
+        })
         if (process.env.IS_ELECTRON) {
           ipcRenderer = require('electron').ipcRenderer
           this.setupListenersToSyncWindows()
           this.activateKeyboardShortcuts()
+          this.activateIPCListeners()
           this.openAllLinksExternally()
           this.enableSetSearchQueryText()
           this.enableOpenUrl()
-          this.watchSystemTheme()
           await this.checkExternalPlayer()
         }
 
         this.dataReady = true
-
+        setTimeout(() => {
+          if (process.env.IS_CORDOVA) {
+            // hide the splashscreen
+            navigator.splashscreen.hide()
+          }
+        }, 250)
         setTimeout(() => {
           this.checkForNewUpdates()
           this.checkForNewBlogPosts()
@@ -204,13 +226,22 @@ export default Vue.extend({
             .then((response) => response.json())
             .then((json) => {
               const tagName = json[0].tag_name
-              const versionNumber = tagName.split('-nightly-')[1]
+              const tagNameParts = tagName.split('.')
+              let versionNumber = tagNameParts[tagNameParts.length - 1]
+              // if the tag is a nightly release
+              if (tagName.indexOf('-nightly-') !== -1) {
+                versionNumber = tagName.split('-nightly-')[1]
+              }
               this.updateChangelog = marked.parse(json[0].body)
               this.changeLogTitle = json[0].name
 
               const message = this.$t('Version $ is now available!  Click for more details')
               this.updateBannerMessage = message.replace('$', versionNumber)
-              const appVersion = packageDetails.version.split('-nightly-')[1]
+              const versionParts = packageDetails.version.split('.')
+              let appVersion = versionParts[versionParts.length - 1]
+              if (appVersion.indexOf('-nightly-') !== -1) {
+                appVersion = appVersion.split('-nightly-')[1]
+              }
               if (parseInt(versionNumber) > parseInt(appVersion)) {
                 this.showUpdatesBanner = true
               }
@@ -288,15 +319,19 @@ export default Vue.extend({
       })
     },
 
+    activateIPCListeners: function () {
+      // handle menu event updates from main script
+      ipcRenderer.on('history-back', (_event) => {
+        this.$refs.topNav.historyBack()
+      })
+      ipcRenderer.on('history-forward', (_event) => {
+        this.$refs.topNav.historyForward()
+      })
+    },
+
     handleKeyboardShortcuts: function (event) {
       if (event.altKey) {
         switch (event.key) {
-          case 'ArrowRight':
-            this.$refs.topNav.historyForward()
-            break
-          case 'ArrowLeft':
-            this.$refs.topNav.historyBack()
-            break
           case 'D':
           case 'd':
             this.$refs.topNav.focusSearch()
@@ -453,9 +488,41 @@ export default Vue.extend({
      * all systems running the electron app.
      */
     watchSystemTheme: function () {
-      ipcRenderer.on(IpcChannels.NATIVE_THEME_UPDATE, (event, shouldUseDarkColors) => {
-        document.body.dataset.systemTheme = shouldUseDarkColors ? 'dark' : 'light'
-      })
+      if (process.env.IS_ELECTRON) {
+        ipcRenderer.on(IpcChannels.NATIVE_THEME_UPDATE, (event, shouldUseDarkColors) => {
+          document.body.dataset.systemTheme = shouldUseDarkColors ? 'dark' : 'light'
+        })
+      } else if (process.env.IS_CORDOVA) {
+        cordova.plugins.ThemeDetection.isAvailable((isThemeDetectionAvailable) => {
+          if (isThemeDetectionAvailable) {
+            cordova.plugins.ThemeDetection.isDarkModeEnabled((message) => {
+              document.body.dataset.systemTheme = message.value ? 'dark' : 'light'
+            })
+          }
+        }, console.error)
+      }
+    },
+
+    openInternalPath: function({ path, doCreateNewWindow, query = {}, searchQueryText = null }) {
+      if (process.env.IS_ELECTRON && doCreateNewWindow) {
+        const { ipcRenderer } = require('electron')
+
+        // Combine current document path and new "hash" as new window startup URL
+        const newWindowStartupURL = [
+          window.location.href.split('#')[0],
+          `#${path}?${(new URLSearchParams(query)).toString()}`
+        ].join('')
+        ipcRenderer.send(IpcChannels.CREATE_NEW_WINDOW, {
+          windowStartupUrl: newWindowStartupURL,
+          searchQueryText
+        })
+      } else {
+        // Web
+        this.$router.push({
+          path,
+          query
+        })
+      }
     },
 
     enableSetSearchQueryText: function () {
