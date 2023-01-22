@@ -77,26 +77,24 @@ Builds are automatically created from changes to our development branch via [Git
 The first build with a green check mark is the latest build. You will need to have a GitHub account to download these builds.
 
 ## How to build and test
-
+### Commands for the Android APK
 ```bash
-    yarn pack:browser
-    # This creates the cordova project, 
-    # copies the dist folder, browserifies 
-    # it, and replaces a bunch of functions
-    # with cordova equivalents.
-    # After your first build, most of the
-    # build components will be recycled
-    # from that build.
+    # 📦 Packs the project using `webpack.cordova.config.js`
+    yarn pack:cordova
+    # 🏗 Builds the debug APK and launches it on a connected device
+    yarn run:cordova
+    # 🚧 Builds the development APK
     yarn build:cordova
-    # This opens up the cordova application 
-    # in a web browser
-    yarn run:cordova browser
-    # This opens up the cordova application
-    # on an android device connected with 
-    # debugging enabled
-    yarn run:cordova android
+    # 🏦 Builds the release APK
+    yarn build:cordova --release
 ```
-
+### Commands for the PWA (progressive web app)
+```bash
+    # 🐛 Debugs the project using `webpack.web.config.js`
+    yarn dev:web
+    # 📦 Packs the project using `webpack.web.config.js` 
+    yarn pack:web
+```
 ## Contributing
 
 **NOTICE: MOST CHANGES SHOULD PROBABLY BE MADE TO [UPSTREAM](https://www.github.com/freetubeapp/freetube) UNLESS DIRECTLY RELATED TO CORDOVA CODE OR WORKFLOWS.**
