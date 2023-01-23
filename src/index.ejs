@@ -3,7 +3,18 @@
 
   <head>
     <% if (process.env.IS_CORDOVA) { %>
-    <script src="cordova.js" ></script>
+    <script>
+      // ⌚ Wait for cordova to load before loading webpack
+      const onCordovaLoaded = () => {
+        const script = document.createElement('script')
+        script.src = "web.js"
+        script.defer = true
+        script.async = true
+        document.head.appendChild(script)
+      }
+    </script>
+    <script src="cordova.js" onload="onCordovaLoaded()"></script>
+    <link rel="stylesheet" type="text/css" href="web.css" />
     <% } %>
     <meta charset="utf-8" />
     <meta name="viewport"

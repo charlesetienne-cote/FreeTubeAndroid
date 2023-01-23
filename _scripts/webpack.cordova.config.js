@@ -130,11 +130,12 @@ const config = {
       filename: 'index.html',
       template: path.resolve(__dirname, '../src/index.ejs'),
       nodeModules: false,
+      inject: false
     }),
     new VueLoaderPlugin(),
     new MiniCssExtractPlugin({
-      filename: isDevMode ? '[name].css' : '[name].[contenthash].css',
-      chunkFilename: isDevMode ? '[id].css' : '[id].[contenthash].css',
+      filename: '[name].css',
+      chunkFilename: '[id].css',
     })
   ],
   resolve: {
