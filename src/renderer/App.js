@@ -166,6 +166,7 @@ export default defineComponent({
       this.grabAllProfiles(this.$t('Profile.All Channels')).then(async () => {
         this.grabHistory()
         this.grabAllPlaylists()
+
         this.watchSystemTheme()
         document.addEventListener('visibilitychange', () => {
           if (!document.hidden) { // if the window was unfocused, the system theme might have changed
@@ -486,13 +487,17 @@ export default defineComponent({
           document.body.dataset.systemTheme = shouldUseDarkColors ? 'dark' : 'light'
         })
       } else if (process.env.IS_CORDOVA) {
-        cordova.plugins.ThemeDetection.isAvailable((isThemeDetectionAvailable) => {
-          if (isThemeDetectionAvailable) {
-            cordova.plugins.ThemeDetection.isDarkModeEnabled((message) => {
-              document.body.dataset.systemTheme = message.value ? 'dark' : 'light'
-            })
-          }
-        }, console.error)
+        if ('ThemeDetection' in cordova.plugins) {
+          cordova.plugins.ThemeDetection.isAvailable((isThemeDetectionAvailable) => {
+            if (isThemeDetectionAvailable) {
+              cordova.plugins.ThemeDetection.isDarkModeEnabled((message) => {
+                document.body.dataset.systemTheme = message.value ? 'dark' : 'light'
+              })
+            }
+          }, console.error)
+        } else {
+          console.warn('ThemeDetection plugin failed to load.')
+        }
       }
     },
 
