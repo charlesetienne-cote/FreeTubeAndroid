@@ -17,8 +17,10 @@ module.exports = (async () => {
   const [major, minor, patch] = versionNumbers
   let build = 0
   if (versionParts.length > 2) {
+    // if the build number comes after -{environment}-
     build = versionParts[2]
-  } else {
+  } else if (versionNumbers.length > 3) {
+    // if the build number comes after a final .
     build = parseInt(versionNumbers[3])
   }
   // eslint-disable-next-line
