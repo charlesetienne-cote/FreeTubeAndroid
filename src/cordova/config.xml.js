@@ -21,7 +21,7 @@ module.exports = (async () => {
   } else {
     build = parseInt(versionNumbers[3])
   }
-  configXML.widget.$['android-versionCode'] = `${major * 100000000 + minor * 10000000 + patch * 10000 + build}`
+  configXML.widget.$['android-versionCode'] = `${major * 10000000 + minor * 1000000 + patch * 10000 + build}`
   configXML.widget.$.version = pkg.version
   configXML.widget.author[0].$.email = pkg.author.email
   configXML.widget.author[0]._ = pkg.author.name
