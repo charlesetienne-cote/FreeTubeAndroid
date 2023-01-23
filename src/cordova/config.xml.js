@@ -21,7 +21,9 @@ module.exports = (async () => {
   } else {
     build = parseInt(versionNumbers[3])
   }
-  configXML.widget.$['android-versionCode'] = `${major * 1000000 + minor * 10000 + patch * 1000 + build}`
+  // eslint-disable-next-line
+  console.log(`SOMETHING TRICKY IS HAPPENING HERE: this should be 0: ${major}, this should be 18: ${minor}, this should be 0: ${patch}, this should be some other number: ${build}`)
+  configXML.widget.$['android-versionCode'] = `${major * 1000000 + minor * 10000000 + patch * 1000 + build}`
   configXML.widget.$.version = pkg.version
   configXML.widget.author[0].$.email = pkg.author.email
   configXML.widget.author[0]._ = pkg.author.name
