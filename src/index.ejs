@@ -2,6 +2,9 @@
 <html>
 
   <head>
+    <% if (process.env.IS_CORDOVA) { %>
+    <script src="cordova.js" ></script>
+    <% } %>
     <meta charset="utf-8" />
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
@@ -43,9 +46,6 @@
       }
     }
     </script>
-    <% } %>
-    <% if (process.env.IS_CORDOVA) { %>
-    <script src="cordova.js"></script>
     <% } %>
     <!-- webpack builds are automatically injected -->
   </body>
