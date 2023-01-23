@@ -13,12 +13,16 @@ module.exports = (async () => {
   const configXML = await parseXMLString((await util.promisify(fs.readFile)('./src/cordova/config.xml')).toString())
   configXML.widget.$.id = `io.freetubeapp.${pkg.name}`
   const versionParts = pkg.version.split('-')
-  const [major, minor, patch] = versionParts[0].split('.')
+  const versionNumbers = versionParts[0].split('.')
+  const [major, minor, patch] = versionNumbers
   let build = 0
   if (versionParts.length > 2) {
     build = versionParts[2]
+  } else {
+    build = parseInt(versionNumbers[3])
   }
-  configXML.widget.$['android-versionCode'] = `${major * 10000000 + minor * 100000 + patch * 1000 + build}`
+  const versionCode = `${major * 1000000000 + minor * 10000000 + patch * 10000 + build}`
+  configXML.widget.$['android-versionCode'] = versionCode
   configXML.widget.$.version = pkg.version
   configXML.widget.author[0].$.email = pkg.author.email
   configXML.widget.author[0]._ = pkg.author.name
