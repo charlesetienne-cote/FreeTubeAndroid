@@ -220,8 +220,8 @@ export default defineComponent({
     checkForNewUpdates: function () {
       if (this.checkForUpdates) {
         const requestUrl = 'https://api.github.com/repos/marmadilemanteater/freetubecordova/releases?per_page=1'
-        // only check for an update if you are on a nightly version
-        if (packageDetails.version.indexOf('nightly') !== -1) {
+        // don't check for updates in nightly
+        if (packageDetails.version.indexOf('nightly') === -1) {
           fetch(requestUrl)
             .then((response) => response.json())
             .then((json) => {
