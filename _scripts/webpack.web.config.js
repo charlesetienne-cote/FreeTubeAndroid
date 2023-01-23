@@ -173,22 +173,26 @@ config.plugins.push(
     'process.env.GEOLOCATION_NAMES': JSON.stringify(fs.readdirSync(path.join(__dirname, '..', 'static', 'geolocations')))
   }),
   new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: path.join(__dirname, '../static/pwabuilder-sw.js'),
-          to: path.join(__dirname, '../dist/web/pwabuilder-sw.js'),
+    patterns: [
+      {
+        from: path.join(__dirname, '../static/pwabuilder-sw.js'),
+        to: path.join(__dirname, '../dist/web/pwabuilder-sw.js'),
+      },
+      {
+        // webmanifest expected to be in root
+        from: path.join(__dirname, '../static/manifest.webmanifest'),
+        to: path.join(__dirname, '../dist/web/manifest.webmanifest'),
+      },
+      {
+        from: path.join(__dirname, '../static'),
+        to: path.join(__dirname, '../dist/web/static'),
+        globOptions: {
+          dot: true,
+          ignore: ['**/.*', '**/locales/**', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
         },
-        {
-          from: path.join(__dirname, '../static'),
-          to: path.join(__dirname, '../dist/web/static'),
-          globOptions: {
-            dot: true,
-            ignore: ['**/.*', '**/locales/**', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
-          },
-        },
+      },
     ]
   })
 )
-
 
 module.exports = config
