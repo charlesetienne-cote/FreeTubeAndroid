@@ -363,11 +363,15 @@ const stateWithSideEffects = {
     defaultValue: false,
     sideEffectsHandler: (_, value) => {
       if (process.env.IS_CORDOVA) {
-        const { backgroundMode } = cordova.plugins
-        backgroundMode.setDefaults({
-          title: 'FreeTube',
-          silent: value
-        })
+        if ('plugins' in cordova && 'backgroundMode' in cordova.plugins) {
+          const { backgroundMode } = cordova.plugins
+          backgroundMode.setDefaults({
+            title: 'FreeTube',
+            silent: value
+          })
+        } else {
+          console.error('Background mode plugin failed to load.')
+        }
       }
     }
   }

@@ -350,15 +350,19 @@ export async function showSaveDialog (options) {
 */
 export async function writeFileFromDialog (response, content) {
   if (process.env.IS_CORDOVA) {
-    return new Promise((resolve, reject) => {
-      const { filePath } = response
-      const blob = new Blob([content], { type: 'application/octet-stream' })
-      cordova.plugins.saveDialog.saveFile(blob, filePath).then(() => {
-        resolve()
-      }).catch(reason => {
-        reject(reason)
+    if ('plugins' in cordova && 'saveDialog' in cordova.plugins) {
+      return new Promise((resolve, reject) => {
+        const { filePath } = response
+        const blob = new Blob([content], { type: 'application/octet-stream' })
+        cordova.plugins.saveDialog.saveFile(blob, filePath).then(() => {
+          resolve()
+        }).catch(reason => {
+          reject(reason)
+        })
       })
-    })
+    } else {
+      console.error('Save dialog plugin failed to load.')
+    }
   } else if (process.env.IS_ELECTRON) {
     const { filePath } = response
     return await fs.writeFile(filePath, content)

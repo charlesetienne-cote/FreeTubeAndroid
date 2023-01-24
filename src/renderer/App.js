@@ -145,15 +145,19 @@ export default defineComponent({
   },
   mounted: function () {
     if (process.env.IS_CORDOVA) {
-      const { backgroundMode } = cordova.plugins
-      backgroundMode.setDefaults({
-        title: 'FreeTube'
-      })
-      backgroundMode.enable()
-      backgroundMode.on('activate', () => {
-        // By default android wants to pause videos in the background, this disables that "optimization"
-        backgroundMode.disableWebViewOptimizations()
-      })
+      if ('plugins' in cordova && 'backgroundMode' in cordova.plugins) {
+        const { backgroundMode } = cordova.plugins
+        backgroundMode.setDefaults({
+          title: 'FreeTube'
+        })
+        backgroundMode.enable()
+        backgroundMode.on('activate', () => {
+          // By default android wants to pause videos in the background, this disables that "optimization"
+          backgroundMode.disableWebViewOptimizations()
+        })
+      } else {
+        console.error('Background mode plugin failed to load.')
+      }
     }
     this.grabUserSettings().then(async () => {
       this.checkThemeSettings()
@@ -487,7 +491,7 @@ export default defineComponent({
           document.body.dataset.systemTheme = shouldUseDarkColors ? 'dark' : 'light'
         })
       } else if (process.env.IS_CORDOVA) {
-        if ('ThemeDetection' in cordova.plugins) {
+        if ('plugins' in cordova && 'ThemeDetection' in cordova.plugins) {
           cordova.plugins.ThemeDetection.isAvailable((isThemeDetectionAvailable) => {
             if (isThemeDetectionAvailable) {
               cordova.plugins.ThemeDetection.isDarkModeEnabled((message) => {
@@ -496,7 +500,7 @@ export default defineComponent({
             }
           }, console.error)
         } else {
-          console.warn('ThemeDetection plugin failed to load.')
+          console.error('Theme detection plugin failed to load.')
         }
       }
     },
