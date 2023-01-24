@@ -182,6 +182,10 @@ config.plugins.push(
         to: path.join(__dirname, '../dist/cordova/www/pwabuilder-sw.js'),
       },
       {
+        from: path.join(__dirname, '../_icons/iconColor.ico'),
+        to: path.join(__dirname, '../dist/cordova/www/favicon.ico'),
+      },
+      {
         from: path.join(__dirname, '../static'),
         to: path.join(__dirname, '../dist/cordova/www/static'),
         globOptions: {
