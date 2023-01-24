@@ -217,9 +217,13 @@ export default defineComponent({
         this.screenshotFolderPlaceholder = this.screenshotFolder
         return
       }
-      this.getScreenshotEmptyFolderPlaceholder().then((res) => {
-        this.screenshotFolderPlaceholder = res
-      })
+      // Screenshots only work in electron right now
+      // TODO📝 make screenshots work in cordova and possibly also in web builds
+      if (process.env.IS_ELECTRON) {
+        this.getScreenshotEmptyFolderPlaceholder().then((res) => {
+          this.screenshotFolderPlaceholder = res
+        })
+      }
     },
 
     chooseScreenshotFolder: async function() {
