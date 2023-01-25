@@ -819,7 +819,7 @@ Tooltips:
     Disable Background Notification:
       Disables the "FreeTube is running" background notificiation. Beware, disabling this notification may cause Android to close the app when it is in the background.
     Show Thumbnail in Media Controls:
-      Sometimes, the media controls info will get out of sync due to an issue with the thumbnail. If you are experiencing problems with the media controls on Android 11, this may resolve them.
+      If you are experiencing issues with the media controls info getting out of sync, disabling this may resolve them.
 # Toast Messages
 Local API Error (Click to copy): Local API Error (Click to copy)
 Invidious API Error (Click to copy): Invidious API Error (Click to copy)
