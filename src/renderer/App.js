@@ -148,7 +148,9 @@ export default defineComponent({
       if ('plugins' in cordova && 'backgroundMode' in cordova.plugins) {
         const { backgroundMode } = cordova.plugins
         backgroundMode.setDefaults({
-          title: 'FreeTube'
+          title: 'FreeTube',
+          // TODO ✏ add this to locale strings
+          text: 'FreeTube is running in the background.'
         })
         backgroundMode.enable()
         backgroundMode.on('activate', () => {
