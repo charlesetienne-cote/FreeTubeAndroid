@@ -13,11 +13,15 @@ export default defineComponent({
   computed: {
     getDisableBackgroundModeNotification: function () {
       return this.$store.getters.getDisableBackgroundModeNotification
+    },
+    getShowThumbnailInMediaControls: function () {
+      return this.$store.getters.getShowThumbnailInMediaControls
     }
   },
   methods: {
     ...mapActions([
       'updateDisableBackgroundModeNotification',
+      'updateShowThumbnailInMediaControls'
     ])
   }
 })

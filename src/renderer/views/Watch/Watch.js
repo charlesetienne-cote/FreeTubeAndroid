@@ -176,31 +176,25 @@ export default defineComponent({
     },
     hideChapters: function () {
       return this.$store.getters.getHideChapters
+    },
+    showThumbnailInMediaControls: function () {
+      return this.$store.getters.getShowThumbnailInMediaControls
     }
   },
   watch: {
-    channelName() {
-      if (process.env.IS_CORDOVA) {
-        if (MusicControls === undefined) {
-          console.error('Music controls plugin failed to load.')
-        } else {
-          MusicControls.create({
-            track: this.videoTitle,
-            artist: this.channelName
-          })
-        }
-      }
-    },
     thumbnail() {
       if (process.env.IS_CORDOVA) {
         if (MusicControls === undefined) {
           console.error('Music controls plugin failed to load.')
         } else {
-          MusicControls.create({
+          const data = {
             track: this.videoTitle,
-            artist: this.channelName,
-            cover: this.thumbnail
-          })
+            artist: this.channelName
+          }
+          if (this.showThumbnailInMediaControls) {
+            data.cover = this.thumbnail
+          }
+          MusicControls.create(data)
           const playPauseListeners = []
           MusicControls.subscribe((action) => {
             try {
@@ -1199,10 +1193,6 @@ export default defineComponent({
       // takes long enough for the video id to have already changed to the new one
       // receiving it as an arg instead of accessing it ourselves means we always have the right one
       if (process.env.IS_CORDOVA) {
-        // I'm struggling with the differences between different versions of android
-        // and destroying this twice is the only way I can figure out how to make it work
-        // https://github.com/ghenry22/cordova-plugin-music-controls2/issues/90
-        MusicControls.destroy()
         MusicControls.destroy()
       }
       clearTimeout(this.playNextTimeout)

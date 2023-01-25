@@ -324,10 +324,11 @@ export async function showSaveDialog (options) {
   } else {
     // If the native filesystem api is available
     if ('showSaveFilePicker' in window) {
+      const pathParts = options.defaultPath.split('/')
       return {
         canceled: false,
         handle: await window.showSaveFilePicker({
-          suggestedName: options.defaultPath.split('/').at(-1),
+          suggestedName: pathParts[pathParts.length - 1],
           types: options.filters[0]?.extensions?.map((extension) => {
             return {
               accept: {
