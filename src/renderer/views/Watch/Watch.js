@@ -179,6 +179,74 @@ export default defineComponent({
     }
   },
   watch: {
+    channelName() {
+      if (process.env.IS_CORDOVA) {
+        if (MusicControls === undefined) {
+          console.error('Music controls plugin failed to load.')
+        } else {
+          MusicControls.create({
+            track: this.videoTitle,
+            artist: this.channelName
+          })
+        }
+      }
+    },
+    thumbnail() {
+      if (process.env.IS_CORDOVA) {
+        if (MusicControls === undefined) {
+          console.error('Music controls plugin failed to load.')
+        } else {
+          MusicControls.create({
+            track: this.videoTitle,
+            artist: this.channelName,
+            cover: this.thumbnail
+          })
+          const playPauseListeners = []
+          MusicControls.subscribe((action) => {
+            try {
+              const { player } = this.$refs.videoPlayer
+              if (playPauseListeners.length === 0) {
+                playPauseListeners.push(player.el().querySelector('video').addEventListener('pause', () => {
+                  MusicControls.updateIsPlaying(false)
+                }), player.el().querySelector('video').addEventListener('play', () => {
+                  MusicControls.updateIsPlaying(true)
+                }))
+              }
+              if (JSON.parse(action).message === 'music-controls-play' || JSON.parse(action).message === 'music-controls-pause') {
+                if (!player.paused()) {
+                  player.pause()
+                } else {
+                  player.play()
+                }
+              } else {
+                switch (JSON.parse(action).message) {
+                  case 'music-controls-next':
+                    // TODO implement next control
+                    if (this.watchingPlaylist) {
+                      this.$refs.watchVideoPlaylist.playNextVideo()
+                    } else {
+                      const nextVideoId = this.recommendedVideos[0].videoId
+                      this.$router.push({
+                        path: `/watch/${nextVideoId}`
+                      })
+                      showToast(this.$t('Playing Next Video'))
+                    }
+                    break
+                  case 'music-controls-previous':
+                    // TODO implement previous control
+                    history.back()
+                    break
+                }
+              }
+              MusicControls.updateIsPlaying(!player.paused())
+            } catch (error) {
+              console.warn(error)
+            }
+          })
+          MusicControls.listen()
+        }
+      }
+    },
     $route() {
       this.handleRouteChange(this.videoId)
       // react to route changes...
@@ -663,61 +731,6 @@ export default defineComponent({
 
       invidiousGetVideoInformation(this.videoId)
         .then(result => {
-          if (process.env.IS_CORDOVA) {
-            if (MusicControls === undefined) {
-              console.error('Music controls plugin failed to load.')
-            } else {
-              try {
-                MusicControls.destroy()
-              } catch (err) {
-                console.error(err)
-              }
-              MusicControls.create({
-                track: result.title,
-                artist: result.author,
-                cover: result.videoThumbnails[result.videoThumbnails.length - 4].url
-              })
-              const playPauseListeners = []
-              MusicControls.subscribe((action) => {
-                const { player } = this.$refs.videoPlayer
-                if (playPauseListeners.length === 0) {
-                  playPauseListeners.push(player.el().querySelector('video').addEventListener('pause', () => {
-                    MusicControls.updateIsPlaying(false)
-                  }), player.el().querySelector('video').addEventListener('play', () => {
-                    MusicControls.updateIsPlaying(true)
-                  }))
-                }
-                if (JSON.parse(action).message === 'music-controls-play' || JSON.parse(action).message === 'music-controls-pause') {
-                  if (!player.paused()) {
-                    player.pause()
-                  } else {
-                    player.play()
-                  }
-                } else {
-                  switch (JSON.parse(action).message) {
-                    case 'music-controls-next':
-                      // TODO implement next control
-                      if (this.watchingPlaylist) {
-                        this.$refs.watchVideoPlaylist.playNextVideo()
-                      } else {
-                        const nextVideoId = this.recommendedVideos[0].videoId
-                        this.$router.push({
-                          path: `/watch/${nextVideoId}`
-                        })
-                        showToast(this.$t('Playing Next Video'))
-                      }
-                      break
-                    case 'music-controls-previous':
-                      // TODO implement previous control
-                      history.back()
-                      break
-                  }
-                }
-                MusicControls.updateIsPlaying(!player.paused())
-              })
-              MusicControls.listen()
-            }
-          }
           if (result.error) {
             throw new Error(result.error)
           }
@@ -1185,7 +1198,13 @@ export default defineComponent({
       // if the user navigates to another video, the ipc call for the userdata path
       // takes long enough for the video id to have already changed to the new one
       // receiving it as an arg instead of accessing it ourselves means we always have the right one
-
+      if (process.env.IS_CORDOVA) {
+        // I'm struggling with the differences between different versions of android
+        // and destroying this twice is the only way I can figure out how to make it work
+        // https://github.com/ghenry22/cordova-plugin-music-controls2/issues/90
+        MusicControls.destroy()
+        MusicControls.destroy()
+      }
       clearTimeout(this.playNextTimeout)
       clearInterval(this.playNextCountDownIntervalId)
       this.videoChapters = []
