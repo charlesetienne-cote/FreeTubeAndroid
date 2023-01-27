@@ -4,6 +4,7 @@ import EmojiRun from 'youtubei.js/dist/src/parser/classes/misc/EmojiRun'
 import Text from 'youtubei.js/dist/src/parser/classes/misc/Text'
 import Autolinker from 'autolinker'
 import { join } from 'path'
+import cordova from 'cordova'
 
 import { PlayerCache } from './PlayerCache'
 import {
@@ -31,7 +32,11 @@ async function createInnertube(options = { withPlayer: false, location: undefine
   let cache
   if (options.withPlayer) {
     const userData = await getUserDataPath()
-    cache = new PlayerCache(join(userData, 'player_cache'))
+    if (userData != null) {
+      cache = new PlayerCache(join(userData, 'player_cache'))
+    } else {
+      cache = undefined
+    }
   }
 
   return await Innertube.create({
@@ -41,7 +46,60 @@ async function createInnertube(options = { withPlayer: false, location: undefine
     client_type: options.clientType,
 
     // use browser fetch
-    fetch: (input, init) => fetch(input, init),
+    fetch: (input, init = {}) => {
+      if (process.env.IS_CORDOVA) {
+        if ('http' in cordova.plugin) {
+          const { http } = cordova.plugin
+          return new Promise((resolve, reject) => {
+            if ('headers' in init) {
+              if (Object.keys(init.headers).length === 0) {
+                // you can't have an empty headers object in cordova advanced http
+                delete init.headers
+              }
+            }
+            let httpFunction
+            if (input instanceof URL) {
+              const url = input.toString()
+              httpFunction = (callbackSuccess, callbackError) => {
+                http.get(url, {}, init.headers, callbackSuccess, callbackError)
+              }
+            } else {
+              const data = input
+              switch (data.method) {
+                case 'POST':
+                  httpFunction = (callbackSuccess, callbackError) => {
+                    http.setDataSerializer('json')
+                    http.useBasicAuth(data.credentials)
+                    http.post(data.url, JSON.parse(init.body), init, callbackSuccess, callbackError)
+                  }
+                  break
+                case 'GET':
+                default:
+                  httpFunction = (callbackSuccess, callbackError) => {
+                    http.get(data.url, {}, init.headers, callbackSuccess, callbackError)
+                  }
+                  break
+              }
+            }
+            httpFunction((response) => {
+              resolve(Object.assign(response, {
+                ok: response.status === 200,
+                text: () => {
+                  return response.data
+                }
+              }))
+            }, (response) => {
+              reject(response)
+            })
+          })
+        } else {
+          console.error('Advanced http plugin failed to load.')
+        }
+      }
+      if (process.env.IS_ELECTRON) {
+        return fetch(input, init)
+      }
+    },
     cache,
     generate_session_locally: true
   })

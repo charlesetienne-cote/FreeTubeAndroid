@@ -28,12 +28,6 @@ const config = {
       electron: '{}',
       cordova: 'cordova',
       'music-controls': 'MusicControls'
-    },
-    ({ request }, callback) => {
-      if (request.startsWith('youtubei.js')) {
-        return callback(null, '{}')
-      }
-      callback()
     }
   ],
   module: {

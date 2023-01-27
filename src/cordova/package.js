@@ -22,7 +22,8 @@ module.exports = {
     'cordova-plugin-music-controls2': '3.0.7',
     'cordova-plugin-save-dialog': '^1.1.1',
     'cordova-plugin-theme-detection': '^1.3.0',
-    'cordova-plugin-device': '^2.1.0'
+    'cordova-plugin-device': '^2.1.0',
+    'cordova-plugin-advanced-http': '^3.3.1'
   },
   cordova: {
     platforms: [
@@ -34,7 +35,8 @@ module.exports = {
       'cordova-clipboard': {},
       'cordova-plugin-background-mode': {},
       'cordova-plugin-theme-detection': {},
-      'cordova-plugin-save-dialog': {}
+      'cordova-plugin-save-dialog': {},
+      'cordova-plugin-advanced-http': {}
     }
   }
 }
