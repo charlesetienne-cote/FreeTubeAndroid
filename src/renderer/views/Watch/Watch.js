@@ -23,6 +23,7 @@ import {
   showToast
 } from '../../helpers/utils'
 import {
+  filterFormats,
   getLocalVideoInfo,
   mapLocalFormat,
   parseLocalTextRuns,
@@ -114,6 +115,9 @@ export default defineComponent({
     saveWatchedProgress: function () {
       return this.$store.getters.getSaveWatchedProgress
     },
+    saveVideoHistoryWithLastViewedPlaylist: function () {
+      return this.$store.getters.getSaveVideoHistoryWithLastViewedPlaylist
+    },
     backendPreference: function () {
       return this.$store.getters.getBackendPreference
     },
@@ -176,6 +180,9 @@ export default defineComponent({
     },
     hideChapters: function () {
       return this.$store.getters.getHideChapters
+    },
+    allowDashAv1Formats: function () {
+      return this.$store.getters.getAllowDashAv1Formats
     },
     showThumbnailInMediaControls: function () {
       return this.$store.getters.getShowThumbnailInMediaControls
@@ -294,6 +301,7 @@ export default defineComponent({
     this.useTheatreMode = this.defaultTheatreMode
 
     this.checkIfPlaylist()
+    this.handlePlaylistPersisting()
     this.checkIfTimestamp()
 
     if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
@@ -577,7 +585,7 @@ export default defineComponent({
             if (result.streaming_data.formats.length > 0) {
               this.videoSourceList = result.streaming_data.formats.map(mapLocalFormat).reverse()
             } else {
-              this.videoSourceList = result.streaming_data.adaptive_formats.map(mapLocalFormat).reverse()
+              this.videoSourceList = filterFormats(result.streaming_data.adaptive_formats, this.allowDashAv1Formats).map(mapLocalFormat).reverse()
             }
             this.adaptiveFormats = this.videoSourceList
 
@@ -647,13 +655,6 @@ export default defineComponent({
           }
 
           if (result.streaming_data?.adaptive_formats.length > 0) {
-            this.adaptiveFormats = result.streaming_data.adaptive_formats.map(mapLocalFormat)
-            if (this.proxyVideos) {
-              this.dashSrc = await this.createInvidiousDashManifest()
-            } else {
-              this.dashSrc = await this.createLocalDashManifest(result)
-            }
-
             this.audioSourceList = result.streaming_data.adaptive_formats.filter((format) => {
               return format.has_audio
             }).sort((a, b) => {
@@ -680,6 +681,16 @@ export default defineComponent({
                 qualityLabel: label(index)
               }
             }).reverse()
+
+            // we need to alter the result object so the toDash function uses the filtered formats too
+            result.streaming_data.adaptive_formats = filterFormats(result.streaming_data.adaptive_formats, this.allowDashAv1Formats)
+
+            this.adaptiveFormats = result.streaming_data.adaptive_formats.map(mapLocalFormat)
+            if (this.proxyVideos) {
+              this.dashSrc = await this.createInvidiousDashManifest()
+            } else {
+              this.dashSrc = await this.createLocalDashManifest(result)
+            }
 
             if (this.activeFormat === 'audio') {
               this.activeSourceList = this.audioSourceList
@@ -994,6 +1005,19 @@ export default defineComponent({
       }
     },
 
+    handlePlaylistPersisting: function () {
+      // Only save playlist ID if enabled, and it's not special video types
+      if (!(this.rememberHistory && this.saveVideoHistoryWithLastViewedPlaylist)) { return }
+      if (this.isUpcoming || this.isLoading || this.isLive) { return }
+
+      const payload = {
+        videoId: this.videoId,
+        // Whether there is a playlist ID or not, save it
+        playlistId: this.$route.query?.playlistId,
+      }
+      this.updateLastViewedPlaylist(payload)
+    },
+
     checkIfWatched: function () {
       const historyIndex = this.historyCache.findIndex((video) => {
         return video.videoId === this.videoId
@@ -1200,6 +1224,7 @@ export default defineComponent({
       this.videoChapters = []
 
       this.handleWatchProgress()
+      this.handlePlaylistPersisting()
 
       if (!this.isUpcoming && !this.isLoading) {
         const player = this.$refs.videoPlayer.player
@@ -1397,7 +1422,7 @@ export default defineComponent({
         captionTracks.unshift({
           url: url.toString(),
           label,
-          languageCode: locale
+          language_code: locale
         })
       }
     },
@@ -1486,6 +1511,7 @@ export default defineComponent({
     ...mapActions([
       'updateHistory',
       'updateWatchProgress',
+      'updateLastViewedPlaylist',
       'updateSubscriptionDetails'
     ])
   }

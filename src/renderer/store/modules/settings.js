@@ -226,6 +226,7 @@ const state = {
   rememberHistory: true,
   removeVideoMetaFiles: true,
   saveWatchedProgress: true,
+  saveVideoHistoryWithLastViewedPlaylist: true,
   showFamilyFriendlyOnly: false,
   sponsorBlockShowSkippedToast: true,
   sponsorBlockUrl: 'https://sponsor.ajay.app',
@@ -279,6 +280,7 @@ const state = {
   screenshotFilenamePattern: '%Y%M%D-%H%N%S',
   fetchSubscriptionsAutomatically: true,
   settingsPassword: '',
+  allowDashAv1Formats: false,
   showThumbnailInMediaControls: true
 }
 
@@ -458,6 +460,10 @@ const customActions = {
 
         case SyncEvents.HISTORY.UPDATE_WATCH_PROGRESS:
           commit('updateRecordWatchProgressInHistoryCache', data)
+          break
+
+        case SyncEvents.HISTORY.UPDATE_PLAYLIST:
+          commit('updateRecordLastViewedPlaylistIdInHistoryCache', data)
           break
 
         case SyncEvents.GENERAL.DELETE:
