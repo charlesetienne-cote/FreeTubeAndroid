@@ -86,6 +86,9 @@ async function createInnertube(options = { withPlayer: false, location: undefine
                 ok: response.status === 200,
                 text: () => {
                   return response.data
+                },
+                json: () => {
+                  return JSON.parse(response.data)
                 }
               }))
             }, (response) => {
