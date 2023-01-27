@@ -304,7 +304,7 @@ export default defineComponent({
     this.handlePlaylistPersisting()
     this.checkIfTimestamp()
 
-    if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
+    if (!(process.env.IS_ELECTRON || process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
       this.getVideoInformationInvidious()
     } else {
       this.getVideoInformationLocal()
@@ -1303,29 +1303,30 @@ export default defineComponent({
       const userData = await getUserDataPath()
       let fileLocation
       let uriSchema
-      if (process.env.NODE_ENV === 'development') {
-        fileLocation = `static/dashFiles/${this.videoId}.xml`
-        uriSchema = `dashFiles/${this.videoId}.xml`
-        // if the location does not exist, writeFileSync will not create the directory, so we have to do that manually
-        if (!(await pathExists('static/dashFiles/'))) {
-          await fs.mkdir('static/dashFiles/')
-        }
+      if (process.env.IS_ELECTRON) {
+        if (process.env.NODE_ENV === 'development') {
+          fileLocation = `static/dashFiles/${this.videoId}.xml`
+          uriSchema = `dashFiles/${this.videoId}.xml`
+          // if the location does not exist, writeFileSync will not create the directory, so we have to do that manually
+          if (!(await pathExists('static/dashFiles/'))) {
+            await fs.mkdir('static/dashFiles/')
+          }
 
-        if (await pathExists(fileLocation)) {
-          await fs.rm(fileLocation)
-        }
-        await fs.writeFile(fileLocation, xmlData)
-      } else {
-        fileLocation = `${userData}/dashFiles/${this.videoId}.xml`
-        uriSchema = `file://${fileLocation}`
+          if (await pathExists(fileLocation)) {
+            await fs.rm(fileLocation)
+          }
+          await fs.writeFile(fileLocation, xmlData)
+        } else {
+          fileLocation = `${userData}/dashFiles/${this.videoId}.xml`
+          uriSchema = `file://${fileLocation}`
 
-        if (!(await pathExists(`${userData}/dashFiles/`))) {
-          await fs.mkdir(`${userData}/dashFiles/`)
-        }
+          if (!(await pathExists(`${userData}/dashFiles/`))) {
+            await fs.mkdir(`${userData}/dashFiles/`)
+          }
 
-        await fs.writeFile(fileLocation, xmlData)
+          await fs.writeFile(fileLocation, xmlData)
+        }
       }
-
       return [
         {
           url: uriSchema,
@@ -1358,30 +1359,31 @@ export default defineComponent({
       const userData = await getUserDataPath()
       let fileLocation
       let uriSchema
+      if (process.env.IS_ELECTRON) {
+        // Dev mode doesn't have access to the file:// schema, so we access
+        // storyboards differently when run in dev
+        if (process.env.NODE_ENV === 'development') {
+          fileLocation = `static/storyboards/${this.videoId}.vtt`
+          uriSchema = `storyboards/${this.videoId}.vtt`
+          // if the location does not exist, writeFile will not create the directory, so we have to do that manually
+          if (!(await pathExists('static/storyboards/'))) {
+            fs.mkdir('static/storyboards/')
+          } else if (await pathExists(fileLocation)) {
+            await fs.rm(fileLocation)
+          }
 
-      // Dev mode doesn't have access to the file:// schema, so we access
-      // storyboards differently when run in dev
-      if (process.env.NODE_ENV === 'development') {
-        fileLocation = `static/storyboards/${this.videoId}.vtt`
-        uriSchema = `storyboards/${this.videoId}.vtt`
-        // if the location does not exist, writeFile will not create the directory, so we have to do that manually
-        if (!(await pathExists('static/storyboards/'))) {
-          fs.mkdir('static/storyboards/')
-        } else if (await pathExists(fileLocation)) {
-          await fs.rm(fileLocation)
+          await fs.writeFile(fileLocation, results)
+        } else {
+          if (!(await pathExists(`${userData}/storyboards/`))) {
+            await fs.mkdir(`${userData}/storyboards/`)
+          }
+          fileLocation = `${userData}/storyboards/${this.videoId}.vtt`
+          uriSchema = `file://${fileLocation}`
+
+          await fs.writeFile(fileLocation, results)
         }
-
-        await fs.writeFile(fileLocation, results)
-      } else {
-        if (!(await pathExists(`${userData}/storyboards/`))) {
-          await fs.mkdir(`${userData}/storyboards/`)
-        }
-        fileLocation = `${userData}/storyboards/${this.videoId}.vtt`
-        uriSchema = `file://${fileLocation}`
-
-        await fs.writeFile(fileLocation, results)
       }
-
+      // TODO 📝 properly figure out how to do this in cordova
       this.videoStoryboardSrc = uriSchema
     },
 
