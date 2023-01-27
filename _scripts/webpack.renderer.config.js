@@ -36,7 +36,7 @@ const config = {
   externals: {
     // ignore linkedom's unnecessary broken canvas import, as youtubei.js only uses linkedom to generate DASH manifests
     canvas: '{}',
-    'cordova': 'browserify/lib/_empty.js',
+    cordova: 'browserify/lib/_empty.js',
     'music-controls': 'browserify/lib/_empty.js'
   },
   module: {
