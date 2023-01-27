@@ -14,6 +14,7 @@ import { IpcChannels } from '../constants'
 import packageDetails from '../../package.json'
 import { openExternalLink, openInternalPath, showToast } from './helpers/utils'
 import cordova from 'cordova'
+import 'core-js/stable'
 
 let ipcRenderer = null
 
