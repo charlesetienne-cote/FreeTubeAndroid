@@ -423,7 +423,7 @@ export default defineComponent({
       const linkName = selectedDownloadLinkOption.label
       const extension = this.grabExtensionFromUrl(linkName)
 
-      if (this.downloadBehavior === 'open') {
+      if (this.downloadBehavior === 'open' || !process.env.IS_ELECTRON) {
         openExternalLink(url)
       } else {
         this.downloadMedia({

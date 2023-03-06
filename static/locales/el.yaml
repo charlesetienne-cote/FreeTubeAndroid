@@ -1,5 +1,5 @@
 # Put the name of your locale in the same language
-Locale Name: 'Ελληνικά'
+Locale Name: 'Ελληνικά (EL)'
 FreeTube: 'FreeTube'
 # Currently on Subscriptions, Playlists, and History
 'This part of the app is not ready yet. Come back later when progress has been made.': >-
@@ -55,12 +55,14 @@ Search Filters:
     Videos: 'Βίντεο'
     Channels: 'Κανάλια'
     #& Playlists
+    Movies: Ταινίες
   Duration:
     Duration: 'Διάρκεια'
     All Durations: 'Οποιασδήποτε Διάρκειας'
     Short (< 4 minutes): 'Μικρό(<4 λεπτών)'
     Long (> 20 minutes): 'Μεγάλο (>20 λεπτών)'
   # On Search Page
+    Medium (4 - 20 minutes): Μεσαία (4 - 20 λεπτά)
   Search Results: 'Αποτελέσματα αναζήτησης'
   Fetching results. Please wait: 'Aνάκτηση αποτελεσμάτων. Παρακαλώ περιμένετε'
   Fetch more results: 'Λήψη περαιτέρω αποτελεσμάτων'
@@ -469,9 +471,9 @@ Settings:
     Remove Password: Κατάργηση Κωδικού πρόσβασης
   Experimental Settings:
     Replace HTTP Cache: Αντικατάσταση HTTP Cache
-    Warning: Αυτές οι ρυθμίσεις είναι πειραματικές, προκαλούν σφάλματα ενώ είναι ενεργοποιημένες.
-      Συνιστάται ιδιαίτερα η δημιουργία αντιγράφων ασφαλείας. Χρησιμοποιήστε το με
-      δική σας ευθύνη!
+    Warning: Αυτές οι ρυθμίσεις είναι πειραματικές, ενδέχεται να προκαλέσουν σφάλματα
+      όταν είναι ενεργοποιημένες. Συνιστάται ιδιαίτερα η δημιουργία αντιγράφων ασφαλείας.
+      Χρησιμοποιήστε το με δική σας ευθύνη!
     Experimental Settings: Πειραματικές Ρυθμίσεις
   Parental Control Settings:
     Parental Control Settings: Ρυθμίσεις Γονικού Ελέγχου
@@ -618,6 +620,22 @@ Channel:
     About: 'Σχετικά με'
     Channel Description: 'Περιγραφή καναλιού'
     Featured Channels: 'Προτεινόμενα κανάλια'
+    Tags:
+      Tags: Ετικέτες
+      Search for: Αναζήτηση για "{ετικέτα}"
+    Details: Λεπτομέριες
+    Location: Τοποθεσία
+    Joined: Εγγράφηκαν
+  This channel does not allow searching: Αυτό το κανάλι δεν επιτρέπει την αναζήτηση
+  This channel is age resticted and currently cannot be viewed in FreeTube.: Αυτό
+    το κανάλι έχει περιορισμό ηλικίας και προς το παρόν δεν μπορεί να προβληθεί στο
+    FreeTube.
+  Channel Tabs: Καρτέλες Καναλιών
+  This channel does not exist: Αυτό το κανάλι δεν υπάρχει
+  Community:
+    Community: Κοινότητα
+    This channel currently does not have any posts: Αυτό το κανάλι προς το παρόν δεν
+      έχει αναρτήσεις
 Video:
   Mark As Watched: 'Επισήμανση ως παρακολουθημένο'
   Remove From History: 'Κατάργηση από το ιστορικό'
@@ -774,12 +792,6 @@ Playlist:
   View: 'Προβολή'
   Views: 'Προβολές'
   Last Updated On: 'Τελευταία ενημέρωση στις'
-  Share Playlist:
-    Share Playlist: 'Κοινοποίηση λίστας αναπαραγωγής'
-    Copy YouTube Link: 'Αντιγραφή συνδέσμου YouTube'
-    Open in YouTube: 'Άνοιγμα στο YouTube'
-    Copy Invidious Link: 'Αντιγραφή συνδέσμου Invidious'
-    Open in Invidious: 'Άνοιγμα στο Invidious'
 
 # On Video Watch Page
 #* Published
@@ -797,6 +809,7 @@ Change Format:
     αυτό το βίντεο'
 Share:
   Share Video: 'Κοινοποίηση βίντεο'
+  Share Playlist: 'Κοινοποίηση λίστας αναπαραγωγής'
   Include Timestamp: 'Συμπερίληψη χρονικής σήμανσης/στιγμής'
   Copy Link: 'Αντιγραφή συνδέσμου'
   Open Link: 'Άνοιγμα Συνδέσμου'

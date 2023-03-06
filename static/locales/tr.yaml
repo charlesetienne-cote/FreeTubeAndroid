@@ -60,12 +60,14 @@ Search Filters:
     Videos: 'Videolar'
     Channels: 'Kanallar'
     #& Playlists
+    Movies: Film
   Duration:
     Duration: 'Süre'
     All Durations: 'Tüm Süreler'
     Short (< 4 minutes): 'Kısa (4 dakikadan az)'
     Long (> 20 minutes): 'Uzun (20 dakikadan fazla)'
   # On Search Page
+    Medium (4 - 20 minutes): Orta (4 - 20 dakika)
   Search Results: 'Arama Sonuçları'
   Fetching results. Please wait: 'Sonuçlar yükleniyor. Lütfen bekleyin'
   Fetch more results: 'Daha fazla sonuç yükle'
@@ -521,7 +523,7 @@ About:
   Chat on Matrix: Matrix'te sohbet et
   Mastodon: Mastodon
   Please check for duplicates before posting: Lütfen bildirmeden önce bildirilmiş
-    olup olmadığını kontrol edin
+    olup olmadığına bakın
   GitHub issues: GitHub sorunları
   Report a problem: Sorun bildir
   FreeTube Wiki: FreeTube Wiki
@@ -606,6 +608,21 @@ Channel:
     About: 'Hakkında'
     Channel Description: 'Kanal Açıklaması'
     Featured Channels: 'Öne Çıkan Kanallar'
+    Tags:
+      Tags: Etiketler
+      Search for: '"{tag}" için ara'
+    Details: Ayrıntılar
+    Joined: Katıldı
+    Location: Konum
+  This channel is age resticted and currently cannot be viewed in FreeTube.: Bu kanal
+    yaş sınırlamasına tabidir ve şu anda FreeTube'da görüntülenememektedir.
+  Channel Tabs: Kanal Sekmeleri
+  This channel does not allow searching: Bu kanal aramaya izin vermiyor
+  This channel does not exist: Bu kanal mevcut değil
+  Community:
+    Community: Topluluk
+    This channel currently does not have any posts: Bu kanalda şu anda herhangi bir
+      gönderi yok
 Video:
   Mark As Watched: 'İzlendi Olarak İşaretle'
   Remove From History: 'Geçmişden Kaldır'
@@ -760,12 +777,6 @@ Playlist:
   View: 'Görüntüle'
   Views: 'Görüntülenme'
   Last Updated On: 'Son Güncelleme Tarihi'
-  Share Playlist:
-    Share Playlist: 'Oynatma Listesini Paylaş'
-    Copy YouTube Link: 'YouTube Bağlantısını Kopyala'
-    Open in YouTube: 'YouTube''da aç'
-    Copy Invidious Link: 'Invidious Bağlantısını Kopyala'
-    Open in Invidious: 'Invidious''da aç'
 
 # On Video Watch Page
 #* Published
@@ -783,6 +794,7 @@ Change Format:
     değil'
 Share:
   Share Video: 'Videoyu Paylaş'
+  Share Playlist: 'Oynatma Listesini Paylaş'
   Include Timestamp: 'Zaman Damgasını Dahil Et'
   Copy Link: 'Bağlantıyı Kopyala'
   Open Link: 'Bağlantıyı Aç'

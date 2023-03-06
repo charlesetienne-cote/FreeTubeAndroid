@@ -4,6 +4,8 @@
   <description>A private YouTube client</description>
   <author email="FreeTubeApp@protonmail.com" href="https://github.com/FreeTubeApp/FreeTube">PrestonN</author>
   <content src="index.html"/>
+  <allow-intent href="http://*/*"/>
+  <allow-intent href="https://*/*"/>
   <platform name="android">
     <icon background="res/icon/android/background_16x16.png" density="ldpi" foreground="res/icon/android/icon_16x16_padded.png"/>
     <icon background="res/icon/android/background_32x32.png" density="mdpi" foreground="res/icon/android/icon_32x32_padded.png"/>
@@ -17,4 +19,5 @@
   </platform>
   <preference name="AndroidPersistentFileLocation" value="Compatibility"/>
   <preference name="AllowInlineMediaPlayback" value="true"/>
+
 </widget>

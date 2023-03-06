@@ -15,7 +15,6 @@ import { pathExists } from '../../helpers/filesystem'
 import {
   buildVTTFileLocally,
   copyToClipboard,
-  extractNumberFromString,
   formatDurationAsTimestamp,
   formatNumber,
   getFormatsFromHLSManifest,
@@ -26,6 +25,7 @@ import {
   filterFormats,
   getLocalVideoInfo,
   mapLocalFormat,
+  parseLocalSubscriberCount,
   parseLocalTextRuns,
   parseLocalWatchNextVideo
 } from '../../helpers/api/local'
@@ -98,7 +98,6 @@ export default defineComponent({
       timestamp: null,
       playNextTimeout: null,
       playNextCountDownIntervalId: null,
-      pictureInPictureButtonInverval: null,
       infoAreaSticky: true
     }
   },
@@ -274,25 +273,6 @@ export default defineComponent({
           }
           break
       }
-    },
-    activeFormat: function (format) {
-      clearInterval(this.pictureInPictureButtonInverval)
-
-      // only hide/show the button once the player is available
-      this.pictureInPictureButtonInverval = setInterval(() => {
-        if (!this.hidePlayer) {
-          const pipButton = document.querySelector('.vjs-picture-in-picture-control')
-          if (pipButton === null) {
-            return
-          }
-          if (format === 'audio') {
-            pipButton.classList.add('vjs-hidden')
-          } else {
-            pipButton.classList.remove('vjs-hidden')
-          }
-          clearInterval(this.pictureInPictureButtonInverval)
-        }
-      }, 100)
     }
   },
   mounted: function () {
@@ -301,7 +281,6 @@ export default defineComponent({
     this.useTheatreMode = this.defaultTheatreMode
 
     this.checkIfPlaylist()
-    this.handlePlaylistPersisting()
     this.checkIfTimestamp()
 
     if (!(process.env.IS_ELECTRON || process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
@@ -419,27 +398,7 @@ export default defineComponent({
         this.isLiveContent = !!result.basic_info.is_live_content
 
         if (!this.hideChannelSubscriptions) {
-          // really not a fan of this :(, YouTube returns the subscribers as "15.1M subscribers"
-          // so we have to parse it somehow
-          const rawSubCount = result.secondary_info.owner.subscriber_count.text
-          const match = rawSubCount
-            .replace(',', '.')
-            .toUpperCase()
-            .match(/([\d.]+)\s*([KM]?)/)
-          let subCount
-          if (match) {
-            subCount = parseFloat(match[1])
-
-            if (match[2] === 'K') {
-              subCount *= 1000
-            } else if (match[2] === 'M') {
-              subCount *= 1000_000
-            }
-
-            subCount = Math.trunc(subCount)
-          } else {
-            subCount = extractNumberFromString(rawSubCount)
-          }
+          const subCount = parseLocalSubscriberCount(result.secondary_info.owner.subscriber_count.text)
 
           if (!isNaN(subCount)) {
             if (subCount >= 10000) {
@@ -454,7 +413,7 @@ export default defineComponent({
           this.channelSubscriptionCountText = ''
         }
 
-        const chapters = []
+        let chapters = []
         if (!this.hideChapters) {
           const rawChapters = result.player_overlays?.decorated_player_bar?.player_bar?.markers_map?.get({ marker_key: 'DESCRIPTION_CHAPTERS' })?.value.chapters
           if (rawChapters) {
@@ -469,7 +428,11 @@ export default defineComponent({
                 thumbnail: chapter.thumbnail[0].url
               })
             }
+          } else {
+            chapters = this.extractChaptersFromDescription(this.videoDescription)
+          }
 
+          if (chapters.length > 0) {
             this.addChaptersEndSeconds(chapters, result.basic_info.duration)
 
             // prevent vue from adding reactivity which isn't needed
@@ -705,7 +668,7 @@ export default defineComponent({
           }
 
           if (result.storyboards?.type === 'PlayerStoryboardSpec') {
-            await this.createLocalStoryboardUrls(result.storyboards.boards[2])
+            await this.createLocalStoryboardUrls(result.storyboards.boards.at(-1))
           }
         }
 
@@ -798,35 +761,9 @@ export default defineComponent({
               break
           }
 
-          const chapters = []
+          let chapters = []
           if (!this.hideChapters) {
-            // HH:MM:SS Text
-            // MM:SS Text
-            // HH:MM:SS - Text // separator is one of '-', '–', '•', '—'
-            // MM:SS - Text
-            // HH:MM:SS - HH:MM:SS - Text // end timestamp is ignored, separator is one of '-', '–', '—'
-            // HH:MM - HH:MM - Text // end timestamp is ignored
-            const chapterMatches = result.description.matchAll(/^(?<timestamp>((?<hours>\d+):)?(?<minutes>\d+):(?<seconds>\d+))(\s*[–—-]\s*(?:\d+:){1,2}\d+)?\s+([–—•-]\s*)?(?<title>.+)$/gm)
-
-            for (const { groups } of chapterMatches) {
-              let start = 60 * Number(groups.minutes) + Number(groups.seconds)
-
-              if (groups.hours) {
-                start += 3600 * Number(groups.hours)
-              }
-
-              // replace previous chapter with current one if they have an identical start time
-              if (chapters.length > 0 && chapters[chapters.length - 1].startSeconds === start) {
-                chapters.pop()
-              }
-
-              chapters.push({
-                title: groups.title.trim(),
-                timestamp: groups.timestamp,
-                startSeconds: start,
-                endSeconds: 0
-              })
-            }
+            chapters = this.extractChaptersFromDescription(result.description)
 
             if (chapters.length > 0) {
               this.addChaptersEndSeconds(chapters, result.lengthSeconds)
@@ -946,6 +883,42 @@ export default defineComponent({
         })
     },
 
+    /**
+     * @param {string} description
+     */
+    extractChaptersFromDescription: function (description) {
+      const chapters = []
+      // HH:MM:SS Text
+      // MM:SS Text
+      // HH:MM:SS - Text // separator is one of '-', '–', '•', '—'
+      // MM:SS - Text
+      // HH:MM:SS - HH:MM:SS - Text // end timestamp is ignored, separator is one of '-', '–', '—'
+      // HH:MM - HH:MM - Text // end timestamp is ignored
+      const chapterMatches = description.matchAll(/^(?<timestamp>((?<hours>\d+):)?(?<minutes>\d+):(?<seconds>\d+))(\s*[–—-]\s*(?:\d+:){1,2}\d+)?\s+([–—•-]\s*)?(?<title>.+)$/gm)
+
+      for (const { groups } of chapterMatches) {
+        let start = 60 * Number(groups.minutes) + Number(groups.seconds)
+
+        if (groups.hours) {
+          start += 3600 * Number(groups.hours)
+        }
+
+        // replace previous chapter with current one if they have an identical start time
+        if (chapters.length > 0 && chapters[chapters.length - 1].startSeconds === start) {
+          chapters.pop()
+        }
+
+        chapters.push({
+          title: groups.title.trim(),
+          timestamp: groups.timestamp,
+          startSeconds: start,
+          endSeconds: 0
+        })
+      }
+
+      return chapters
+    },
+
     addChaptersEndSeconds: function (chapters, videoLengthSeconds) {
       for (let i = 0; i < chapters.length - 1; i++) {
         chapters[i].endSeconds = chapters[i + 1].startSeconds
@@ -1008,12 +981,12 @@ export default defineComponent({
     handlePlaylistPersisting: function () {
       // Only save playlist ID if enabled, and it's not special video types
       if (!(this.rememberHistory && this.saveVideoHistoryWithLastViewedPlaylist)) { return }
-      if (this.isUpcoming || this.isLoading || this.isLive) { return }
+      if (this.isUpcoming || this.isLive) { return }
 
       const payload = {
         videoId: this.videoId,
         // Whether there is a playlist ID or not, save it
-        playlistId: this.$route.query?.playlistId,
+        lastViewedPlaylistId: this.$route.query?.playlistId,
       }
       this.updateLastViewedPlaylist(payload)
     },
@@ -1049,6 +1022,10 @@ export default defineComponent({
         } else {
           this.addToHistory(0)
         }
+
+        // Must be called AFTER history entry inserted
+        // Otherwise the value is not saved for first time watched videos
+        this.handlePlaylistPersisting()
       }
     },
 
@@ -1224,7 +1201,6 @@ export default defineComponent({
       this.videoChapters = []
 
       this.handleWatchProgress()
-      this.handlePlaylistPersisting()
 
       if (!this.isUpcoming && !this.isLoading) {
         const player = this.$refs.videoPlayer.player
@@ -1355,7 +1331,7 @@ export default defineComponent({
     },
 
     createLocalStoryboardUrls: async function (storyboardInfo) {
-      const results = buildVTTFileLocally(storyboardInfo)
+      const results = buildVTTFileLocally(storyboardInfo, this.videoLengthSeconds)
       const userData = await getUserDataPath()
       let fileLocation
       let uriSchema

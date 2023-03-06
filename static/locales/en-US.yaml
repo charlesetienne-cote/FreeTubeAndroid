@@ -65,11 +65,13 @@ Search Filters:
     All Types: All Types
     Videos: Videos
     Channels: Channels
+    Movies: Movies
     #& Playlists
   Duration:
     Duration: Duration
     All Durations: All Durations
     Short (< 4 minutes): Short (< 4 minutes)
+    Medium (4 - 20 minutes): Medium (4 - 20 minutes)
     Long (> 20 minutes): Long (> 20 minutes)
   # On Search Page
   Search Results: Search Results
@@ -418,7 +420,7 @@ Settings:
     Open in web browser: Open in web browser
   Experimental Settings:
     Experimental Settings: Experimental Settings
-    Warning: These settings are experimental, they make cause crashes while enabled. Making backups is highly recommended. Use at your own risk!
+    Warning: These settings are experimental, they may cause crashes while enabled. Making backups is highly recommended. Use at your own risk!
     Replace HTTP Cache: Replace HTTP Cache
   Password Dialog:
     Password: Password
@@ -521,6 +523,10 @@ Channel:
   Your search results have returned 0 results: Your search results have returned 0
     results
   Sort By: Sort By
+  This channel does not exist: This channel does not exist
+  This channel does not allow searching: This channel does not allow searching
+  This channel is age resticted and currently cannot be viewed in FreeTube.: This channel is age resticted and currently cannot be viewed in FreeTube.
+  Channel Tabs: Channel Tabs
   Videos:
     Videos: Videos
     This channel does not currently have any videos: This channel does not currently
@@ -540,7 +546,16 @@ Channel:
   About:
     About: About
     Channel Description: Channel Description
+    Tags:
+      Tags: Tags
+      Search for: Search for "{tag}"
+    Details: Details
+    Joined: Joined
+    Location: Location
     Featured Channels: Featured Channels
+  Community:
+    Community: Community
+    This channel currently does not have any posts: This channel currently does not have any posts
 Video:
   Mark As Watched: Mark As Watched
   Remove From History: Remove From History
@@ -685,12 +700,6 @@ Playlist:
   View: View
   Views: Views
   Last Updated On: Last Updated On
-  Share Playlist:
-    Share Playlist: Share Playlist
-    Copy YouTube Link: Copy YouTube Link
-    Open in YouTube: Open in YouTube
-    Copy Invidious Link: Copy Invidious Link
-    Open in Invidious: Open in Invidious
 
 # On Video Watch Page
 #* Published
@@ -708,6 +717,7 @@ Change Format:
 Share:
   Share Video: Share Video
   Share Channel: Share Channel
+  Share Playlist: Share Playlist
   Include Timestamp: Include Timestamp
   Copy Link: Copy Link
   Open Link: Open Link
