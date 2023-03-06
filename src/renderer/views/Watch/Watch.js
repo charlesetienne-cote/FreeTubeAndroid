@@ -812,6 +812,17 @@ export default defineComponent({
           } else {
             this.videoLengthSeconds = result.lengthSeconds
             this.videoSourceList = result.formatStreams.reverse()
+            // if we need to proxy videos through invidious
+            if (!process.env.IS_ELECTRON || this.proxyVideos) {
+              this.videoSourceList = this.videoSourceList.map(format => {
+                return {
+                  ...format,
+                  // hacky af, but this technically gets past a very recent issue with invidious servers
+                  // not honouring the `&local=true` flag
+                  url: `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
+                }
+              })
+            }
 
             this.downloadLinks = result.adaptiveFormats.concat(this.videoSourceList).map((format) => {
               const qualityLabel = format.qualityLabel || format.bitrate
