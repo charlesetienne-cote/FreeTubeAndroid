@@ -11,6 +11,62 @@ import {
   toLocalePublicationString
 } from '../utils'
 
+export function cordovaFetch(input, init = {}) {
+  if ('http' in cordova.plugin) {
+    const { http } = cordova.plugin
+    return new Promise((resolve, reject) => {
+      if ('headers' in init) {
+        if (Object.keys(init.headers).length === 0) {
+          // you can't have an empty headers object in cordova advanced http
+          delete init.headers
+        }
+      }
+      let httpFunction
+      if (input instanceof URL) {
+        const url = input.toString()
+        httpFunction = (callbackSuccess, callbackError) => {
+          http.get(url, {}, init.headers, callbackSuccess, callbackError)
+        }
+      } else {
+        let data = input
+        if (typeof data === 'string') {
+          data = { url: data }
+        }
+        switch (data.method) {
+          case 'POST':
+            httpFunction = (callbackSuccess, callbackError) => {
+              http.setDataSerializer('json')
+              http.useBasicAuth(data.credentials)
+              http.post(data.url, JSON.parse(init.body), init, callbackSuccess, callbackError)
+            }
+            break
+          case 'GET':
+          default:
+            httpFunction = (callbackSuccess, callbackError) => {
+              http.get(data.url, {}, init.headers, callbackSuccess, callbackError)
+            }
+            break
+        }
+      }
+      httpFunction((response) => {
+        resolve(Object.assign(response, {
+          ok: response.status === 200,
+          text: () => {
+            return response.data
+          },
+          json: () => {
+            return JSON.parse(response.data)
+          }
+        }))
+      }, (response) => {
+        reject(response)
+      })
+    })
+  } else {
+    console.error('Advanced http plugin failed to load.')
+  }
+}
+
 /**
  * Creates a lightweight Innertube instance, which is faster to create or
  * an instance that can decode the streaming URLs, which is slower to create
@@ -46,56 +102,7 @@ async function createInnertube(options = { withPlayer: false, location: undefine
     // use browser fetch
     fetch: (input, init = {}) => {
       if (process.env.IS_CORDOVA) {
-        if ('http' in cordova.plugin) {
-          const { http } = cordova.plugin
-          return new Promise((resolve, reject) => {
-            if ('headers' in init) {
-              if (Object.keys(init.headers).length === 0) {
-                // you can't have an empty headers object in cordova advanced http
-                delete init.headers
-              }
-            }
-            let httpFunction
-            if (input instanceof URL) {
-              const url = input.toString()
-              httpFunction = (callbackSuccess, callbackError) => {
-                http.get(url, {}, init.headers, callbackSuccess, callbackError)
-              }
-            } else {
-              const data = input
-              switch (data.method) {
-                case 'POST':
-                  httpFunction = (callbackSuccess, callbackError) => {
-                    http.setDataSerializer('json')
-                    http.useBasicAuth(data.credentials)
-                    http.post(data.url, JSON.parse(init.body), init, callbackSuccess, callbackError)
-                  }
-                  break
-                case 'GET':
-                default:
-                  httpFunction = (callbackSuccess, callbackError) => {
-                    http.get(data.url, {}, init.headers, callbackSuccess, callbackError)
-                  }
-                  break
-              }
-            }
-            httpFunction((response) => {
-              resolve(Object.assign(response, {
-                ok: response.status === 200,
-                text: () => {
-                  return response.data
-                },
-                json: () => {
-                  return JSON.parse(response.data)
-                }
-              }))
-            }, (response) => {
-              reject(response)
-            })
-          })
-        } else {
-          console.error('Advanced http plugin failed to load.')
-        }
+        return cordovaFetch(input, init)
       }
       if (process.env.IS_ELECTRON) {
         return fetch(input, init)

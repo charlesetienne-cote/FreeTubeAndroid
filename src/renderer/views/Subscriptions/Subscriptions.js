@@ -11,7 +11,7 @@ import FtChannelBubble from '../../components/ft-channel-bubble/ft-channel-bubbl
 import { MAIN_PROFILE_ID } from '../../../constants'
 import { calculatePublishedDate, copyToClipboard, showToast } from '../../helpers/utils'
 import { invidiousAPICall } from '../../helpers/api/invidious'
-import { getLocalChannelVideos } from '../../helpers/api/local'
+import { cordovaFetch, getLocalChannelVideos } from '../../helpers/api/local'
 
 export default defineComponent({
   name: 'Subscriptions',
@@ -173,7 +173,7 @@ export default defineComponent({
       this.errorChannels = []
       this.activeSubscriptionList.forEach(async (channel) => {
         let videos = []
-        if (!(process.env.IS_ELECTRON && process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
+        if ((!process.env.IS_ELECTRON && !process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
           if (useRss) {
             videos = await this.getChannelVideosInvidiousRSS(channel)
           } else {
@@ -319,7 +319,12 @@ export default defineComponent({
       const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`
 
       try {
-        const response = await fetch(feedUrl)
+        let response
+        if (process.env.IS_CORDOVA) {
+          response = await cordovaFetch(feedUrl)
+        } else {
+          response = await fetch(feedUrl)
+        }
 
         if (response.status === 404) {
           this.errorChannels.push(channel)
@@ -402,7 +407,12 @@ export default defineComponent({
       const feedUrl = `${this.currentInvidiousInstance}/feed/channel/${channel.id}`
 
       try {
-        const response = await fetch(feedUrl)
+        let response
+        if (process.env.IS_CORDOVA) {
+          response = await cordovaFetch(feedUrl)
+        } else {
+          response = await fetch(feedUrl)
+        }
 
         if (response.status === 500) {
           this.errorChannels.push(channel)
