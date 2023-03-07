@@ -306,7 +306,17 @@ export default defineComponent({
 
       try {
         let result = await getLocalVideoInfo(this.videoId)
-
+        // if we need to proxy videos through invidious
+        if (!process.env.IS_ELECTRON || this.proxyVideos) {
+          result.streaming_data.formats = result.streaming_data.formats.map(format => {
+            return {
+              ...format,
+              // hacky af, but this technically gets past a very recent issue with invidious servers
+              // not honouring the `&local=true` flag
+              url: `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
+            }
+          })
+        }
         this.isFamilyFriendly = result.basic_info.is_family_safe
 
         this.recommendedVideos = result.watch_next_feed
@@ -490,7 +500,6 @@ export default defineComponent({
           this.showLegacyPlayer = true
           this.showDashPlayer = false
           this.activeFormat = 'legacy'
-          this.activeSourceList = this.videoSourceList
         } else if (this.isUpcoming) {
           const upcomingTimestamp = result.basic_info.start_timestamp
 
@@ -550,6 +559,7 @@ export default defineComponent({
             } else {
               this.videoSourceList = filterFormats(result.streaming_data.adaptive_formats, this.allowDashAv1Formats).map(mapLocalFormat).reverse()
             }
+
             this.adaptiveFormats = this.videoSourceList
 
             const formats = [...result.streaming_data.formats, ...result.streaming_data.adaptive_formats]
@@ -1113,6 +1123,20 @@ export default defineComponent({
 
       const watchedProgress = this.getWatchedProgress()
       this.activeFormat = 'legacy'
+      // if we need to proxy videos through invidious
+      if (!process.env.IS_ELECTRON || this.proxyVideos) {
+        this.videoSourceList = this.videoSourceList.map(format => {
+          if (format.url.indexOf('.googlevideo.com/') === -1) {
+            return format
+          }
+          return {
+            ...format,
+            // hacky af, but this technically gets past a very recent issue with invidious servers
+            // not honouring the `&local=true` flag
+            url: `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
+          }
+        })
+      }
       this.activeSourceList = this.videoSourceList
       this.hidePlayer = true
 
