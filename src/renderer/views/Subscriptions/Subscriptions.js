@@ -173,7 +173,7 @@ export default defineComponent({
       this.errorChannels = []
       this.activeSubscriptionList.forEach(async (channel) => {
         let videos = []
-        if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
+        if (!(process.env.IS_ELECTRON && process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
           if (useRss) {
             videos = await this.getChannelVideosInvidiousRSS(channel)
           } else {
@@ -381,7 +381,7 @@ export default defineComponent({
               resolve(this.getChannelVideosInvidiousRSS(channel, failedAttempts + 1))
               break
             case 1:
-              if (process.env.IS_ELECTRON && this.backendFallback) {
+              if ((process.env.IS_ELECTRON && process.env.IS_CORDOVA) && this.backendFallback) {
                 showToast(this.$t('Falling back to the local API'))
                 resolve(this.getChannelVideosLocalScraper(channel, failedAttempts + 1))
               } else {
@@ -420,7 +420,7 @@ export default defineComponent({
           case 0:
             return this.getChannelVideosInvidiousScraper(channel, failedAttempts + 1)
           case 1:
-            if (process.env.IS_ELECTRON && this.backendFallback) {
+            if ((process.env.IS_ELECTRON && process.env.IS_CORDOVA) && this.backendFallback) {
               showToast(this.$t('Falling back to the local API'))
               return this.getChannelVideosLocalRSS(channel, failedAttempts + 1)
             } else {
