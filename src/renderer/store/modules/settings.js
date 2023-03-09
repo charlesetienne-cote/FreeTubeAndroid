@@ -221,7 +221,7 @@ const state = {
   proxyHostname: '127.0.0.1',
   proxyPort: '9050',
   proxyProtocol: 'socks5',
-  proxyVideos: false,
+  proxyVideos: !process.env.IS_ELECTRON,
   region: 'US',
   rememberHistory: true,
   removeVideoMetaFiles: true,
