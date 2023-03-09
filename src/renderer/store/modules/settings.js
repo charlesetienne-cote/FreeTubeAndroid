@@ -163,8 +163,8 @@ const defaultSideEffectsTriggerId = settingId =>
 const state = {
   autoplayPlaylists: true,
   autoplayVideos: true,
-  backendFallback: true,
-  backendPreference: 'local',
+  backendFallback: process.env.IS_ELECTRON || process.env.IS_CORDOVA,
+  backendPreference: process.env.IS_ELECTRON || process.env.IS_CORDOVA ? 'local' : 'invidious',
   barColor: false,
   checkForBlogPosts: true,
   checkForUpdates: true,
