@@ -17,12 +17,13 @@ module.exports = {
   devDependencies: {
     'cordova-android': '^11.0.0',
     'cordova-clipboard': '^1.3.0',
-    'cordova-plugin-advanced-background-mode': '^1.1.1',
+    'cordova-plugin-background-mode': 'git+https://bitbucket.org/TheBosZ/cordova-plugin-run-in-background.git',
     'cordova-plugin-android-permissions': '^1.1.4',
-    'cordova-plugin-music-controls2': '3.0.5',
+    'cordova-plugin-music-controls2': '3.0.7',
     'cordova-plugin-save-dialog': '^1.1.1',
     'cordova-plugin-theme-detection': '^1.3.0',
-    'cordova-plugin-device': '^2.1.0'
+    'cordova-plugin-device': '^2.1.0',
+    'cordova-plugin-advanced-http': '^3.3.1'
   },
   cordova: {
     platforms: [
@@ -32,9 +33,10 @@ module.exports = {
       'cordova-plugin-android-permissions': {},
       'cordova-plugin-music-controls2': {},
       'cordova-clipboard': {},
-      'cordova-plugin-advanced-background-mode': {},
+      'cordova-plugin-background-mode': {},
       'cordova-plugin-theme-detection': {},
-      'cordova-plugin-save-dialog': {}
+      'cordova-plugin-save-dialog': {},
+      'cordova-plugin-advanced-http': {}
     }
   }
 }

@@ -15,7 +15,6 @@ import { pathExists } from '../../helpers/filesystem'
 import {
   buildVTTFileLocally,
   copyToClipboard,
-  extractNumberFromString,
   formatDurationAsTimestamp,
   formatNumber,
   getFormatsFromHLSManifest,
@@ -23,8 +22,10 @@ import {
   showToast
 } from '../../helpers/utils'
 import {
+  filterFormats,
   getLocalVideoInfo,
   mapLocalFormat,
+  parseLocalSubscriberCount,
   parseLocalTextRuns,
   parseLocalWatchNextVideo
 } from '../../helpers/api/local'
@@ -97,7 +98,6 @@ export default defineComponent({
       timestamp: null,
       playNextTimeout: null,
       playNextCountDownIntervalId: null,
-      pictureInPictureButtonInverval: null,
       infoAreaSticky: true
     }
   },
@@ -113,6 +113,9 @@ export default defineComponent({
     },
     saveWatchedProgress: function () {
       return this.$store.getters.getSaveWatchedProgress
+    },
+    saveVideoHistoryWithLastViewedPlaylist: function () {
+      return this.$store.getters.getSaveVideoHistoryWithLastViewedPlaylist
     },
     backendPreference: function () {
       return this.$store.getters.getBackendPreference
@@ -176,9 +179,74 @@ export default defineComponent({
     },
     hideChapters: function () {
       return this.$store.getters.getHideChapters
+    },
+    allowDashAv1Formats: function () {
+      return this.$store.getters.getAllowDashAv1Formats
+    },
+    showThumbnailInMediaControls: function () {
+      return this.$store.getters.getShowThumbnailInMediaControls
     }
   },
   watch: {
+    thumbnail() {
+      if (process.env.IS_CORDOVA) {
+        if (MusicControls === undefined) {
+          console.error('Music controls plugin failed to load.')
+        } else {
+          const data = {
+            track: this.videoTitle,
+            artist: this.channelName
+          }
+          if (this.showThumbnailInMediaControls) {
+            data.cover = this.thumbnail
+          }
+          MusicControls.create(data)
+          const playPauseListeners = []
+          MusicControls.subscribe((action) => {
+            try {
+              const { player } = this.$refs.videoPlayer
+              if (playPauseListeners.length === 0) {
+                playPauseListeners.push(player.el().querySelector('video').addEventListener('pause', () => {
+                  MusicControls.updateIsPlaying(false)
+                }), player.el().querySelector('video').addEventListener('play', () => {
+                  MusicControls.updateIsPlaying(true)
+                }))
+              }
+              if (JSON.parse(action).message === 'music-controls-play' || JSON.parse(action).message === 'music-controls-pause') {
+                if (!player.paused()) {
+                  player.pause()
+                } else {
+                  player.play()
+                }
+              } else {
+                switch (JSON.parse(action).message) {
+                  case 'music-controls-next':
+                    // TODO implement next control
+                    if (this.watchingPlaylist) {
+                      this.$refs.watchVideoPlaylist.playNextVideo()
+                    } else {
+                      const nextVideoId = this.recommendedVideos[0].videoId
+                      this.$router.push({
+                        path: `/watch/${nextVideoId}`
+                      })
+                      showToast(this.$t('Playing Next Video'))
+                    }
+                    break
+                  case 'music-controls-previous':
+                    // TODO implement previous control
+                    history.back()
+                    break
+                }
+              }
+              MusicControls.updateIsPlaying(!player.paused())
+            } catch (error) {
+              console.warn(error)
+            }
+          })
+          MusicControls.listen()
+        }
+      }
+    },
     $route() {
       this.handleRouteChange(this.videoId)
       // react to route changes...
@@ -205,25 +273,6 @@ export default defineComponent({
           }
           break
       }
-    },
-    activeFormat: function (format) {
-      clearInterval(this.pictureInPictureButtonInverval)
-
-      // only hide/show the button once the player is available
-      this.pictureInPictureButtonInverval = setInterval(() => {
-        if (!this.hidePlayer) {
-          const pipButton = document.querySelector('.vjs-picture-in-picture-control')
-          if (pipButton === null) {
-            return
-          }
-          if (format === 'audio') {
-            pipButton.classList.add('vjs-hidden')
-          } else {
-            pipButton.classList.remove('vjs-hidden')
-          }
-          clearInterval(this.pictureInPictureButtonInverval)
-        }
-      }, 100)
     }
   },
   mounted: function () {
@@ -234,7 +283,7 @@ export default defineComponent({
     this.checkIfPlaylist()
     this.checkIfTimestamp()
 
-    if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
+    if (!(process.env.IS_ELECTRON || process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
       this.getVideoInformationInvidious()
     } else {
       this.getVideoInformationLocal()
@@ -257,7 +306,17 @@ export default defineComponent({
 
       try {
         let result = await getLocalVideoInfo(this.videoId)
-
+        // if we need to proxy videos through invidious
+        if (!process.env.IS_ELECTRON || this.proxyVideos) {
+          result.streaming_data.formats = result.streaming_data.formats.map(format => {
+            return {
+              ...format,
+              // hacky af, but this technically gets past a very recent issue with invidious servers
+              // not honouring the `&local=true` flag
+              url: `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
+            }
+          })
+        }
         this.isFamilyFriendly = result.basic_info.is_family_safe
 
         this.recommendedVideos = result.watch_next_feed
@@ -349,27 +408,7 @@ export default defineComponent({
         this.isLiveContent = !!result.basic_info.is_live_content
 
         if (!this.hideChannelSubscriptions) {
-          // really not a fan of this :(, YouTube returns the subscribers as "15.1M subscribers"
-          // so we have to parse it somehow
-          const rawSubCount = result.secondary_info.owner.subscriber_count.text
-          const match = rawSubCount
-            .replace(',', '.')
-            .toUpperCase()
-            .match(/([\d.]+)\s*([KM]?)/)
-          let subCount
-          if (match) {
-            subCount = parseFloat(match[1])
-
-            if (match[2] === 'K') {
-              subCount *= 1000
-            } else if (match[2] === 'M') {
-              subCount *= 1000_000
-            }
-
-            subCount = Math.trunc(subCount)
-          } else {
-            subCount = extractNumberFromString(rawSubCount)
-          }
+          const subCount = parseLocalSubscriberCount(result.secondary_info.owner.subscriber_count.text)
 
           if (!isNaN(subCount)) {
             if (subCount >= 10000) {
@@ -384,7 +423,7 @@ export default defineComponent({
           this.channelSubscriptionCountText = ''
         }
 
-        const chapters = []
+        let chapters = []
         if (!this.hideChapters) {
           const rawChapters = result.player_overlays?.decorated_player_bar?.player_bar?.markers_map?.get({ marker_key: 'DESCRIPTION_CHAPTERS' })?.value.chapters
           if (rawChapters) {
@@ -399,7 +438,11 @@ export default defineComponent({
                 thumbnail: chapter.thumbnail[0].url
               })
             }
+          } else {
+            chapters = this.extractChaptersFromDescription(this.videoDescription)
+          }
 
+          if (chapters.length > 0) {
             this.addChaptersEndSeconds(chapters, result.basic_info.duration)
 
             // prevent vue from adding reactivity which isn't needed
@@ -457,7 +500,6 @@ export default defineComponent({
           this.showLegacyPlayer = true
           this.showDashPlayer = false
           this.activeFormat = 'legacy'
-          this.activeSourceList = this.videoSourceList
         } else if (this.isUpcoming) {
           const upcomingTimestamp = result.basic_info.start_timestamp
 
@@ -515,8 +557,9 @@ export default defineComponent({
             if (result.streaming_data.formats.length > 0) {
               this.videoSourceList = result.streaming_data.formats.map(mapLocalFormat).reverse()
             } else {
-              this.videoSourceList = result.streaming_data.adaptive_formats.map(mapLocalFormat).reverse()
+              this.videoSourceList = filterFormats(result.streaming_data.adaptive_formats, this.allowDashAv1Formats).map(mapLocalFormat).reverse()
             }
+
             this.adaptiveFormats = this.videoSourceList
 
             const formats = [...result.streaming_data.formats, ...result.streaming_data.adaptive_formats]
@@ -585,13 +628,6 @@ export default defineComponent({
           }
 
           if (result.streaming_data?.adaptive_formats.length > 0) {
-            this.adaptiveFormats = result.streaming_data.adaptive_formats.map(mapLocalFormat)
-            if (this.proxyVideos) {
-              this.dashSrc = await this.createInvidiousDashManifest()
-            } else {
-              this.dashSrc = await this.createLocalDashManifest(result)
-            }
-
             this.audioSourceList = result.streaming_data.adaptive_formats.filter((format) => {
               return format.has_audio
             }).sort((a, b) => {
@@ -619,6 +655,16 @@ export default defineComponent({
               }
             }).reverse()
 
+            // we need to alter the result object so the toDash function uses the filtered formats too
+            result.streaming_data.adaptive_formats = filterFormats(result.streaming_data.adaptive_formats, this.allowDashAv1Formats)
+
+            this.adaptiveFormats = result.streaming_data.adaptive_formats.map(mapLocalFormat)
+            if (this.proxyVideos) {
+              this.dashSrc = await this.createInvidiousDashManifest()
+            } else {
+              this.dashSrc = await this.createLocalDashManifest(result)
+            }
+
             if (this.activeFormat === 'audio') {
               this.activeSourceList = this.audioSourceList
             } else {
@@ -632,7 +678,7 @@ export default defineComponent({
           }
 
           if (result.storyboards?.type === 'PlayerStoryboardSpec') {
-            await this.createLocalStoryboardUrls(result.storyboards.boards[2])
+            await this.createLocalStoryboardUrls(result.storyboards.boards.at(-1))
           }
         }
 
@@ -663,57 +709,6 @@ export default defineComponent({
 
       invidiousGetVideoInformation(this.videoId)
         .then(result => {
-          if (process.env.IS_CORDOVA) {
-            try {
-              MusicControls.destroy()
-            } catch (err) {
-              console.error(err)
-            }
-            MusicControls.create({
-              track: result.title,
-              artist: result.author,
-              cover: result.videoThumbnails[result.videoThumbnails.length - 4].url
-            })
-            const playPauseListeners = []
-            MusicControls.subscribe((action) => {
-              const { player } = this.$refs.videoPlayer
-              if (playPauseListeners.length === 0) {
-                playPauseListeners.push(player.el().querySelector('video').addEventListener('pause', () => {
-                  MusicControls.updateIsPlaying(false)
-                }), player.el().querySelector('video').addEventListener('play', () => {
-                  MusicControls.updateIsPlaying(true)
-                }))
-              }
-              if (JSON.parse(action).message === 'music-controls-play' || JSON.parse(action).message === 'music-controls-pause') {
-                if (!player.paused()) {
-                  player.pause()
-                } else {
-                  player.play()
-                }
-              } else {
-                switch (JSON.parse(action).message) {
-                  case 'music-controls-next':
-                    // TODO implement next control
-                    if (this.watchingPlaylist) {
-                      this.$refs.watchVideoPlaylist.playNextVideo()
-                    } else {
-                      const nextVideoId = this.recommendedVideos[0].videoId
-                      this.$router.push({
-                        path: `/watch/${nextVideoId}`
-                      })
-                      showToast(this.$t('Playing Next Video'))
-                    }
-                    break
-                  case 'music-controls-previous':
-                    // TODO implement previous control
-                    history.back()
-                    break
-                }
-              }
-              MusicControls.updateIsPlaying(!player.paused())
-            })
-            MusicControls.listen()
-          }
           if (result.error) {
             throw new Error(result.error)
           }
@@ -776,35 +771,9 @@ export default defineComponent({
               break
           }
 
-          const chapters = []
+          let chapters = []
           if (!this.hideChapters) {
-            // HH:MM:SS Text
-            // MM:SS Text
-            // HH:MM:SS - Text // separator is one of '-', '–', '•', '—'
-            // MM:SS - Text
-            // HH:MM:SS - HH:MM:SS - Text // end timestamp is ignored, separator is one of '-', '–', '—'
-            // HH:MM - HH:MM - Text // end timestamp is ignored
-            const chapterMatches = result.description.matchAll(/^(?<timestamp>((?<hours>\d+):)?(?<minutes>\d+):(?<seconds>\d+))(\s*[–—-]\s*(?:\d+:){1,2}\d+)?\s+([–—•-]\s*)?(?<title>.+)$/gm)
-
-            for (const { groups } of chapterMatches) {
-              let start = 60 * Number(groups.minutes) + Number(groups.seconds)
-
-              if (groups.hours) {
-                start += 3600 * Number(groups.hours)
-              }
-
-              // replace previous chapter with current one if they have an identical start time
-              if (chapters.length > 0 && chapters[chapters.length - 1].startSeconds === start) {
-                chapters.pop()
-              }
-
-              chapters.push({
-                title: groups.title.trim(),
-                timestamp: groups.timestamp,
-                startSeconds: start,
-                endSeconds: 0
-              })
-            }
+            chapters = this.extractChaptersFromDescription(result.description)
 
             if (chapters.length > 0) {
               this.addChaptersEndSeconds(chapters, result.lengthSeconds)
@@ -853,6 +822,17 @@ export default defineComponent({
           } else {
             this.videoLengthSeconds = result.lengthSeconds
             this.videoSourceList = result.formatStreams.reverse()
+            // if we need to proxy videos through invidious
+            if (!process.env.IS_ELECTRON || this.proxyVideos) {
+              this.videoSourceList = this.videoSourceList.map(format => {
+                return {
+                  ...format,
+                  // hacky af, but this technically gets past a very recent issue with invidious servers
+                  // not honouring the `&local=true` flag
+                  url: `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
+                }
+              })
+            }
 
             this.downloadLinks = result.adaptiveFormats.concat(this.videoSourceList).map((format) => {
               const qualityLabel = format.qualityLabel || format.bitrate
@@ -924,6 +904,42 @@ export default defineComponent({
         })
     },
 
+    /**
+     * @param {string} description
+     */
+    extractChaptersFromDescription: function (description) {
+      const chapters = []
+      // HH:MM:SS Text
+      // MM:SS Text
+      // HH:MM:SS - Text // separator is one of '-', '–', '•', '—'
+      // MM:SS - Text
+      // HH:MM:SS - HH:MM:SS - Text // end timestamp is ignored, separator is one of '-', '–', '—'
+      // HH:MM - HH:MM - Text // end timestamp is ignored
+      const chapterMatches = description.matchAll(/^(?<timestamp>((?<hours>\d+):)?(?<minutes>\d+):(?<seconds>\d+))(\s*[–—-]\s*(?:\d+:){1,2}\d+)?\s+([–—•-]\s*)?(?<title>.+)$/gm)
+
+      for (const { groups } of chapterMatches) {
+        let start = 60 * Number(groups.minutes) + Number(groups.seconds)
+
+        if (groups.hours) {
+          start += 3600 * Number(groups.hours)
+        }
+
+        // replace previous chapter with current one if they have an identical start time
+        if (chapters.length > 0 && chapters[chapters.length - 1].startSeconds === start) {
+          chapters.pop()
+        }
+
+        chapters.push({
+          title: groups.title.trim(),
+          timestamp: groups.timestamp,
+          startSeconds: start,
+          endSeconds: 0
+        })
+      }
+
+      return chapters
+    },
+
     addChaptersEndSeconds: function (chapters, videoLengthSeconds) {
       for (let i = 0; i < chapters.length - 1; i++) {
         chapters[i].endSeconds = chapters[i + 1].startSeconds
@@ -983,6 +999,19 @@ export default defineComponent({
       }
     },
 
+    handlePlaylistPersisting: function () {
+      // Only save playlist ID if enabled, and it's not special video types
+      if (!(this.rememberHistory && this.saveVideoHistoryWithLastViewedPlaylist)) { return }
+      if (this.isUpcoming || this.isLive) { return }
+
+      const payload = {
+        videoId: this.videoId,
+        // Whether there is a playlist ID or not, save it
+        lastViewedPlaylistId: this.$route.query?.playlistId,
+      }
+      this.updateLastViewedPlaylist(payload)
+    },
+
     checkIfWatched: function () {
       const historyIndex = this.historyCache.findIndex((video) => {
         return video.videoId === this.videoId
@@ -1014,6 +1043,10 @@ export default defineComponent({
         } else {
           this.addToHistory(0)
         }
+
+        // Must be called AFTER history entry inserted
+        // Otherwise the value is not saved for first time watched videos
+        this.handlePlaylistPersisting()
       }
     },
 
@@ -1090,6 +1123,20 @@ export default defineComponent({
 
       const watchedProgress = this.getWatchedProgress()
       this.activeFormat = 'legacy'
+      // if we need to proxy videos through invidious
+      if (!process.env.IS_ELECTRON || this.proxyVideos) {
+        this.videoSourceList = this.videoSourceList.map(format => {
+          if (format.url.indexOf('.googlevideo.com/') === -1) {
+            return format
+          }
+          return {
+            ...format,
+            // hacky af, but this technically gets past a very recent issue with invidious servers
+            // not honouring the `&local=true` flag
+            url: `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
+          }
+        })
+      }
       this.activeSourceList = this.videoSourceList
       this.hidePlayer = true
 
@@ -1181,7 +1228,9 @@ export default defineComponent({
       // if the user navigates to another video, the ipc call for the userdata path
       // takes long enough for the video id to have already changed to the new one
       // receiving it as an arg instead of accessing it ourselves means we always have the right one
-
+      if (process.env.IS_CORDOVA) {
+        MusicControls.destroy()
+      }
       clearTimeout(this.playNextTimeout)
       clearInterval(this.playNextCountDownIntervalId)
       this.videoChapters = []
@@ -1265,29 +1314,30 @@ export default defineComponent({
       const userData = await getUserDataPath()
       let fileLocation
       let uriSchema
-      if (process.env.NODE_ENV === 'development') {
-        fileLocation = `static/dashFiles/${this.videoId}.xml`
-        uriSchema = `dashFiles/${this.videoId}.xml`
-        // if the location does not exist, writeFileSync will not create the directory, so we have to do that manually
-        if (!(await pathExists('static/dashFiles/'))) {
-          await fs.mkdir('static/dashFiles/')
-        }
+      if (process.env.IS_ELECTRON) {
+        if (process.env.NODE_ENV === 'development') {
+          fileLocation = `static/dashFiles/${this.videoId}.xml`
+          uriSchema = `dashFiles/${this.videoId}.xml`
+          // if the location does not exist, writeFileSync will not create the directory, so we have to do that manually
+          if (!(await pathExists('static/dashFiles/'))) {
+            await fs.mkdir('static/dashFiles/')
+          }
 
-        if (await pathExists(fileLocation)) {
-          await fs.rm(fileLocation)
-        }
-        await fs.writeFile(fileLocation, xmlData)
-      } else {
-        fileLocation = `${userData}/dashFiles/${this.videoId}.xml`
-        uriSchema = `file://${fileLocation}`
+          if (await pathExists(fileLocation)) {
+            await fs.rm(fileLocation)
+          }
+          await fs.writeFile(fileLocation, xmlData)
+        } else {
+          fileLocation = `${userData}/dashFiles/${this.videoId}.xml`
+          uriSchema = `file://${fileLocation}`
 
-        if (!(await pathExists(`${userData}/dashFiles/`))) {
-          await fs.mkdir(`${userData}/dashFiles/`)
-        }
+          if (!(await pathExists(`${userData}/dashFiles/`))) {
+            await fs.mkdir(`${userData}/dashFiles/`)
+          }
 
-        await fs.writeFile(fileLocation, xmlData)
+          await fs.writeFile(fileLocation, xmlData)
+        }
       }
-
       return [
         {
           url: uriSchema,
@@ -1316,34 +1366,35 @@ export default defineComponent({
     },
 
     createLocalStoryboardUrls: async function (storyboardInfo) {
-      const results = buildVTTFileLocally(storyboardInfo)
+      const results = buildVTTFileLocally(storyboardInfo, this.videoLengthSeconds)
       const userData = await getUserDataPath()
       let fileLocation
       let uriSchema
+      if (process.env.IS_ELECTRON) {
+        // Dev mode doesn't have access to the file:// schema, so we access
+        // storyboards differently when run in dev
+        if (process.env.NODE_ENV === 'development') {
+          fileLocation = `static/storyboards/${this.videoId}.vtt`
+          uriSchema = `storyboards/${this.videoId}.vtt`
+          // if the location does not exist, writeFile will not create the directory, so we have to do that manually
+          if (!(await pathExists('static/storyboards/'))) {
+            fs.mkdir('static/storyboards/')
+          } else if (await pathExists(fileLocation)) {
+            await fs.rm(fileLocation)
+          }
 
-      // Dev mode doesn't have access to the file:// schema, so we access
-      // storyboards differently when run in dev
-      if (process.env.NODE_ENV === 'development') {
-        fileLocation = `static/storyboards/${this.videoId}.vtt`
-        uriSchema = `storyboards/${this.videoId}.vtt`
-        // if the location does not exist, writeFile will not create the directory, so we have to do that manually
-        if (!(await pathExists('static/storyboards/'))) {
-          fs.mkdir('static/storyboards/')
-        } else if (await pathExists(fileLocation)) {
-          await fs.rm(fileLocation)
+          await fs.writeFile(fileLocation, results)
+        } else {
+          if (!(await pathExists(`${userData}/storyboards/`))) {
+            await fs.mkdir(`${userData}/storyboards/`)
+          }
+          fileLocation = `${userData}/storyboards/${this.videoId}.vtt`
+          uriSchema = `file://${fileLocation}`
+
+          await fs.writeFile(fileLocation, results)
         }
-
-        await fs.writeFile(fileLocation, results)
-      } else {
-        if (!(await pathExists(`${userData}/storyboards/`))) {
-          await fs.mkdir(`${userData}/storyboards/`)
-        }
-        fileLocation = `${userData}/storyboards/${this.videoId}.vtt`
-        uriSchema = `file://${fileLocation}`
-
-        await fs.writeFile(fileLocation, results)
       }
-
+      // TODO 📝 properly figure out how to do this in cordova
       this.videoStoryboardSrc = uriSchema
     },
 
@@ -1384,7 +1435,7 @@ export default defineComponent({
         captionTracks.unshift({
           url: url.toString(),
           label,
-          languageCode: locale
+          language_code: locale
         })
       }
     },
@@ -1473,6 +1524,7 @@ export default defineComponent({
     ...mapActions([
       'updateHistory',
       'updateWatchProgress',
+      'updateLastViewedPlaylist',
       'updateSubscriptionDetails'
     ])
   }

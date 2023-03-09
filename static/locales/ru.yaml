@@ -28,7 +28,7 @@ Back: 'Назад'
 Forward: 'Вперёд'
 
 # Search Bar
-Search / Go to URL: 'Поиск/Перейти по адресу'
+Search / Go to URL: 'Поиск / Перейти по адресу'
   # In Filter Button
 Search Filters:
   Search Filters: 'Фильтры поиска'
@@ -52,12 +52,14 @@ Search Filters:
     Videos: 'Видео'
     Channels: 'Каналы'
     #& Playlists
+    Movies: Фильмы
   Duration:
     Duration: 'Длительность'
     All Durations: 'Любая длительность'
     Short (< 4 minutes): 'Короткие (< 4 минут)'
     Long (> 20 minutes): 'Длинные (> 20 минут)'
   # On Search Page
+    Medium (4 - 20 minutes): Средние (4—20 мин)
   Search Results: 'Итоги поиска'
   Fetching results. Please wait: 'Получение результатов. Подождите'
   Fetch more results: 'Получить больше результатов'
@@ -93,7 +95,7 @@ Playlists: 'Подборки'
 User Playlists:
   Your Playlists: 'Ваши подборки'
   Your saved videos are empty. Click on the save button on the corner of a video to have it listed here: У
-    вас нет сохранённых видео. Нажмите "Добавить видео в сохранённые", чтобы добавить
+    вас нет сохранённых видео. Нажмите «Добавить видео в сохранённые», чтобы добавить
     сюда
   Playlist Message: Эта страница не отражает все возможности подборок. Она показывает
     только те видео, которые вы сохранили или добавили в избранное. После переработки
@@ -268,6 +270,7 @@ Settings:
     Enter Fullscreen on Display Rotate: Входить в полноэкранный режим при повороте
       дисплея
     Skip by Scrolling Over Video Player: Пропустить, прокручивая видеопроигрыватель
+    Allow DASH AV1 formats: Разрешить форматы DASH AV1
   Subscription Settings:
     Subscription Settings: 'Подписки'
     Hide Videos on Watch: 'Скрывать видео после просмотра'
@@ -325,6 +328,8 @@ Settings:
       удаление всех подписок и учётных записей?  Невозможно отменить.
     Remove All Subscriptions / Profiles: Удалить все подписки/профили
     Automatically Remove Video Meta Files: Автоудаление метафайлов видео
+    Save Watched Videos With Last Viewed Playlist: Сохранить просмотренные видео с
+      последней просмотренной подборкой
   Data Settings:
     How do I import my subscriptions?: Как импортировать подписки?
     Unknown data key: Неизвестный ключ данных
@@ -548,10 +553,25 @@ Channel:
     About: 'О канале'
     Channel Description: 'Описание канала'
     Featured Channels: 'Избранные каналы'
+    Tags:
+      Tags: Метки
+      Search for: Поиск по "{tag}"
+    Details: Подробности
+    Joined: Присоединился
+    Location: Расположение
   Added channel to your subscriptions: Канал добавлен в ваши подписки
   Removed subscription from {count} other channel(s): Подписка удалена с {count} другого(их)
     канала(ов)
   Channel has been removed from your subscriptions: Канал был удалён из подписок
+  This channel does not exist: Этого канала не существует
+  This channel does not allow searching: Этот канал не позволяет выполнять поиск
+  Channel Tabs: Вкладки каналов
+  This channel is age resticted and currently cannot be viewed in FreeTube.: Этот
+    канал ограничен по возрасту и в настоящее время не может быть просмотрен во FreeTube.
+  Community:
+    Community: Сообщество
+    This channel currently does not have any posts: На этом канале в настоящее время
+      нет никаких записей
 Video:
   Mark As Watched: 'Отметить как просмотренное'
   Remove From History: 'Удалить из истории'
@@ -641,7 +661,7 @@ Video:
   Started streaming on: Трансляция начата на
   Video has been removed from your saved list: Видео было удалено из списка сохраненных
   Video has been saved: Видео было добавлено в сохраненные
-  Save Video: Добавить видео в сохраненные
+  Save Video: Добавить видео в сохранённые
   translated from English: переведён с английского
   Sponsor Block category:
     music offtopic: Сегмент без музыки
@@ -708,12 +728,6 @@ Playlist:
   View: 'Вид'
   Views: 'Просмотров'
   Last Updated On: 'Последнее обновление'
-  Share Playlist:
-    Share Playlist: 'Поделиться подборкой'
-    Copy YouTube Link: 'Скопировать ссылку YouTube'
-    Open in YouTube: 'Открыть в YouTube'
-    Copy Invidious Link: 'Скопировать ссылку Invidious'
-    Open in Invidious: 'Открыть в Invidious'
 
 # On Video Watch Page
 #* Published
@@ -731,6 +745,7 @@ Change Format:
     видео
 Share:
   Share Video: 'Поделиться видео'
+  Share Playlist: 'Поделиться подборкой'
   Copy Link: 'Скопировать ссылку'
   Open Link: 'Открыть ссылку'
   Copy Embed: 'Скопировать встраиваемые'
@@ -895,6 +910,10 @@ Tooltips:
       не была изменена в настройках).
     Skip by Scrolling Over Video Player: Используйте колесо прокрутки, чтобы пропустить
       видео в стиле MPV.
+    Allow DASH AV1 formats: Форматы DASH AV1 могут выглядеть лучше, чем форматы DASH
+      H.264. Форматы DASH AV1 требуют большей производительности для воспроизведения!
+      Они доступны не для всех видео. Если они будут недоступны, тогда проигрыватель
+      будет использовать форматы DASH H.264.
   Privacy Settings:
     Remove Video Meta Files: Если эта настройка включена, FreeTube автоматически удаляет
       метаданные, созданные во время воспроизведения видео, когда страница просмотра

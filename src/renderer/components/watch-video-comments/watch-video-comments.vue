@@ -1,5 +1,7 @@
 <template>
-  <ft-card>
+  <ft-card
+    class="card"
+  >
     <h4
       v-if="commentData.length === 0 && !isLoading"
       class="getCommentsTitle"
@@ -33,6 +35,7 @@
     />
     <h3
       v-if="commentData.length > 0 && !isLoading && showComments"
+      class="commentsTitle"
     >
       {{ $t("Comments.Comments") }}
       <span
@@ -104,11 +107,14 @@
           @timestamp-event="onTimestamp"
         />
         <p class="commentLikeCount">
-          <font-awesome-icon
+          <template
             v-if="!hideCommentLikes"
-            :icon="['fas', 'thumbs-up']"
-          />
-          {{ comment.likes }}
+          >
+            <font-awesome-icon
+              :icon="['fas', 'thumbs-up']"
+            />
+            {{ comment.likes }}
+          </template>
           <span
             v-if="comment.isHearted"
             class="commentHeartBadge"
@@ -144,7 +150,7 @@
             <span v-if="comment.numReplies === 1">{{ $t("Comments.Reply").toLowerCase() }}</span>
             <span v-else>{{ $t("Comments.Replies").toLowerCase() }}</span>
             <span v-if="comment.hasOwnerReplied && !comment.showReplies"> {{ $t("Comments.From {channelName}", { channelName }) }}</span>
-            <span v-if="comment.numReplies > 1 && comment.hasOwnerReplied && !comment.showReplies">{{ $t("Comments.And others") }}</span>
+            <span v-if="comment.numReplies > 1 && comment.hasOwnerReplied && !comment.showReplies"> {{ $t("Comments.And others") }}</span>
           </span>
         </p>
         <div
@@ -168,18 +174,15 @@
               >
             </router-link>
             <p class="commentAuthorWrapper">
-              <span
+              <router-link
                 class="commentAuthor"
                 :class="{
                   commentOwner: reply.isOwner
                 }"
+                :to="`/channel/${reply.authorLink}`"
               >
-                <router-link
-                  :to="`/channel/${reply.authorLink}`"
-                >
-                  {{ reply.author }}
-                </router-link>
-              </span>
+                {{ reply.author }}
+              </router-link>
               <img
                 v-if="reply.isMember"
                 :src="reply.memberIconUrl"
@@ -196,11 +199,15 @@
               @timestamp-event="onTimestamp"
             />
             <p class="commentLikeCount">
-              <font-awesome-icon
+              <template
                 v-if="!hideCommentLikes"
-                :icon="['fas', 'thumbs-up']"
-              />
-              {{ reply.likes }}
+              >
+                <font-awesome-icon
+                  v-if="!hideCommentLikes"
+                  :icon="['fas', 'thumbs-up']"
+                />
+                {{ reply.likes }}
+              </template>
             </p>
             <p
               v-if="reply.numReplies > 0"

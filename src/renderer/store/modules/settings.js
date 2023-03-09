@@ -163,8 +163,8 @@ const defaultSideEffectsTriggerId = settingId =>
 const state = {
   autoplayPlaylists: true,
   autoplayVideos: true,
-  backendFallback: process.env.IS_ELECTRON,
-  backendPreference: process.env.IS_ELECTRON ? 'local' : 'invidious',
+  backendFallback: process.env.IS_ELECTRON || process.env.IS_CORDOVA,
+  backendPreference: process.env.IS_ELECTRON || process.env.IS_CORDOVA ? 'local' : 'invidious',
   barColor: false,
   checkForBlogPosts: true,
   checkForUpdates: true,
@@ -221,11 +221,12 @@ const state = {
   proxyHostname: '127.0.0.1',
   proxyPort: '9050',
   proxyProtocol: 'socks5',
-  proxyVideos: false,
+  proxyVideos: !process.env.IS_ELECTRON,
   region: 'US',
   rememberHistory: true,
   removeVideoMetaFiles: true,
   saveWatchedProgress: true,
+  saveVideoHistoryWithLastViewedPlaylist: true,
   showFamilyFriendlyOnly: false,
   sponsorBlockShowSkippedToast: true,
   sponsorBlockUrl: 'https://sponsor.ajay.app',
@@ -278,7 +279,9 @@ const state = {
   screenshotFolderPath: '',
   screenshotFilenamePattern: '%Y%M%D-%H%N%S',
   fetchSubscriptionsAutomatically: true,
-  settingsPassword: ''
+  settingsPassword: '',
+  allowDashAv1Formats: false,
+  showThumbnailInMediaControls: true
 }
 
 const stateWithSideEffects = {
@@ -363,11 +366,15 @@ const stateWithSideEffects = {
     defaultValue: false,
     sideEffectsHandler: (_, value) => {
       if (process.env.IS_CORDOVA) {
-        const { backgroundMode } = cordova.plugins
-        backgroundMode.setDefaults({
-          title: 'FreeTube',
-          silent: value
-        })
+        if ('plugins' in cordova && 'backgroundMode' in cordova.plugins) {
+          const { backgroundMode } = cordova.plugins
+          backgroundMode.setDefaults({
+            title: 'FreeTube',
+            silent: value
+          })
+        } else {
+          console.error('Background mode plugin failed to load.')
+        }
       }
     }
   }
@@ -453,6 +460,10 @@ const customActions = {
 
         case SyncEvents.HISTORY.UPDATE_WATCH_PROGRESS:
           commit('updateRecordWatchProgressInHistoryCache', data)
+          break
+
+        case SyncEvents.HISTORY.UPDATE_PLAYLIST:
+          commit('updateRecordLastViewedPlaylistIdInHistoryCache', data)
           break
 
         case SyncEvents.GENERAL.DELETE:

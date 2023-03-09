@@ -28,15 +28,12 @@ const config = {
     level: isDevMode ? 'info' : 'none'
   },
   output: {
-    publicPath: '',
     libraryTarget: 'commonjs2',
     path: path.join(__dirname, '../dist'),
     filename: '[name].js',
   },
   externals: {
-    // ignore linkedom's unnecessary broken canvas import, as youtubei.js only uses linkedom to generate DASH manifests
-    canvas: '{}',
-    'cordova': 'browserify/lib/_empty.js',
+    cordova: 'browserify/lib/_empty.js',
     'music-controls': 'browserify/lib/_empty.js'
   },
   module: {
@@ -49,6 +46,11 @@ const config = {
       {
         test: /\.vue$/,
         loader: 'vue-loader',
+        options: {
+          compilerOptions: {
+            whitespace: 'condense',
+          }
+        }
       },
       {
         test: /\.scss$/,
@@ -136,10 +138,7 @@ const config = {
     alias: {
       vue$: 'vue/dist/vue.common.js',
 
-      // defaults to the prebundled browser version which causes webpack to error with:
-      // "Critical dependency: require function is used in a way in which dependencies cannot be statically extracted"
-      // webpack likes to bundle the dependencies itself, could really have a better error message though
-      'youtubei.js$': 'youtubei.js/dist/browser.js',
+      'youtubei.js$': 'youtubei.js/web',
     },
     extensions: ['.js', '.vue']
   },

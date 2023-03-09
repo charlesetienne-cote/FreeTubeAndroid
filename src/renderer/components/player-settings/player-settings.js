@@ -113,6 +113,10 @@ export default defineComponent({
       return this.$store.getters.getDefaultQuality
     },
 
+    allowDashAv1Formats: function () {
+      return this.$store.getters.getAllowDashAv1Formats
+    },
+
     defaultTheatreMode: function () {
       return this.$store.getters.getDefaultTheatreMode
     },
@@ -217,9 +221,13 @@ export default defineComponent({
         this.screenshotFolderPlaceholder = this.screenshotFolder
         return
       }
-      this.getScreenshotEmptyFolderPlaceholder().then((res) => {
-        this.screenshotFolderPlaceholder = res
-      })
+      // Screenshots only work in electron right now
+      // TODO📝 make screenshots work in cordova and possibly also in web builds
+      if (process.env.IS_ELECTRON) {
+        this.getScreenshotEmptyFolderPlaceholder().then((res) => {
+          this.screenshotFolderPlaceholder = res
+        })
+      }
     },
 
     chooseScreenshotFolder: async function() {
@@ -276,6 +284,7 @@ export default defineComponent({
       'updateDefaultPlayback',
       'updateDefaultVideoFormat',
       'updateDefaultQuality',
+      'updateAllowDashAv1Formats',
       'updateVideoVolumeMouseScroll',
       'updateVideoPlaybackRateMouseScroll',
       'updateVideoSkipMouseScroll',

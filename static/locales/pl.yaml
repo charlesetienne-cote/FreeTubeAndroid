@@ -53,12 +53,14 @@ Search Filters:
     Videos: 'Filmy'
     Channels: 'Kanały'
     #& Playlists
+    Movies: Filmy kinowe
   Duration:
     Duration: 'Długość'
     All Durations: 'Każda'
     Short (< 4 minutes): 'Krótkie (< 4 minuty)'
     Long (> 20 minutes): 'Długie (> 20 minut)'
   # On Search Page
+    Medium (4 - 20 minutes): Średnie (4 - 20 minut)
   Search Results: 'Wyniki wyszukiwania'
   Fetching results. Please wait: 'Trwa wyszukiwanie. Proszę poczekać'
   Fetch more results: 'Pokaż więcej wyników'
@@ -272,6 +274,7 @@ Settings:
       orientacji ekranu
     Skip by Scrolling Over Video Player: Przewijaj film kółkiem myszy na obszarze
       odtwarzacza
+    Allow DASH AV1 formats: Zezwól na format AV1 DASH
   Subscription Settings:
     Subscription Settings: 'Ustawienia subskrypcji'
     Hide Videos on Watch: 'Ukrywaj filmy po obejrzeniu'
@@ -330,6 +333,8 @@ Settings:
       można tego cofnąć.
     Remove All Subscriptions / Profiles: Usuń wszystkie subskrypcje / profile
     Automatically Remove Video Meta Files: Automatycznie usuwaj pliki metadanych filmu
+    Save Watched Videos With Last Viewed Playlist: Zapisuj do historii film wraz z
+      ostatnią odtwarzaną playlistą, która go zawierała
   Data Settings:
     How do I import my subscriptions?: Jak mogę zaimportować swoje subskrypcje?
     Unknown data key: Nieznany klucz danych
@@ -458,7 +463,7 @@ Settings:
   Experimental Settings:
     Replace HTTP Cache: Zastąp pamięć podręczną HTTP
     Experimental Settings: Ustawienia eksperymentalne
-    Warning: Te ustawienia są w fazie testów i po włączeniu mogą spowodować wywalenie
+    Warning: Te ustawienia są w fazie testów i po włączeniu mogą powodować wywalanie
       się programu. Zalecane jest stworzenie kopii zapasowej. Używaj na własne ryzyko!
   Password Dialog:
     Unlock: Odblokuj
@@ -563,11 +568,26 @@ Channel:
     About: 'O kanale'
     Channel Description: 'Opis kanału'
     Featured Channels: 'Polecane kanały'
+    Details: Szczegóły
+    Joined: Data dołączenia
+    Location: Lokalizacja
+    Tags:
+      Tags: Tagi
+      Search for: Szukaj „{tag}”
   Added channel to your subscriptions: Dodano kanał do twoich subskrypcji
   Removed subscription from {count} other channel(s): Usunięto subskrypcje z {count}
     pozostałych kanałów
   Channel has been removed from your subscriptions: Kanał został usunięty z twoich
     subskrypcji
+  This channel is age resticted and currently cannot be viewed in FreeTube.: Kanał
+    ten ma ograniczenie wiekowe, dlatego nie zostanie wyświetlony we FreeTube.
+  Channel Tabs: Karty kanału
+  This channel does not exist: Nie ma takiego kanału
+  This channel does not allow searching: Ten kanał nie zezwala na przeszukiwanie
+  Community:
+    This channel currently does not have any posts: Ten kanał nie ma obecnie żadnych
+      publikacji
+    Community: Społeczność
 Video:
   Mark As Watched: 'Oznacz jako obejrzany'
   Remove From History: 'Usuń z historii'
@@ -724,12 +744,6 @@ Playlist:
   View: 'wyświetlenie'
   Views: 'wyświetleń'
   Last Updated On: 'Ostatnio zaktualizowano'
-  Share Playlist:
-    Share Playlist: 'Podziel się playlistą'
-    Copy YouTube Link: 'Skopiuj link do strony YouTube'
-    Open in YouTube: 'Otwórz na stronie YouTube'
-    Copy Invidious Link: 'Skopiuj link do strony Invidious'
-    Open in Invidious: 'Otwórz w Invidious'
 
 # On Video Watch Page
 #* Published
@@ -747,6 +761,7 @@ Change Format:
     tego filmu
 Share:
   Share Video: 'Podziel się filmem'
+  Share Playlist: 'Podziel się playlistą'
   Copy Link: 'Skopiuj link'
   Open Link: 'Otwórz link'
   Copy Embed: 'Skopiuj link do osadzenia'
@@ -907,6 +922,10 @@ Tooltips:
       wartości (1x, chyba że została zmieniona w ustawieniach).
     Skip by Scrolling Over Video Player: Użyj kółka myszy, by przewijać film tak jak
       w MPV.
+    Allow DASH AV1 formats: Film w formacie AV1 DASH może wyglądać lepiej, niż w formacie
+      H.264 DASH. Dekodowanie formatu AV1 DASH wymaga większej mocy obliczeniowej.
+      W filmach, dla których ten format nie jest dostępny, zostanie użyty format H.264
+      DASH.
   Privacy Settings:
     Remove Video Meta Files: Po włączeniu FreeTube automatycznie usunie pliki metadanych
       utworzone podczas odtwarzania filmu, gdy strona odtwarzania zostanie zamknięta.

@@ -1,10 +1,71 @@
-import { Innertube } from 'youtubei.js'
-import { ClientType } from 'youtubei.js/dist/src/core/Session'
-import EmojiRun from 'youtubei.js/dist/src/parser/classes/misc/EmojiRun'
+import { Innertube, ClientType, Misc, Utils } from 'youtubei.js'
+import Autolinker from 'autolinker'
 import { join } from 'path'
+import cordova from 'cordova'
 
 import { PlayerCache } from './PlayerCache'
-import { extractNumberFromString, getUserDataPath } from '../utils'
+import {
+  CHANNEL_HANDLE_REGEX,
+  extractNumberFromString,
+  getUserDataPath,
+  toLocalePublicationString
+} from '../utils'
+
+export function cordovaFetch(input, init = {}) {
+  if ('http' in cordova.plugin) {
+    const { http } = cordova.plugin
+    return new Promise((resolve, reject) => {
+      if ('headers' in init) {
+        if (Object.keys(init.headers).length === 0) {
+          // you can't have an empty headers object in cordova advanced http
+          delete init.headers
+        }
+      }
+      let httpFunction
+      if (input instanceof URL) {
+        const url = input.toString()
+        httpFunction = (callbackSuccess, callbackError) => {
+          http.get(url, {}, init.headers, callbackSuccess, callbackError)
+        }
+      } else {
+        let data = input
+        if (typeof data === 'string') {
+          data = { url: data }
+        }
+        switch (data.method) {
+          case 'POST':
+            httpFunction = (callbackSuccess, callbackError) => {
+              http.setDataSerializer('json')
+              http.useBasicAuth(data.credentials)
+              http.post(data.url, JSON.parse(init.body), init, callbackSuccess, callbackError)
+            }
+            break
+          case 'GET':
+          default:
+            httpFunction = (callbackSuccess, callbackError) => {
+              http.get(data.url, {}, init.headers, callbackSuccess, callbackError)
+            }
+            break
+        }
+      }
+      httpFunction((response) => {
+        resolve(Object.assign(response, {
+          ok: response.status === 200,
+          text: () => {
+            return response.data
+          },
+          json: () => {
+            return JSON.parse(response.data)
+          }
+        }))
+      }, (response) => {
+        reject(response)
+      })
+    })
+  } else {
+    console.error('Advanced http plugin failed to load.')
+  }
+}
 
 /**
  * Creates a lightweight Innertube instance, which is faster to create or
@@ -25,7 +86,11 @@ async function createInnertube(options = { withPlayer: false, location: undefine
   let cache
   if (options.withPlayer) {
     const userData = await getUserDataPath()
-    cache = new PlayerCache(join(userData, 'player_cache'))
+    if (userData != null) {
+      cache = new PlayerCache(join(userData, 'player_cache'))
+    } else {
+      cache = undefined
+    }
   }
 
   return await Innertube.create({
@@ -35,7 +100,14 @@ async function createInnertube(options = { withPlayer: false, location: undefine
     client_type: options.clientType,
 
     // use browser fetch
-    fetch: (input, init) => fetch(input, init),
+    fetch: (input, init = {}) => {
+      if (process.env.IS_CORDOVA) {
+        return cordovaFetch(input, init)
+      }
+      if (process.env.IS_ELECTRON) {
+        return fetch(input, init)
+      }
+    },
     cache,
     generate_session_locally: true
   })
@@ -82,7 +154,7 @@ export async function getLocalTrending(location, tab, instance) {
 
   const results = resultsInstance.videos
     .filter((video) => video.type === 'Video')
-    .map(parseListVideo)
+    .map(parseLocalListVideo)
 
   return {
     results,
@@ -141,6 +213,11 @@ export async function getLocalVideoInfo(id, attemptBypass = false) {
   return info
 }
 
+export async function getLocalComments(id, sortByNewest = false) {
+  const innertube = await createInnertube()
+  return innertube.getComments(id, sortByNewest ? 'NEWEST_FIRST' : 'TOP_COMMENTS')
+}
+
 /**
  * @param {import('youtubei.js/dist/src/parser/classes/misc/Format').default[]} formats
  * @param {import('youtubei.js/dist/index').Player} player
@@ -152,6 +229,117 @@ function decipherFormats(formats, player) {
     // set these to undefined so that toDash doesn't try to decipher them again, throwing an error
     format.cipher = undefined
     format.signature_cipher = undefined
+  }
+}
+
+export async function getLocalChannelId(url) {
+  try {
+    const innertube = await createInnertube()
+
+    // resolveURL throws an error if the URL doesn't exist
+    const navigationEndpoint = await innertube.resolveURL(url)
+
+    if (navigationEndpoint.metadata.page_type === 'WEB_PAGE_TYPE_CHANNEL') {
+      return navigationEndpoint.payload.browseId
+    } else {
+      return null
+    }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Returns the channel or the channel termination reason
+ * @param {string} id
+ */
+export async function getLocalChannel(id) {
+  const innertube = await createInnertube()
+  let result
+  try {
+    result = await innertube.getChannel(id)
+  } catch (error) {
+    if (error instanceof Utils.ChannelError) {
+      result = {
+        alert: error.message
+      }
+    } else {
+      throw error
+    }
+  }
+  return result
+}
+
+export async function getLocalChannelVideos(id) {
+  const channel = await getLocalChannel(id)
+
+  if (channel.alert) {
+    return null
+  }
+
+  if (!channel.has_videos) {
+    return []
+  }
+
+  const videosTab = await channel.getVideos()
+
+  return parseLocalChannelVideos(videosTab.videos, channel.header.author)
+}
+
+/**
+ * @param {import('youtubei.js/dist/src/parser/classes/Video').default[]} videos
+ * @param {import('youtubei.js/dist/src/parser/classes/misc/Author').default} author
+ */
+export function parseLocalChannelVideos(videos, author) {
+  const parsedVideos = videos.map(parseLocalListVideo)
+
+  // fix empty author info
+  parsedVideos.forEach(video => {
+    video.author = author.name
+    video.authorId = author.id
+  })
+
+  return parsedVideos
+}
+
+/**
+ * @typedef {import('youtubei.js/dist/src/parser/classes/Playlist').default} Playlist
+ * @typedef {import('youtubei.js/dist/src/parser/classes/GridPlaylist').default} GridPlaylist
+ */
+
+/**
+ * @param {Playlist|GridPlaylist} playlist
+ * @param {import('youtubei.js/dist/src/parser/classes/misc/Author').default} author
+ */
+export function parseLocalListPlaylist(playlist, author = undefined) {
+  let channelName
+  let channelId = null
+
+  if (playlist.author) {
+    if (playlist.author instanceof Misc.Text) {
+      channelName = playlist.author.text
+
+      if (author) {
+        channelId = author.id
+      }
+    } else {
+      channelName = playlist.author.name
+      channelId = playlist.author.id
+    }
+  } else {
+    channelName = author.name
+    channelId = author.id
+  }
+
+  return {
+    type: 'playlist',
+    dataSource: 'local',
+    title: playlist.title.text,
+    thumbnail: playlist.thumbnails[0].url,
+    channelName,
+    channelId,
+    playlistId: playlist.id,
+    videoCount: extractNumberFromString(playlist.video_count.text)
   }
 }
 
@@ -191,18 +379,17 @@ export function parseLocalPlaylistVideo(video) {
     title: video.title.text,
     author: video.author.name,
     authorId: video.author.id,
-    lengthSeconds: isNaN(video.duration.seconds) ? '' : video.duration.seconds
+    lengthSeconds: isNaN(video.duration.seconds) ? '' : video.duration.seconds,
+    liveNow: video.is_live,
+    isUpcoming: video.is_upcoming,
+    premiereDate: video.upcoming
   }
 }
 
 /**
- * @typedef {import('youtubei.js/dist/src/parser/classes/Video').default} Video
+ * @param {import('youtubei.js/dist/src/parser/classes/Video').default} video
  */
-
-/**
- * @param {Video} video
- */
-function parseListVideo(video) {
+export function parseLocalListVideo(video) {
   return {
     type: 'video',
     videoId: video.id,
@@ -211,7 +398,7 @@ function parseListVideo(video) {
     authorId: video.author.id,
     description: video.description,
     viewCount: extractNumberFromString(video.view_count.text),
-    publishedText: video.published.text,
+    publishedText: video.published.text !== 'N/A' ? video.published.text : null,
     lengthSeconds: isNaN(video.duration.seconds) ? '' : video.duration.seconds,
     liveNow: video.is_live,
     isUpcoming: video.is_upcoming || video.is_premiere,
@@ -220,35 +407,35 @@ function parseListVideo(video) {
 }
 
 /**
- * @typedef {import('youtubei.js/dist/src/parser/helpers').YTNode} YTNode
- * @typedef {import('youtubei.js/dist/src/parser/classes/Channel').default} Channel
- * @typedef {import('youtubei.js/dist/src/parser/classes/Playlist').default} Playlist
- */
-
-/**
- * @param {YTNode} item
+ * @param {import('youtubei.js/dist/src/parser/helpers').YTNode} item
  */
 function parseListItem(item) {
   switch (item.type) {
     case 'Video':
-      return parseListVideo(item)
+      return parseLocalListVideo(item)
     case 'Channel': {
-      /** @type {Channel} */
+      /** @type {import('youtubei.js/dist/src/parser/classes/Channel').default} */
       const channel = item
 
       // see upstream TODO: https://github.com/LuanRT/YouTube.js/blob/main/src/parser/classes/Channel.ts#L33
 
       // according to https://github.com/iv-org/invidious/issues/3514#issuecomment-1368080392
       // the response can be the new or old one, so we currently need to handle both here
-      let subscribers
+      let subscribers = null
       let videos = null
       let handle = null
       if (channel.subscribers.text.startsWith('@')) {
-        subscribers = channel.videos.text
         handle = channel.subscribers.text
+
+        if (channel.videos.text !== 'N/A') {
+          subscribers = channel.videos.text
+        }
       } else {
-        subscribers = channel.subscribers.text
-        videos = channel.videos.text
+        videos = extractNumberFromString(channel.videos.text)
+
+        if (channel.subscribers.text !== 'N/A') {
+          subscribers = channel.subscribers.text
+        }
       }
 
       return {
@@ -256,7 +443,7 @@ function parseListItem(item) {
         dataSource: 'local',
         thumbnail: channel.author.best_thumbnail?.url,
         name: channel.author.name,
-        channelID: channel.author.id,
+        id: channel.author.id,
         subscribers,
         videos,
         handle,
@@ -264,18 +451,7 @@ function parseListItem(item) {
       }
     }
     case 'Playlist': {
-      /** @type {Playlist} */
-      const playlist = item
-      return {
-        type: 'playlist',
-        dataSource: 'local',
-        title: playlist.title,
-        thumbnail: playlist.thumbnails[0].url,
-        channelName: playlist.author.name,
-        channelId: playlist.author.id,
-        playlistId: playlist.id,
-        videoCount: extractNumberFromString(playlist.video_count.text)
-      }
+      return parseLocalListPlaylist(item)
     }
   }
 }
@@ -295,10 +471,10 @@ export function parseLocalWatchNextVideo(video) {
     author: video.author.name,
     authorId: video.author.id,
     viewCount: extractNumberFromString(video.view_count.text),
-    // CompactVideo doesn't have is_live, is_upcoming or is_premiere,
-    // so we have to make do with this for the moment, to stop toLocalePublicationString erroring
     publishedText: video.published.text === 'N/A' ? null : video.published.text,
-    lengthSeconds: isNaN(video.duration.seconds) ? '' : video.duration.seconds
+    lengthSeconds: isNaN(video.duration.seconds) ? '' : video.duration.seconds,
+    liveNow: video.is_live,
+    isUpcoming: video.is_premiere
   }
 }
 
@@ -322,7 +498,7 @@ function convertSearchFilters(filters) {
     }
 
     if (filters.duration) {
-      convertedFilters.type = filters.duration
+      convertedFilters.duration = filters.duration
     }
   }
 
@@ -331,6 +507,7 @@ function convertSearchFilters(filters) {
 
 /**
  * @typedef {import('youtubei.js/dist/src/parser/classes/misc/TextRun').default} TextRun
+ * @typedef {import('youtubei.js/dist/src/parser/classes/misc/EmojiRun').default} EmojiRun
  */
 
 /**
@@ -346,29 +523,33 @@ export function parseLocalTextRuns(runs, emojiSize = 16) {
   const parsedRuns = []
 
   for (const run of runs) {
-    if (run instanceof EmojiRun) {
+    if (run instanceof Misc.EmojiRun) {
       const { emoji, text } = run
 
-      let altText
+      // empty array if video creator removes a channel emoji so we ignore.
+      // eg: pinned comment here https://youtu.be/v3wm83zoSSY
+      if (emoji.image.length > 0) {
+        let altText
 
-      if (emoji.is_custom) {
-        if (emoji.shortcuts.length > 0) {
-          altText = emoji.shortcuts[0]
-        } else if (emoji.search_terms.length > 0) {
-          altText = emoji.search_terms.join(', ')
+        if (emoji.is_custom) {
+          if (emoji.shortcuts.length > 0) {
+            altText = emoji.shortcuts[0]
+          } else if (emoji.search_terms.length > 0) {
+            altText = emoji.search_terms.join(', ')
+          } else {
+            altText = 'Custom emoji'
+          }
         } else {
-          altText = 'Custom emoji'
+          altText = text
         }
-      } else {
-        altText = text
-      }
 
-      // lazy load the emoji image so it doesn't delay rendering of the text
-      // by defining a height and width, that space is reserved until the image is loaded
-      // that way we avoid layout shifts when it loads
-      parsedRuns.push(`<img src="${emoji.image[0].url}" alt="${altText}" width="${emojiSize}" height="${emojiSize}" loading="lazy" style="vertical-align: middle">`)
+        // lazy load the emoji image so it doesn't delay rendering of the text
+        // by defining a height and width, that space is reserved until the image is loaded
+        // that way we avoid layout shifts when it loads
+        parsedRuns.push(`<img src="${emoji.image[0].url}" alt="${altText}" width="${emojiSize}" height="${emojiSize}" loading="lazy" style="vertical-align: middle">`)
+      }
     } else {
-      const { text, endpoint } = run
+      const { text, bold, italics, strikethrough, endpoint } = run
 
       if (endpoint && !text.startsWith('#')) {
         switch (endpoint.metadata.page_type) {
@@ -379,13 +560,15 @@ export function parseLocalTextRuns(runs, emojiSize = 16) {
               parsedRuns.push(`https://www.youtube.com${endpoint.metadata.url}`)
             }
             break
-          case 'WEB_PAGE_TYPE_CHANNEL':
-            if (text.startsWith('@')) {
-              parsedRuns.push(`<a href="https://www.youtube.com/channel/${endpoint.payload.browseId}">${text}</a>`)
+          case 'WEB_PAGE_TYPE_CHANNEL': {
+            const trimmedText = text.trim()
+            if (CHANNEL_HANDLE_REGEX.test(trimmedText)) {
+              parsedRuns.push(`<a href="https://www.youtube.com/channel/${endpoint.payload.browseId}">${trimmedText}</a>`)
             } else {
               parsedRuns.push(`https://www.youtube.com${endpoint.metadata.url}`)
             }
             break
+          }
           case 'WEB_PAGE_TYPE_PLAYLIST':
             parsedRuns.push(`https://www.youtube.com${endpoint.metadata.url}`)
             break
@@ -411,7 +594,20 @@ export function parseLocalTextRuns(runs, emojiSize = 16) {
           }
         }
       } else {
-        parsedRuns.push(text)
+        let formattedText = text
+        if (bold) {
+          formattedText = `<b>${formattedText}</b>`
+        }
+
+        if (italics) {
+          formattedText = `<i>${formattedText}</i>`
+        }
+
+        if (strikethrough) {
+          formattedText = `<s>${formattedText}</s>`
+        }
+
+        parsedRuns.push(formattedText)
       }
     }
   }
@@ -435,5 +631,163 @@ export function mapLocalFormat(format) {
     mimeType: format.mime_type,
     height: format.height,
     url: format.url
+  }
+}
+
+/**
+ * @param {import('youtubei.js/dist/src/parser/classes/comments/Comment').default} comment
+ * @param {import('youtubei.js/dist/src/parser/classes/comments/CommentThread').default} commentThread
+ */
+export function parseLocalComment(comment, commentThread = undefined) {
+  let hasOwnerReplied = false
+  let replyToken = null
+
+  if (commentThread?.has_replies) {
+    hasOwnerReplied = commentThread.comment_replies_data.has_channel_owner_replied
+    replyToken = commentThread
+  }
+
+  return {
+    dataType: 'local',
+    authorLink: comment.author.id,
+    author: comment.author.name,
+    authorThumb: comment.author.best_thumbnail.url,
+    isPinned: comment.is_pinned,
+    isOwner: comment.author_is_channel_owner,
+    isMember: comment.is_member,
+    memberIconUrl: comment.is_member ? comment.sponsor_comment_badge.custom_badge[0].url : '',
+    text: Autolinker.link(parseLocalTextRuns(comment.content.runs, 16)),
+    time: toLocalePublicationString({ publishText: comment.published.text.replace('(edited)', '').trim() }),
+    likes: comment.vote_count,
+    isHearted: comment.is_hearted,
+    numReplies: comment.reply_count,
+    hasOwnerReplied,
+    replyToken,
+    showReplies: false,
+    replies: []
+  }
+}
+
+/**
+ * video.js only supports MP4 DASH not WebM DASH
+ * so we filter out the WebM DASH formats
+ * @param {Format[]} formats
+ * @param {boolean} allowAv1 Use the AV1 formats if they are available
+ */
+export function filterFormats(formats, allowAv1 = false) {
+  const audioFormats = []
+  const h264Formats = []
+  const av1Formats = []
+
+  formats.forEach(format => {
+    const mimeType = format.mime_type
+
+    if (mimeType.startsWith('audio/mp4')) {
+      audioFormats.push(format)
+    } else if (allowAv1 && mimeType.startsWith('video/mp4; codecs="av01')) {
+      av1Formats.push(format)
+    } else if (mimeType.startsWith('video/mp4; codecs="avc')) {
+      h264Formats.push(format)
+    }
+  })
+
+  if (allowAv1 && av1Formats.length > 0) {
+    return [...audioFormats, ...av1Formats]
+  } else {
+    return [...audioFormats, ...h264Formats]
+  }
+}
+
+/**
+ * Really not a fan of this :(, YouTube returns the subscribers as "15.1M subscribers"
+ * so we have to parse it somehow
+ * @param {string} text
+ */
+export function parseLocalSubscriberCount(text) {
+  const match = text
+    .replace(',', '.')
+    .toUpperCase()
+    .match(/([\d.]+)\s*([KM]?)/)
+
+  let subscribers
+  if (match) {
+    subscribers = parseFloat(match[1])
+
+    if (match[2] === 'K') {
+      subscribers *= 1000
+    } else if (match[2] === 'M') {
+      subscribers *= 1000_000
+    }
+
+    subscribers = Math.trunc(subscribers)
+  } else {
+    subscribers = extractNumberFromString(text)
+  }
+
+  return subscribers
+}
+
+/**
+ * Parse community posts
+ * @param {import('youtubei.js/dist/src/parser/classes/BackstagePost').default} post
+ */
+export function parseLocalCommunityPost(post) {
+  let replyCount = post.action_buttons.reply_button?.text ?? null
+  if (replyCount !== null) {
+    replyCount = parseLocalSubscriberCount(post?.action_buttons.reply_button.text)
+  }
+
+  return {
+    postText: post.content.text === 'N/A' ? '' : post.content.text,
+    postId: post.id,
+    authorThumbnails: post.author.thumbnails,
+    publishedText: post.published.text,
+    voteCount: post.vote_count,
+    postContent: parseLocalAttachment(post.attachment),
+    commentCount: replyCount,
+    author: post.author.name,
+    type: 'community'
+  }
+}
+
+function parseLocalAttachment(attachment) {
+  if (!attachment) {
+    return null
+  }
+  // image post
+  if (attachment.type === 'BackstageImage') {
+    return {
+      type: 'image',
+      content: attachment.image
+    }
+  } else if (attachment.type === 'Video') {
+    return {
+      type: 'video',
+      content: parseLocalListVideo(attachment)
+    }
+  } else if (attachment.type === 'Playlist') {
+    return {
+      type: 'playlist',
+      content: parseLocalListPlaylist(attachment)
+    }
+  } else if (attachment.type === 'PostMultiImage') {
+    return {
+      type: 'multiImage',
+      content: attachment.images.map(thumbnail => thumbnail.image)
+    }
+  } else if (attachment.type === 'Poll') {
+    return {
+      type: 'poll',
+      totalVotes: attachment.total_votes ?? 0,
+      content: attachment.choices.map(choice => {
+        return {
+          text: choice.text.text,
+          image: choice.image
+        }
+      })
+    }
+  } else {
+    console.error(attachment)
+    console.error('unknown type')
   }
 }

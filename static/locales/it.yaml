@@ -55,12 +55,14 @@ Search Filters:
     Videos: 'Video'
     Channels: 'Canali'
     #& Playlists
+    Movies: Film
   Duration:
     Duration: 'Durata'
     All Durations: 'Tutte le durate'
     Short (< 4 minutes): 'Corto (< 4 minuti)'
     Long (> 20 minutes): 'Lungo (> 20 minuti)'
   # On Search Page
+    Medium (4 - 20 minutes): Medio (4 - 20 minuti)
   Search Results: 'Risultati della ricerca'
   Fetching results. Please wait: 'Caricamento risultati. Per favore attendi'
   Fetch more results: 'Carica più risultati'
@@ -272,6 +274,7 @@ Settings:
         del video 3 cifre. %i ID video. Puoi anche usare \ o / per creare sottocartelle.
     Enter Fullscreen on Display Rotate: Entra a schermo intero su Ruota schermo
     Skip by Scrolling Over Video Player: Salta scorrendo il lettore video
+    Allow DASH AV1 formats: Consenti formati DASH AV1
   Privacy Settings:
     Privacy Settings: 'Impostazioni della privacy'
     Remember History: 'Salva la cronologia'
@@ -290,6 +293,8 @@ Settings:
     Remove All Subscriptions / Profiles: Elimina tutte le iscrizioni e i profili
     Automatically Remove Video Meta Files: Rimuovi automaticamente i metafile dai
       video
+    Save Watched Videos With Last Viewed Playlist: Salva i video guardati con l'ultima
+      playlist vista
   Subscription Settings:
     Subscription Settings: 'Impostazioni delle iscrizioni'
     Hide Videos on Watch: 'Nascondi i video successivi durante la riproduzione'
@@ -561,11 +566,27 @@ Channel:
     About: 'Informazioni'
     Channel Description: 'Descrizione canale'
     Featured Channels: 'Canali suggeriti'
+    Tags:
+      Search for: Cerca «{tag}»
+      Tags: Etichette
+    Details: Dettagli
+    Joined: Partecipato
+    Location: Posizione
   Added channel to your subscriptions: Il canale è stato aggiunto alle tue iscrizioni
   Removed subscription from {count} other channel(s): È stata rimossa l'iscrizione
     dagli altri canali di {count}
   Channel has been removed from your subscriptions: Il canale è stato rimosso dalle
     tue iscrizioni
+  This channel does not exist: Questo canale non esiste
+  This channel does not allow searching: Questo canale non consente la ricerca
+  Channel Tabs: Schede canale
+  This channel is age resticted and currently cannot be viewed in FreeTube.: Questo
+    canale è soggetto a limiti di età e al momento non può essere visualizzato su
+    FreeTube.
+  Community:
+    This channel currently does not have any posts: Questo canale al momento non ha
+      post
+    Community: Comunità
 Video:
   Mark As Watched: 'Segna come già visto'
   Remove From History: 'Rimuovi dalla cronologia'
@@ -722,12 +743,6 @@ Playlist:
   View: 'Visualizzazione'
   Views: 'Visualizzazioni'
   Last Updated On: 'Ultimo aggiornamento il'
-  Share Playlist:
-    Share Playlist: 'Condividi la playlist'
-    Copy YouTube Link: 'Copia link YouTube'
-    Open in YouTube: 'Apri con YouTube'
-    Copy Invidious Link: 'Copia link Invidious'
-    Open in Invidious: 'Apri con Invidious'
 
 # On Video Watch Page
 #* Published
@@ -745,6 +760,7 @@ Change Format:
     per questo video
 Share:
   Share Video: 'Condividi video'
+  Share Playlist: 'Condividi la playlist'
   Copy Link: 'Copia link'
   Open Link: 'Apri link'
   Copy Embed: 'Copia codice da incorporare'
@@ -885,6 +901,10 @@ Tooltips:
       nelle impostazioni).
     Skip by Scrolling Over Video Player: Usa la rotella di scorrimento per saltare
       il video, in stile MPV.
+    Allow DASH AV1 formats: I formati DASH AV1 possono avere un aspetto migliore dei
+      formati DASH H.264. I formati DASH AV1 richiedono più potenza per la riproduzione!
+      Non sono disponibili su tutti i video, in questo caso il lettore utilizzerà
+      invece i formati DASH H.264.
   Subscription Settings:
     Fetch Feeds from RSS: Se abilitato, FreeTube userà gli RSS invece del metodo standard
       per leggere la tua lista iscrizioni. Gli RSS sono più veloci e impediscono il

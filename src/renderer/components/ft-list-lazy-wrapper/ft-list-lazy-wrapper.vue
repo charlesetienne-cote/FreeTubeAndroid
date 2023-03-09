@@ -16,12 +16,18 @@
       :data="data"
     />
     <ft-list-video
-      v-if="(data.type === 'video' || data.type === 'shortVideo') && visible"
+      v-else-if="(data.type === 'video' || data.type === 'shortVideo') && visible"
+      :appearance="appearance"
+      :data="data"
+      :show-video-with-last-viewed-playlist="showVideoWithLastViewedPlaylist"
+    />
+    <ft-list-playlist
+      v-else-if="data.type === 'playlist' && visible"
       :appearance="appearance"
       :data="data"
     />
-    <ft-list-playlist
-      v-if="data.type === 'playlist' && visible"
+    <ft-community-post
+      v-else-if="data.type === 'community' && visible"
       :appearance="appearance"
       :data="data"
     />

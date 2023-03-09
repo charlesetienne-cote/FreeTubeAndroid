@@ -6,17 +6,18 @@ import FtFlexBox from '../ft-flex-box/ft-flex-box.vue'
 import FtPrompt from '../ft-prompt/ft-prompt.vue'
 import { MAIN_PROFILE_ID } from '../../../constants'
 
-import ytch from 'yt-channel-info'
 import { calculateColorLuminance, getRandomColor } from '../../helpers/colors'
 import {
   copyToClipboard,
+  getTodayDateStrLocalTimezone,
   readFileFromDialog,
   showOpenDialog,
   showSaveDialog,
   showToast,
-  writeFileFromDialog
+  writeFileFromDialog,
 } from '../../helpers/utils'
 import { invidiousAPICall } from '../../helpers/api/invidious'
+import { getLocalChannel } from '../../helpers/api/local'
 
 export default defineComponent({
   name: 'DataSettings',
@@ -75,9 +76,6 @@ export default defineComponent({
         `${exportYouTube} (.opml)`,
         `${exportNewPipe} (.json)`
       ]
-    },
-    usingElectron: function () {
-      return process.env.IS_ELECTRON
     },
     primaryProfile: function () {
       return JSON.parse(JSON.stringify(this.profileList[0]))
@@ -512,8 +510,8 @@ export default defineComponent({
       const subscriptionsDb = this.profileList.map((profile) => {
         return JSON.stringify(profile)
       }).join('\n') + '\n'// a trailing line is expected
-      const date = new Date().toISOString().split('T')[0]
-      const exportFileName = 'freetube-subscriptions-' + date + '.db'
+      const dateStr = getTodayDateStrLocalTimezone()
+      const exportFileName = 'freetube-subscriptions-' + dateStr + '.db'
 
       const options = {
         defaultPath: exportFileName,
@@ -525,24 +523,12 @@ export default defineComponent({
         ]
       }
 
-      const response = await showSaveDialog(options)
-      if (response.canceled || response.filePath === '') {
-        // User canceled the save dialog
-        return
-      }
-      try {
-        await writeFileFromDialog(response, subscriptionsDb)
-      } catch (writeErr) {
-        const message = this.$t('Settings.Data Settings.Unable to read file')
-        showToast(`${message}: ${writeErr}`)
-        return
-      }
-      showToast(this.$t('Settings.Data Settings.Subscriptions have been successfully exported'))
+      await this.promptAndWriteToFile(options, subscriptionsDb, 'Subscriptions have been successfully exported')
     },
 
     exportYouTubeSubscriptions: async function () {
-      const date = new Date().toISOString().split('T')[0]
-      const exportFileName = 'youtube-subscriptions-' + date + '.json'
+      const dateStr = getTodayDateStrLocalTimezone()
+      const exportFileName = 'youtube-subscriptions-' + dateStr + '.json'
 
       const options = {
         defaultPath: exportFileName,
@@ -590,25 +576,12 @@ export default defineComponent({
         return object
       })
 
-      const response = await showSaveDialog(options)
-      if (response.canceled || response.filePath === '') {
-        // User canceled the save dialog
-        return
-      }
-
-      try {
-        await writeFileFromDialog(response, JSON.stringify(subscriptionsObject))
-      } catch (writeErr) {
-        const message = this.$t('Settings.Data Settings.Unable to write file')
-        showToast(`${message}: ${writeErr}`)
-        return
-      }
-      showToast(this.$t('Settings.Data Settings.Subscriptions have been successfully exported'))
+      await this.promptAndWriteToFile(options, JSON.stringify(subscriptionsObject), 'Subscriptions have been successfully exported')
     },
 
     exportOpmlYouTubeSubscriptions: async function () {
-      const date = new Date().toISOString().split('T')[0]
-      const exportFileName = 'youtube-subscriptions-' + date + '.opml'
+      const dateStr = getTodayDateStrLocalTimezone()
+      const exportFileName = 'youtube-subscriptions-' + dateStr + '.opml'
 
       const options = {
         defaultPath: exportFileName,
@@ -636,25 +609,12 @@ export default defineComponent({
 
       opmlData += '</outline></body></opml>'
 
-      const response = await showSaveDialog(options)
-      if (response.canceled || response.filePath === '') {
-        // User canceled the save dialog
-        return
-      }
-
-      try {
-        await writeFileFromDialog(response, opmlData)
-      } catch (writeErr) {
-        const message = this.$t('Settings.Data Settings.Unable to write file')
-        showToast(`${message}: ${writeErr}`)
-        return
-      }
-      showToast(this.$t('Settings.Data Settings.Subscriptions have been successfully exported'))
+      await this.promptAndWriteToFile(options, opmlData, 'Subscriptions have been successfully exported')
     },
 
     exportCsvYouTubeSubscriptions: async function () {
-      const date = new Date().toISOString().split('T')[0]
-      const exportFileName = 'youtube-subscriptions-' + date + '.csv'
+      const dateStr = getTodayDateStrLocalTimezone()
+      const exportFileName = 'youtube-subscriptions-' + dateStr + '.csv'
 
       const options = {
         defaultPath: exportFileName,
@@ -675,25 +635,13 @@ export default defineComponent({
         exportText += `${channel.id},${channelUrl},${channelName}\n`
       })
       exportText += '\n'
-      const response = await showSaveDialog(options)
-      if (response.canceled || response.filePath === '') {
-        // User canceled the save dialog
-        return
-      }
 
-      try {
-        await writeFileFromDialog(response, exportText)
-      } catch (writeErr) {
-        const message = this.$t('Settings.Data Settings.Unable to write file')
-        showToast(`${message}: ${writeErr}`)
-        return
-      }
-      showToast(this.$t('Settings.Data Settings.Subscriptions have been successfully exported'))
+      await this.promptAndWriteToFile(options, exportText, 'Subscriptions have been successfully exported')
     },
 
     exportNewPipeSubscriptions: async function () {
-      const date = new Date().toISOString().split('T')[0]
-      const exportFileName = 'newpipe-subscriptions-' + date + '.json'
+      const dateStr = getTodayDateStrLocalTimezone()
+      const exportFileName = 'newpipe-subscriptions-' + dateStr + '.json'
 
       const options = {
         defaultPath: exportFileName,
@@ -722,19 +670,7 @@ export default defineComponent({
         newPipeObject.subscriptions.push(subscription)
       })
 
-      const response = await showSaveDialog(options)
-      if (response.canceled || response.filePath === '') {
-        // User canceled the save dialog
-        return
-      }
-      try {
-        await writeFileFromDialog(response, JSON.stringify(newPipeObject))
-      } catch (writeErr) {
-        const message = this.$t('Settings.Data Settings.Unable to write file')
-        showToast(`${message}: ${writeErr}`)
-        return
-      }
-      showToast(this.$t('Settings.Data Settings.Subscriptions have been successfully exported'))
+      await this.promptAndWriteToFile(options, JSON.stringify(newPipeObject), 'Subscriptions have been successfully exported')
     },
 
     importHistory: async function () {
@@ -809,8 +745,8 @@ export default defineComponent({
       const historyDb = this.historyCache.map((historyEntry) => {
         return JSON.stringify(historyEntry)
       }).join('\n') + '\n'
-      const date = new Date().toISOString().split('T')[0]
-      const exportFileName = 'freetube-history-' + date + '.db'
+      const dateStr = getTodayDateStrLocalTimezone()
+      const exportFileName = 'freetube-history-' + dateStr + '.db'
 
       const options = {
         defaultPath: exportFileName,
@@ -822,19 +758,7 @@ export default defineComponent({
         ]
       }
 
-      const response = await showSaveDialog(options)
-      if (response.canceled || response.filePath === '') {
-        // User canceled the save dialog
-        return
-      }
-
-      try {
-        await writeFileFromDialog(response, historyDb)
-      } catch (writeErr) {
-        const message = this.$t('Settings.Data Settings.Unable to write file')
-        showToast(`${message}: ${writeErr}`)
-      }
-      showToast(this.$t('Settings.Data Settings.All watched history has been successfully exported'))
+      await this.promptAndWriteToFile(options, historyDb, 'All watched history has been successfully exported')
     },
 
     importPlaylists: async function () {
@@ -952,8 +876,8 @@ export default defineComponent({
     },
 
     exportPlaylists: async function () {
-      const date = new Date().toISOString().split('T')[0]
-      const exportFileName = 'freetube-playlists-' + date + '.db'
+      const dateStr = getTodayDateStrLocalTimezone()
+      const exportFileName = 'freetube-playlists-' + dateStr + '.db'
 
       const options = {
         defaultPath: exportFileName,
@@ -965,19 +889,7 @@ export default defineComponent({
         ]
       }
 
-      const response = await showSaveDialog(options)
-      if (response.canceled || response.filePath === '') {
-        // User canceled the save dialog
-        return
-      }
-      try {
-        await writeFileFromDialog(response, JSON.stringify(this.allPlaylists))
-      } catch (writeErr) {
-        const message = this.$t('Settings.Data Settings.Unable to write file')
-        showToast(`${message}: ${writeErr}`)
-        return
-      }
-      showToast(`${this.$t('Settings.Data Settings.All playlists has been successfully exported')}`)
+      await this.promptAndWriteToFile(options, JSON.stringify(this.allPlaylists), 'All playlists has been successfully exported')
     },
 
     convertOldFreeTubeFormatToNew(oldData) {
@@ -1011,6 +923,24 @@ export default defineComponent({
       return convertedData
     },
 
+    promptAndWriteToFile: async function (saveOptions, content, successMessageKeySuffix) {
+      const response = await showSaveDialog(saveOptions)
+      if (response.canceled || response.filePath === '') {
+        // User canceled the save dialog
+        return
+      }
+
+      try {
+        await writeFileFromDialog(response, content)
+      } catch (writeErr) {
+        const message = this.$t('Settings.Data Settings.Unable to write file')
+        showToast(`${message}: ${writeErr}`)
+        return
+      }
+
+      showToast(this.$t(`Settings.Data Settings.${successMessageKeySuffix}`))
+    },
+
     getChannelInfoInvidious: function (channelId) {
       return new Promise((resolve, reject) => {
         const subscriptionsPayload = {
@@ -1038,25 +968,32 @@ export default defineComponent({
       })
     },
 
-    getChannelInfoLocal: function (channelId) {
-      return new Promise((resolve, reject) => {
-        ytch.getChannelInfo({ channelId: channelId }).then(async (response) => {
-          resolve(response)
-        }).catch((err) => {
-          console.error(err)
-          const errorMessage = this.$t('Local API Error (Click to copy)')
-          showToast(`${errorMessage}: ${err}`, 10000, () => {
-            copyToClipboard(err)
-          })
+    getChannelInfoLocal: async function (channelId) {
+      try {
+        const channel = await getLocalChannel(channelId)
 
-          if (this.backendFallback && this.backendPreference === 'local') {
-            showToast(this.$t('Falling back to the Invidious API'))
-            resolve(this.getChannelInfoInvidious(channelId))
-          } else {
-            resolve([])
-          }
+        if (channel.alert) {
+          return undefined
+        }
+
+        return {
+          author: channel.header.author.name,
+          authorThumbnails: channel.header.author.thumbnails
+        }
+      } catch (err) {
+        console.error(err)
+        const errorMessage = this.$t('Local API Error (Click to copy)')
+        showToast(`${errorMessage}: ${err}`, 10000, () => {
+          copyToClipboard(err)
         })
-      })
+
+        if (this.backendFallback && this.backendPreference === 'local') {
+          showToast(this.$t('Falling back to the Invidious API'))
+          return await this.getChannelInfoInvidious(channelId)
+        } else {
+          return []
+        }
+      }
     },
 
     /*

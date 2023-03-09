@@ -69,13 +69,20 @@ export default defineComponent({
       }
     },
 
-    focusTab: function (tab) {
-      this.$refs[tab].focus()
-      this.$emit('showOutlines')
+    /**
+     * @param {KeyboardEvent} event
+     * @param {string} tab
+     */
+    focusTab: function (event, tab) {
+      if (!event.altKey) {
+        event.preventDefault()
+        this.$refs[tab].focus()
+        this.$emit('showOutlines')
+      }
     },
 
     getTrendingInfo: function () {
-      if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
+      if (!(process.env.IS_ELECTRON || process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
         this.getTrendingInfoInvidious()
       } else {
         this.getTrendingInfoLocal()
@@ -159,7 +166,7 @@ export default defineComponent({
           copyToClipboard(err.responseText)
         })
 
-        if (process.env.IS_ELECTRON && (this.backendPreference === 'invidious' && this.backendFallback)) {
+        if ((process.env.IS_ELECTRON || process.env.IS_CORDOVA) && (this.backendPreference === 'invidious' && this.backendFallback)) {
           showToast(this.$t('Falling back to Local API'))
           this.getTrendingInfoLocal()
         } else {

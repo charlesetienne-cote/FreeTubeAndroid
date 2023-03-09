@@ -2,10 +2,24 @@
 <html>
 
   <head>
+    <% if (process.env.IS_CORDOVA) { %>
+    <script>
+      // ⌚ Wait for cordova to load before loading webpack
+      const onCordovaLoaded = () => {
+        const script = document.createElement('script')
+        script.src = "web.js"
+        script.defer = true
+        script.async = true
+        document.head.appendChild(script)
+      }
+    </script>
+    <script src="cordova.js" onload="onCordovaLoaded()"></script>
+    <link rel="stylesheet" type="text/css" href="web.css" />
+    <% } %>
     <meta charset="utf-8" />
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
-    <% if (!process.env.IS_ELECTRON) { %>
+    <% if (!process.env.IS_ELECTRON && !process.env.IS_CORDOVA) { %>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="shortcut icon" href="static/icon.ico" />
     <% } %>
@@ -21,7 +35,7 @@
 
   <body>
     <div id="app"></div>
-    <% if (!process.env.IS_ELECTRON) { %>
+    <% if (!process.env.IS_ELECTRON && !process.env.IS_CORDOVA) { %>
     <script>
     // This is the service worker with the Advanced caching
 
@@ -43,9 +57,6 @@
       }
     }
     </script>
-    <% } %>
-    <% if (process.env.IS_CORDOVA) { %>
-    <script src="cordova.js"></script>
     <% } %>
     <!-- webpack builds are automatically injected -->
   </body>

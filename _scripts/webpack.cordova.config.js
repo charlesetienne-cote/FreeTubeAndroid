@@ -28,12 +28,6 @@ const config = {
       electron: '{}',
       cordova: 'cordova',
       'music-controls': 'MusicControls'
-    },
-    ({ request }, callback) => {
-      if (request.startsWith('youtubei.js')) {
-        return callback(null, '{}')
-      }
-      callback()
     }
   ],
   module: {
@@ -130,11 +124,12 @@ const config = {
       filename: 'index.html',
       template: path.resolve(__dirname, '../src/index.ejs'),
       nodeModules: false,
+      inject: false
     }),
     new VueLoaderPlugin(),
     new MiniCssExtractPlugin({
-      filename: isDevMode ? '[name].css' : '[name].[contenthash].css',
-      chunkFilename: isDevMode ? '[id].css' : '[id].[contenthash].css',
+      filename: '[name].css',
+      chunkFilename: '[id].css',
     })
   ],
   resolve: {
@@ -179,6 +174,10 @@ config.plugins.push(
       {
         from: path.join(__dirname, '../static/pwabuilder-sw.js'),
         to: path.join(__dirname, '../dist/cordova/www/pwabuilder-sw.js'),
+      },
+      {
+        from: path.join(__dirname, '../_icons/iconColor.ico'),
+        to: path.join(__dirname, '../dist/cordova/www/favicon.ico'),
       },
       {
         from: path.join(__dirname, '../static'),

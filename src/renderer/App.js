@@ -14,6 +14,7 @@ import { IpcChannels } from '../constants'
 import packageDetails from '../../package.json'
 import { openExternalLink, openInternalPath, showToast } from './helpers/utils'
 import cordova from 'cordova'
+import 'core-js/stable'
 
 let ipcRenderer = null
 
@@ -145,15 +146,21 @@ export default defineComponent({
   },
   mounted: function () {
     if (process.env.IS_CORDOVA) {
-      const { backgroundMode } = cordova.plugins
-      backgroundMode.setDefaults({
-        title: 'FreeTube'
-      })
-      backgroundMode.enable()
-      backgroundMode.on('activate', () => {
-        // By default android wants to pause videos in the background, this disables that "optimization"
-        backgroundMode.disableWebViewOptimizations()
-      })
+      if ('plugins' in cordova && 'backgroundMode' in cordova.plugins) {
+        const { backgroundMode } = cordova.plugins
+        backgroundMode.setDefaults({
+          title: 'FreeTube',
+          // TODO ✏ add this to locale strings
+          text: 'FreeTube is running in the background.'
+        })
+        backgroundMode.enable()
+        backgroundMode.on('activate', () => {
+          // By default android wants to pause videos in the background, this disables that "optimization"
+          backgroundMode.disableWebViewOptimizations()
+        })
+      } else {
+        console.error('Background mode plugin failed to load.')
+      }
     }
     this.grabUserSettings().then(async () => {
       this.checkThemeSettings()
@@ -166,6 +173,7 @@ export default defineComponent({
       this.grabAllProfiles(this.$t('Profile.All Channels')).then(async () => {
         this.grabHistory()
         this.grabAllPlaylists()
+
         this.watchSystemTheme()
         document.addEventListener('visibilitychange', () => {
           if (!document.hidden) { // if the window was unfocused, the system theme might have changed
@@ -449,11 +457,14 @@ export default defineComponent({
           }
 
           case 'channel': {
-            const { channelId, subPath } = result
+            const { channelId, subPath, url } = result
 
             openInternalPath({
               path: `/channel/${channelId}/${subPath}`,
-              doCreateNewWindow
+              doCreateNewWindow,
+              query: {
+                url
+              }
             })
             break
           }
@@ -486,13 +497,17 @@ export default defineComponent({
           document.body.dataset.systemTheme = shouldUseDarkColors ? 'dark' : 'light'
         })
       } else if (process.env.IS_CORDOVA) {
-        cordova.plugins.ThemeDetection.isAvailable((isThemeDetectionAvailable) => {
-          if (isThemeDetectionAvailable) {
-            cordova.plugins.ThemeDetection.isDarkModeEnabled((message) => {
-              document.body.dataset.systemTheme = message.value ? 'dark' : 'light'
-            })
-          }
-        }, console.error)
+        if ('plugins' in cordova && 'ThemeDetection' in cordova.plugins) {
+          cordova.plugins.ThemeDetection.isAvailable((isThemeDetectionAvailable) => {
+            if (isThemeDetectionAvailable) {
+              cordova.plugins.ThemeDetection.isDarkModeEnabled((message) => {
+                document.body.dataset.systemTheme = message.value ? 'dark' : 'light'
+              })
+            }
+          }, console.error)
+        } else {
+          console.error('Theme detection plugin failed to load.')
+        }
       }
     },
 

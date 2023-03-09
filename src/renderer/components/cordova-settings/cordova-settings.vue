@@ -10,6 +10,13 @@
         :default-value="getDisableBackgroundModeNotification"
         @change="updateDisableBackgroundModeNotification"
       />
+      <ft-toggle-switch
+        :label="$t('Settings.Cordova Settings.Show Thumbnail in Media Controls')"
+        :compact="true"
+        :tooltip="$t('Tooltips.Cordova Settings.Show Thumbnail in Media Controls')"
+        :default-value="getShowThumbnailInMediaControls"
+        @change="updateShowThumbnailInMediaControls"
+      />
     </div>
   </ft-settings-section>
 </template>

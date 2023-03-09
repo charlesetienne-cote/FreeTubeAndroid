@@ -6,6 +6,10 @@ import i18n from '../i18n/index'
 import router from '../router/index'
 import cordova from 'cordova'
 
+// allowed characters in channel handle: A-Z, a-z, 0-9, -, _, .
+// https://support.google.com/youtube/answer/11585688#change_handle
+export const CHANNEL_HANDLE_REGEX = /^@[\w.-]{3,30}$/
+
 export function calculatePublishedDate(publishedText) {
   const date = new Date()
   if (publishedText === 'Live') {
@@ -90,13 +94,18 @@ export function toLocalePublicationString ({ publishText, isLive = false, isUpco
   return i18n.t('Video.Publicationtemplate', { number: strings[0], unit })
 }
 
-export function buildVTTFileLocally(storyboard) {
+export function buildVTTFileLocally(storyboard, videoLengthSeconds) {
   let vttString = 'WEBVTT\n\n'
   // how many images are in one image
   const numberOfSubImagesPerImage = storyboard.columns * storyboard.rows
   // the number of storyboard images
   const numberOfImages = Math.ceil(storyboard.thumbnail_count / numberOfSubImagesPerImage)
-  const intervalInSeconds = storyboard.interval / 1000
+  let intervalInSeconds
+  if (storyboard.interval > 0) {
+    intervalInSeconds = storyboard.interval / 1000
+  } else {
+    intervalInSeconds = videoLengthSeconds / (numberOfImages * numberOfSubImagesPerImage)
+  }
   let startHours = 0
   let startMinutes = 0
   let startSeconds = 0
@@ -111,11 +120,11 @@ export function buildVTTFileLocally(storyboard) {
       // add the timestamp information
       const paddedStartHours = startHours.toString().padStart(2, '0')
       const paddedStartMinutes = startMinutes.toString().padStart(2, '0')
-      const paddedStartSeconds = startSeconds.toString().padStart(2, '0')
+      const paddedStartSeconds = startSeconds.toFixed(3).padStart(6, '0')
       const paddedEndHours = endHours.toString().padStart(2, '0')
       const paddedEndMinutes = endMinutes.toString().padStart(2, '0')
-      const paddedEndSeconds = endSeconds.toString().padStart(2, '0')
-      vttString += `${paddedStartHours}:${paddedStartMinutes}:${paddedStartSeconds}.000 --> ${paddedEndHours}:${paddedEndMinutes}:${paddedEndSeconds}.000\n`
+      const paddedEndSeconds = endSeconds.toFixed(3).padStart(6, '0')
+      vttString += `${paddedStartHours}:${paddedStartMinutes}:${paddedStartSeconds} --> ${paddedEndHours}:${paddedEndMinutes}:${paddedEndSeconds}\n`
       // add the current image url as well as the x, y, width, height information
       vttString += `${currentUrl}#xywh=${xCoord},${yCoord},${storyboard.thumbnail_width},${storyboard.thumbnail_height}\n\n`
       // update the variables
@@ -324,10 +333,11 @@ export async function showSaveDialog (options) {
   } else {
     // If the native filesystem api is available
     if ('showSaveFilePicker' in window) {
+      const pathParts = options.defaultPath.split('/')
       return {
         canceled: false,
         handle: await window.showSaveFilePicker({
-          suggestedName: options.defaultPath.split('/').at(-1),
+          suggestedName: pathParts[pathParts.length - 1],
           types: options.filters[0]?.extensions?.map((extension) => {
             return {
               accept: {
@@ -350,15 +360,19 @@ export async function showSaveDialog (options) {
 */
 export async function writeFileFromDialog (response, content) {
   if (process.env.IS_CORDOVA) {
-    return new Promise((resolve, reject) => {
-      const { filePath } = response
-      const blob = new Blob([content], { type: 'application/octet-stream' })
-      cordova.plugins.saveDialog.saveFile(blob, filePath).then(() => {
-        resolve()
-      }).catch(reason => {
-        reject(reason)
+    if ('plugins' in cordova && 'saveDialog' in cordova.plugins) {
+      return new Promise((resolve, reject) => {
+        const { filePath } = response
+        const blob = new Blob([content], { type: 'application/octet-stream' })
+        cordova.plugins.saveDialog.saveFile(blob, filePath).then(() => {
+          resolve()
+        }).catch(reason => {
+          reject(reason)
+        })
       })
-    })
+    } else {
+      console.error('Save dialog plugin failed to load.')
+    }
   } else if (process.env.IS_ELECTRON) {
     const { filePath } = response
     return await fs.writeFile(filePath, content)
@@ -627,4 +641,24 @@ export function toDistractionFreeTitle(title, minUpperCase = 3) {
 
 export function formatNumber(number, options = undefined) {
   return Intl.NumberFormat([i18n.locale.replace('_', '-'), 'en'], options).format(number)
+}
+
+/**
+ * This will return true if a string is null, undefined or empty.
+ * @param {string} _string the string to process
+ * @returns {bool} whether the string is empty or not
+ */
+export function isNullOrEmpty(_string) {
+  return _string == null || _string === ''
+}
+
+export function getTodayDateStrLocalTimezone() {
+  const timeNow = new Date()
+  // `Date#getTimezoneOffset` returns the difference, in minutes
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset
+  const timeNowStr = new Date(timeNow.getTime() - (timeNow.getTimezoneOffset() * 60000)).toISOString()
+  // `Date#toISOString` returns string with `T` as date/time separator (ISO 8601 format)
+  // e.g. 2011-10-05T14:48:00.000Z
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
+  return timeNowStr.split('T')[0]
 }

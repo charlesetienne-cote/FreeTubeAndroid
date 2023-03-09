@@ -18,26 +18,18 @@ import { calculateColorLuminance, colors } from '../../helpers/colors'
 import { pathExists } from '../../helpers/filesystem'
 import { getPicturesPath, showSaveDialog, showToast } from '../../helpers/utils'
 
+// YouTube now throttles if you use the `Range` header for the DASH formats, instead of the range query parameter
+// videojs-http-streaming calls this hook everytime it makes a request,
+// so we can use it to convert the Range header into the range query parameter for the streaming URLs
+videojs.Vhs.xhr.beforeRequest = (options) => {
+  if (options.headers?.Range && new URL(options.uri).hostname.endsWith('.googlevideo.com')) {
+    options.uri += `&range=${options.headers.Range.split('=')[1]}`
+    delete options.headers.Range
+  }
+}
+
 export default defineComponent({
   name: 'FtVideoPlayer',
-  beforeRouteLeave: function () {
-    document.removeEventListener('keydown', this.keyboardShortcutHandler)
-    if (this.player !== null) {
-      this.exitFullWindow()
-    }
-    if (this.player !== null && !this.player.isInPictureInPicture()) {
-      this.player.dispose()
-      this.player = null
-      clearTimeout(this.mouseTimeout)
-    } else if (this.player.isInPictureInPicture()) {
-      this.player.play()
-    }
-
-    if (process.env.IS_ELECTRON && this.powerSaveBlocker !== null) {
-      const { ipcRenderer } = require('electron')
-      ipcRenderer.send(IpcChannels.STOP_POWER_SAVE_BLOCKER, this.powerSaveBlocker)
-    }
-  },
   props: {
     format: {
       type: String,
@@ -102,13 +94,15 @@ export default defineComponent({
       maxFramerate: 0,
       activeSourceList: [],
       activeAdaptiveFormats: [],
-      mouseTimeout: null,
-      touchTimeout: null,
       playerStats: null,
       statsModal: null,
       showStatsModal: false,
       statsModalEventName: 'updateStats',
       usingTouch: false,
+      // whether or not sponsor segments should be skipped
+      skipSponsors: true,
+      // countdown before actually skipping sponsor segments
+      skipCountdown: 1,
       dataSetup: {
         fluid: true,
         nativeTextTracks: false,
@@ -331,13 +325,13 @@ export default defineComponent({
     }
   },
   beforeDestroy: function () {
+    document.removeEventListener('keydown', this.keyboardShortcutHandler)
     if (this.player !== null) {
       this.exitFullWindow()
 
       if (!this.player.isInPictureInPicture()) {
         this.player.dispose()
         this.player = null
-        clearTimeout(this.mouseTimeout)
       }
     }
 
@@ -358,6 +352,13 @@ export default defineComponent({
         if (!this.useDash) {
           qualitySelector(videojs, { showQualitySelectionLabelInControlBar: true })
           await this.determineDefaultQualityLegacy()
+        }
+
+        if (this.format === 'audio') {
+          // hide the PIP button for the audio formats
+          const controlBarItems = this.dataSetup.controlBar.children
+          const index = controlBarItems.indexOf('pictureInPictureToggle')
+          controlBarItems.splice(index, 1)
         }
 
         this.player = videojs(this.$refs.video, {
@@ -434,15 +435,6 @@ export default defineComponent({
           })
         }
 
-        if (this.useDash) {
-          // this.dataSetup.plugins.httpSourceSelector = {
-          // default: 'auto'
-          // }
-
-          // this.player.httpSourceSelector()
-          this.createDashQualitySelector(this.player.qualityLevels())
-        }
-
         if (this.autoplayVideos) {
           // Calling play() won't happen right away, so a quick timeout will make it function properly.
           setTimeout(() => {
@@ -466,9 +458,6 @@ export default defineComponent({
         document.removeEventListener('keydown', this.keyboardShortcutHandler)
         document.addEventListener('keydown', this.keyboardShortcutHandler)
 
-        this.player.on('mousemove', this.hideMouseTimeout)
-        this.player.on('mouseleave', this.removeMouseTimeout)
-
         this.player.on('volumechange', this.updateVolume)
         if (this.videoVolumeMouseScroll) {
           this.player.on('wheel', this.mouseScrollVolume)
@@ -487,17 +476,32 @@ export default defineComponent({
           this.player.on('wheel', this.mouseScrollSkip)
         }
 
-        this.player.on('fullscreenchange', this.fullscreenOverlay)
-        this.player.on('fullscreenchange', this.toggleFullscreenClass)
+        this.player.on('fullscreenchange', () => {
+          this.fullscreenOverlay()
+          this.toggleFullscreenClass()
+        })
 
         this.player.on('ready', () => {
           this.$emit('ready')
-          this.checkAspectRatio()
           this.createStatsModal()
           if (this.captionHybridList.length !== 0) {
             this.transformAndInsertCaptions()
           }
           this.toggleScreenshotButton()
+        })
+
+        this.player.one('loadedmetadata', () => {
+          if (this.useDash) {
+            // Reserved for switching back to videojs-http-quality-selector if needed
+            // this.dataSetup.plugins.httpSourceSelector = {
+            // default: 'auto'
+            // }
+
+            // this.player.httpSourceSelector()
+            this.createDashQualitySelector(this.player.qualityLevels())
+          }
+
+          this.checkAspectRatio()
         })
 
         this.player.on('ended', () => {
@@ -586,6 +590,11 @@ export default defineComponent({
               this.skipSponsorBlocks(skipSegments)
             })
 
+            this.player.on('seeking', () => {
+              // disabling sponsors auto skipping when the user manually seeks
+              this.skipSponsors = false
+            })
+
             skipSegments.forEach(({
               category,
               segment: [startTime, endTime]
@@ -612,13 +621,22 @@ export default defineComponent({
           skippedCategory = category
         }
       })
-      if (newTime !== null && Math.abs(duration - currentTime) > 0.500) {
+      if (this.skipSponsors && newTime !== null && Math.abs(duration - currentTime) > 0.500) {
         if (this.sponsorSkips.autoSkip[skippedCategory]) {
-          if (this.sponsorBlockShowSkippedToast) {
-            this.showSkippedSponsorSegmentInformation(skippedCategory)
+          if (this.skipCountdown === 0) {
+            if (this.sponsorBlockShowSkippedToast) {
+              this.showSkippedSponsorSegmentInformation(skippedCategory)
+            }
+            this.player.currentTime(newTime)
+          } else {
+            this.skipCountdown--
           }
-          this.player.currentTime(newTime)
         }
+      }
+      // restoring sponsors skipping default values
+      if (newTime === null && !this.skipSponsors) {
+        this.skipSponsors = true
+        this.skipCountdown = 1
       }
     },
 
@@ -673,13 +691,6 @@ export default defineComponent({
     checkAspectRatio() {
       const videoWidth = this.player.videoWidth()
       const videoHeight = this.player.videoHeight()
-
-      if (videoWidth === 0 || videoHeight === 0) {
-        setTimeout(() => {
-          this.checkAspectRatio()
-        }, 200)
-        return
-      }
 
       if ((videoWidth - videoHeight) <= 240) {
         this.player.fluid(false)
@@ -1480,12 +1491,6 @@ export default defineComponent({
     },
 
     createDashQualitySelector: function (levels) {
-      if (levels.levels_.length === 0) {
-        setTimeout(() => {
-          this.createDashQualitySelector(this.player.qualityLevels())
-        }, 200)
-        return
-      }
       const adaptiveFormats = this.adaptiveFormats
       const activeAdaptiveFormats = this.activeAdaptiveFormats
       const setDashQualityLevel = this.setDashQualityLevel
@@ -1676,22 +1681,6 @@ export default defineComponent({
       }
     },
 
-    hideMouseTimeout: function () {
-      if (typeof this.$refs.video !== 'undefined') {
-        this.$refs.video.style.cursor = 'default'
-        clearTimeout(this.mouseTimeout)
-        this.mouseTimeout = setTimeout(() => {
-          this.$refs.video.style.cursor = 'none'
-        }, 2650)
-      }
-    },
-
-    removeMouseTimeout: function () {
-      if (this.mouseTimeout !== null) {
-        clearTimeout(this.mouseTimeout)
-      }
-    },
-
     fullscreenOverlay: function () {
       const title = document.title.replace('- FreeTube', '')
 
@@ -1817,8 +1806,11 @@ export default defineComponent({
     },
 
     // This function should always be at the bottom of this file
+    /**
+     * @param {KeyboardEvent} event
+     */
     keyboardShortcutHandler: function (event) {
-      if (document.activeElement.classList.contains('ft-input')) {
+      if (document.activeElement.classList.contains('ft-input') || event.altKey) {
         return
       }
 

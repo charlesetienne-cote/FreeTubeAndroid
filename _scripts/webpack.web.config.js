@@ -19,23 +19,15 @@ const config = {
     web: path.join(__dirname, '../src/renderer/main.js'),
   },
   output: {
-    publicPath: '',
     path: path.join(__dirname, '../dist/web'),
     filename: '[name].js',
   },
-  externals: [
-    {
+  externals: {
       electron: '{}',
       cordova: '{}',
-      'music-controls': '{}'
+      'music-controls': '{}',
+      'youtubei.js': '{}'
     },
-    ({ request }, callback) => {
-      if (request.startsWith('youtubei.js')) {
-        return callback(null, '{}')
-      }
-      callback()
-    }
-  ],
   module: {
     rules: [
       {
@@ -45,7 +37,12 @@ const config = {
       },
       {
         test: /\.vue$/,
-        loader: 'vue-loader'
+        loader: 'vue-loader',
+        options: {
+          compilerOptions: {
+            whitespace: 'condense',
+          }
+        }
       },
       {
         test: /\.scss$/,
@@ -173,26 +170,22 @@ config.plugins.push(
     'process.env.GEOLOCATION_NAMES': JSON.stringify(fs.readdirSync(path.join(__dirname, '..', 'static', 'geolocations')))
   }),
   new CopyWebpackPlugin({
-    patterns: [
-      {
-        from: path.join(__dirname, '../static/pwabuilder-sw.js'),
-        to: path.join(__dirname, '../dist/web/pwabuilder-sw.js'),
-      },
-      {
-        // webmanifest expected to be in root
-        from: path.join(__dirname, '../static/manifest.webmanifest'),
-        to: path.join(__dirname, '../dist/web/manifest.webmanifest'),
-      },
-      {
-        from: path.join(__dirname, '../static'),
-        to: path.join(__dirname, '../dist/web/static'),
-        globOptions: {
-          dot: true,
-          ignore: ['**/.*', '**/locales/**', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
+      patterns: [
+        {
+          from: path.join(__dirname, '../static/pwabuilder-sw.js'),
+          to: path.join(__dirname, '../dist/web/pwabuilder-sw.js'),
         },
-      },
+        {
+          from: path.join(__dirname, '../static'),
+          to: path.join(__dirname, '../dist/web/static'),
+          globOptions: {
+            dot: true,
+            ignore: ['**/.*', '**/locales/**', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
+          },
+        },
     ]
   })
 )
+
 
 module.exports = config

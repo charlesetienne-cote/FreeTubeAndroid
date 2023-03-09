@@ -54,12 +54,14 @@ Search Filters:
     Videos: 'فيديوهات'
     Channels: 'قنوات'
     #& Playlists
+    Movies: الأفلام
   Duration:
     Duration: 'المدة'
     All Durations: 'كل الآوقات'
     Short (< 4 minutes): 'قصير (< 4 دقائق)'
     Long (> 20 minutes): 'طويل (> 20 دقيقة)'
   # On Search Page
+    Medium (4 - 20 minutes): متوسط (4 - 20 دقيقة)
   Search Results: 'نتائج البحث'
   Fetching results. Please wait: 'جاري إحضار النتائج. الرجاء الانتظار'
   Fetch more results: 'إحضار المزيد من النتائج'
@@ -261,6 +263,7 @@ Settings:
         أرقام. %i معرف الفيديو. يمكنك أيضا استخدام "\" أو "/" لإنشاء مجلدات فرعية.
     Enter Fullscreen on Display Rotate: وضع ملء الشاشة عند تدوير الشاشة
     Skip by Scrolling Over Video Player: تخطي بالتمرير فوق مشغل الفيديو
+    Allow DASH AV1 formats: السماح بتنسيقات DASH AV1
   Privacy Settings:
     Privacy Settings: 'إعدادات الخصوصية'
     Remember History: 'تذّكر سجلّ المشاهدة'
@@ -278,6 +281,8 @@ Settings:
       هذا.
     Remove All Subscriptions / Profiles: إزالة جميع الاشتراكات \ الملفات الشخصية
     Automatically Remove Video Meta Files: إزالة ملفات تعريف الفيديو تلقائيًا
+    Save Watched Videos With Last Viewed Playlist: حفظ مقاطع الفيديو التي تمت مشاهدتها
+      مع آخر قائمة تشغيل تم عرضها
   Subscription Settings:
     Subscription Settings: 'إعدادات الاشتراك'
     Hide Videos on Watch: 'أخفِ الفيديوهات عند مشاهدتها'
@@ -441,8 +446,8 @@ Settings:
   Experimental Settings:
     Replace HTTP Cache: استبدال ذاكرة التخزين المؤقت HTTP
     Experimental Settings: الإعدادات التجريبية
-    Warning: هذه الإعدادات تجريبية ، فهي تسبب أعطال أثناء التمكين. يوصى بشدة بعمل
-      نسخ احتياطية. استخدام على مسؤوليتك الخاصة!
+    Warning: هذه الإعدادات تجريبية ، فهي تسبب أعطال أثناء تمكينها. يوصى بشدة بعمل
+      نسخ احتياطية. استخدمها على مسؤوليتك الخاصة!
   Password Settings:
     Set Password To Prevent Access: تعيين كلمة مرور لمنع الوصول إلى الإعدادات
     Remove Password: إزالة كلمة المرور
@@ -580,10 +585,25 @@ Channel:
     About: 'حول'
     Channel Description: 'وصف القناة'
     Featured Channels: 'القنوات المميزة'
+    Tags:
+      Tags: الوسوم
+      Search for: ابحث عن "{علامة}"
+    Details: التفاصيل
+    Joined: انضم
+    Location: الموقع
   Added channel to your subscriptions: تم إضافة القناة إلى اشتراكاتك
   Removed subscription from {count} other channel(s): 'تمت إزالة الاشتراك من {count}
     قناة (قنوات) أخرى'
   Channel has been removed from your subscriptions: تمت إزالة القناة من اشتراكاتك
+  Channel Tabs: علامات تبويب القنوات
+  This channel does not exist: هذه القناة غير موجودة
+  This channel does not allow searching: هذه القناة لا تسمح بالبحث
+  This channel is age resticted and currently cannot be viewed in FreeTube.: هذه القناة
+    مصنفة حسب العمر ولا يمكن عرضها حاليا في FreeTube.
+  Community:
+    Community: المجتمع
+    This channel currently does not have any posts: لا تحتوي هذه القناة حاليا على
+      أي مشاركات
 Video:
   Mark As Watched: 'علّمه كفيديو تمت مشاهدته'
   Remove From History: 'إزالة من سجلّ المشاهدة'
@@ -738,12 +758,6 @@ Playlist:
   View: 'عرض'
   Views: 'مشاهدات'
   Last Updated On: 'تم إجراء التعديل الأخير في'
-  Share Playlist:
-    Share Playlist: 'مشاركة قائمة التشغيل'
-    Copy YouTube Link: '‫انسخ رابط اليوتيوب'
-    Open in YouTube: 'افتح في اليوتيوب'
-    Copy Invidious Link: 'انسخ رابط Invidious'
-    Open in Invidious: 'فتح في Invidious'
 
 # On Video Watch Page
 #* Published
@@ -759,6 +773,7 @@ Change Format:
   Dash formats are not available for this video: تنسيقات DASH غير متوفرة لهذا الفيديو
 Share:
   Share Video: 'شارك الفيديو'
+  Share Playlist: 'مشاركة قائمة التشغيل'
   Copy Link: 'انسخ الرابط'
   Open Link: 'افتح الرابط'
   Copy Embed: 'انسخ المُضمّن'
@@ -860,6 +875,9 @@ Tooltips:
       على Mac) ثم انقر فوق الماوس للعودة بسرعة إلى معدل التشغيل الافتراضي (1x ما لم
       يتم تغييره في الإعدادات).
     Skip by Scrolling Over Video Player: استخدم عجلة التمرير لتخطي الفيديو بنمط MPV.
+    Allow DASH AV1 formats: قد تبدو تنسيقات DASH AV1 أفضل من تنسيقات DASH H.264. تتطلب
+      تنسيقات DASH AV1 مزيدا من الطاقة للتشغيل! وهي غير متوفرة في جميع مقاطع الفيديو
+      ، وفي هذه الحالات سيستخدم المشغل تنسيقات DASH H.264 بدلا من ذلك.
   Privacy Settings:
     Remove Video Meta Files: عندما يمكن، يحذف Freetube تلقائيًا ملفات التعريف التي
       تم إنشاؤها أثناء تشغيل الفيديو ، عندما تكون صفحة المشاهدة مغلقة.

@@ -19,4 +19,5 @@
   </platform>
   <preference name="AndroidPersistentFileLocation" value="Compatibility"/>
   <preference name="AllowInlineMediaPlayback" value="true"/>
+
 </widget>

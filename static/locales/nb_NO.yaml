@@ -54,12 +54,14 @@ Search Filters:
     Videos: 'Videoer'
     Channels: 'Kanaler'
     #& Playlists
+    Movies: Filmer
   Duration:
     Duration: 'Varighet'
     All Durations: 'Alle varigheter'
     Short (< 4 minutes): 'Kort (< 4 minutter)'
     Long (> 20 minutes): 'Lang (> 20 minutter)'
   # On Search Page
+    Medium (4 - 20 minutes): Middels (4–20 minutter)
   Search Results: 'Søkeresultater'
   Fetching results. Please wait: 'Henter resultater. Vennligst vent.'
   Fetch more results: 'Hent flere resultater'
@@ -264,6 +266,7 @@ Settings:
     Video Playback Rate Interval: Intervall for videoavspillingshastighet
     Enter Fullscreen on Display Rotate: Fullskjermsvisning når skjermen roteres
     Skip by Scrolling Over Video Player: Hopp over ved å rulle over videoavspiller
+    Allow DASH AV1 formats: Tillat DASH AV1-formater
   Privacy Settings:
     Privacy Settings: 'Personvernsinnstillinger'
     Remember History: 'Husk historikk'
@@ -280,6 +283,8 @@ Settings:
       du sikker på at du vil fjerne alle abonnementer og profiler? Dette kan ikke
       angres.
     Automatically Remove Video Meta Files: Fjern metadata automatisk fra videoer
+    Save Watched Videos With Last Viewed Playlist: Lagre sette videoer med sist sette
+      spilleliste
   Subscription Settings:
     Subscription Settings: 'Abonnementsinnstillinger'
     Hide Videos on Watch: 'Skjul sette videoer'
@@ -531,11 +536,25 @@ Channel:
     About: 'Om'
     Channel Description: 'Kanalbeskrivelse'
     Featured Channels: 'Framhevede kanaler'
+    Tags:
+      Tags: Etiketter
+      Search for: Søk etter «{tag}»
+    Details: Detaljer
+    Joined: Registrert
+    Location: Posisjon
   Added channel to your subscriptions: Lagt til kanal til dine abonnenter
   Removed subscription from {count} other channel(s): Fjernet abonnement fra {count}
     andre kanal(er)
   Channel has been removed from your subscriptions: Kanalen har blitt fjernet fra
     dine abonnement
+  This channel does not exist: Denne kanalen finnes ikke
+  This channel does not allow searching: Denne kanalen tillater ikke søk
+  This channel is age resticted and currently cannot be viewed in FreeTube.: Denne
+    kanalen er aldersbegrenset og kan derfor ikke vises i FreeTube.
+  Channel Tabs: Kanalfaner
+  Community:
+    Community: Gemenskap
+    This channel currently does not have any posts: Denne kanalen har ingen oppføringer
 Video:
   Mark As Watched: 'Marker som sett'
   Remove From History: 'Fjern fra historikk'
@@ -682,12 +701,6 @@ Playlist:
   View: 'Visning'
   Views: 'Visninger'
   Last Updated On: 'Sist oppdatert'
-  Share Playlist:
-    Share Playlist: 'Del spilleliste'
-    Copy YouTube Link: 'Kopier YouTube-lenke'
-    Open in YouTube: 'Åpne i YouTube'
-    Copy Invidious Link: 'Kopier Invidious-lenke'
-    Open in Invidious: 'Åpne i Invidious'
 
 # On Video Watch Page
 #* Published
@@ -705,6 +718,7 @@ Change Format:
     for denne videoen
 Share:
   Share Video: 'Del video'
+  Share Playlist: 'Del spilleliste'
   Copy Link: 'Kopier lenke'
   Open Link: 'Åpne lenke'
   Copy Embed: 'Kopier innebyggingslenke'
@@ -856,6 +870,9 @@ Tooltips:
       å kontrollere avspillingshastigheten. Trykk og hold Ctrl-tasten (⌘ på Mac) og
       venstreklikk på musen for å gå tilbake til fovalgt avspillingshastighet (1x
       med minde det har blitt endret i innstillingene).
+    Allow DASH AV1 formats: DASH AV1-formater kan ha bedre kvalitet enn DASH H.264
+      -formater. DASH AV1-formater krever dog mer regnekraft for avspilling. Ikke
+      tilgjengelig for alle videoer, og i sådant fall bruker avspilleren DASH H.264-formater.
   Privacy Settings:
     Remove Video Meta Files: Hvis denne instillingen er på, vil FreeTube automatisk
       slette metadata generert under videoavspilling når du lukker avspillingsiden.
