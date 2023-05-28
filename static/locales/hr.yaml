@@ -76,7 +76,7 @@ Subscriptions:
     neke pretplate.'
   'Getting Subscriptions. Please wait.': 'Preuzimanje pretplata. Pričekaj.'
   Refresh Subscriptions: 'Aktualiziraj pretplate'
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Ovaj
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Ovaj
     profil sadrži velik broj pretplata. Za izbjegavanje ograničenja stope koristit
     će se RSS
   Load More Videos: Učitaj još videa
@@ -270,6 +270,8 @@ Settings:
       ekrana
     Skip by Scrolling Over Video Player: Preskoči pomicanjem preko video playera
     Allow DASH AV1 formats: Dozvoli DASH AV1 formate
+    Comment Auto Load:
+      Comment Auto Load: Automatski učitaj komentare
   Privacy Settings:
     Privacy Settings: 'Postavke privatnosti'
     Remember History: 'Zapamti povijest'
@@ -397,6 +399,10 @@ Settings:
     Hide Channels Placeholder: Ime kanala ili ID
     Display Titles Without Excessive Capitalisation: Prikaži naslove bez pretjeranog
       korištenja velikih slova
+    Hide Featured Channels: Sakrij istaknute kanale
+    Hide Channel Playlists: Sakrij kanal zbirki
+    Hide Channel Community: Sakrij kanal zajednice
+    Hide Channel Shorts: Sakrij kanal kratkih videa
   The app needs to restart for changes to take effect. Restart and apply change?: Promjene
     će se primijeniti nakon ponovnog pokeretanja programa. Ponovo pokrenuti program?
   Proxy Settings:
@@ -612,8 +618,19 @@ Channel:
   Channel Tabs: Kartice kanala
   This channel does not exist: Ovaj kanal ne postoji
   This channel does not allow searching: Ovaj kanal ne dozvoljava pretraživanje
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Ovaj
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Ovaj
     kanal je dobno ograničen i trenutačno se ne može gledati na FreeTubeu.
+  Live:
+    Live: Uživo
+    This channel does not currently have any live streams: Ovaj kanal trenutačno nema
+      prijenosa uživo
+  Community:
+    This channel currently does not have any posts: Ovaj kanal trenutačno nema objava
+    Community: Zajednica
+  Shorts:
+    This channel does not currently have any shorts: Ovaj kanal trenutačno nema kratka
+      videa
+    Shorts: Kratka videa
 Video:
   Mark As Watched: 'Označi kao pogledano'
   Remove From History: 'Ukloni iz povijesti'
@@ -639,9 +656,9 @@ Video:
     nije podržan u ovoj verziji.'
   'Chat is disabled or the Live Stream has ended.': 'Razgovor je deaktiviran ili je
     prijenos uživo završio.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Razgovor uživo
+  Live chat is enabled. Chat messages will appear here once sent.: 'Razgovor uživo
     je aktiviran. Poruke razgovora pojavit će se ovdje nakon slanja.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Razgovor
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Razgovor
     uživo trenutačno nije podržan s Invidious sučeljem. Potrebna je izravna veza s
     YouTubeom.'
   Published:
@@ -756,6 +773,8 @@ Video:
   Show Super Chat Comment: Prikaži Super Chat komentar
   Scroll to Bottom: Pomakni se skroz dolje
   Upcoming: Predstojeći
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Razgovor
+    uživo nije dostupan za ovaj prijenos. Možda ga je prenosnik deaktivirao.
 Videos:
   #& Sort By
   Sort By:
@@ -843,10 +862,8 @@ Shuffle is now disabled: 'Slučajni redoslijed je sada deaktiviran'
 Shuffle is now enabled: 'Slučajni redoslijed je sada aktiviran'
 Playing Next Video: 'Reprodukcija sljedećeg videa'
 Playing Previous Video: 'Reprodukcija prethodnog videa'
-Playing next video in 5 seconds.  Click to cancel: 'Reprodukcija sljedećeg videa za
-  5 sekundi. Pritisni za prekid.'
 Canceled next video autoplay: 'Automatska reprodukcija sljedećeg videa je prekinuta'
-'The playlist has ended.  Enable loop to continue playing': 'Dosegnut je kraj zbirke.
+'The playlist has ended. Enable loop to continue playing': 'Dosegnut je kraj zbirke.
   Aktiviraj ponavljanje za nastavljanje reprodukcije'
 
 Yes: 'Da'
@@ -895,9 +912,9 @@ Tooltips:
       poslužitelja na koji će se povezati.
     Region for Trending: 'Regija trendova omogućuje biranje prikaza videa u trendu
       za određenu zemlju. YouTube zapravo ne podržava sve prikazane zemlje.'
-    External Link Handling: "Odaberi standardno ponašanje kad se pritisne poveznica\
-      \ koja se ne može otvoriti u FreeTubeu.\nFreeTube takve poveznice otvara u tvom\
-      \ standardnom pregledniku.\n"
+    External Link Handling: "Odaberi standardno ponašanje kad se pritisne poveznica
+      koja se ne može otvoriti u FreeTubeu.\nFreeTube takve poveznice otvara u tvom
+      standardnom pregledniku.\n"
   Subscription Settings:
     Fetch Feeds from RSS: Kad je aktivirano, FreeTube će koristiti RSS umjesto vlastite
       standardne metode za dohvaćanje podataka tvoje pretplate. RSS je brži i sprečava
@@ -977,3 +994,6 @@ Chapters:
     aktualno poglavlje: {chapterName}'
 Preferences: Korisničke postavke
 Ok: U redu
+Hashtag:
+  This hashtag does not currently have any videos: Ovaj hashtag trenutačno nema videa
+  Hashtag: Hashtag

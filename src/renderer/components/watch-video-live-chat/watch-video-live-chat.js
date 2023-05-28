@@ -85,18 +85,23 @@ export default defineComponent({
     if (!process.env.IS_ELECTRON && !process.env.IS_CORDOVA) {
       this.hasError = true
       this.errorMessage = this.$t('Video["Live Chat is currently not supported in this build."]')
+      this.isLoading = false
     } else {
       switch (this.backendPreference) {
         case 'local':
-          this.liveChatInstance = this.liveChat
-          this.startLiveChatLocal()
+          if (this.liveChat) {
+            this.liveChatInstance = this.liveChat
+            this.startLiveChatLocal()
+          } else {
+            this.showLiveChatUnavailable()
+          }
           break
         case 'invidious':
           if (this.backendFallback) {
             this.getLiveChatLocal()
           } else {
             this.hasError = true
-            this.errorMessage = this.$t('Video["Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required."]')
+            this.errorMessage = this.$t('Video["Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required."]')
             this.showEnableChat = true
             this.isLoading = false
           }
@@ -114,9 +119,21 @@ export default defineComponent({
 
     getLiveChatLocal: async function () {
       const videoInfo = await getLocalVideoInfo(this.videoId)
-      this.liveChatInstance = videoInfo.getLiveChat()
 
-      this.startLiveChatLocal()
+      if (videoInfo.livechat) {
+        this.liveChatInstance = videoInfo.getLiveChat()
+
+        this.startLiveChatLocal()
+      } else {
+        this.showLiveChatUnavailable()
+      }
+    },
+
+    showLiveChatUnavailable: function () {
+      this.hasError = true
+      this.errorMessage = this.$t('Video["Live Chat is unavailable for this stream. It may have been disabled by the uploader."]')
+      this.isLoading = false
+      this.showEnableChat = false
     },
 
     startLiveChatLocal: function () {
@@ -183,19 +200,19 @@ export default defineComponent({
     },
 
     /**
-     * @param {import('youtubei.js/dist/src/parser/classes/livechat/items/LiveChatTextMessage').default} comment
+     * @param {import('youtubei.js').YTNodes.LiveChatTextMessage} comment
      */
     parseLiveChatComment: function (comment) {
       /**
        * can also be undefined if there is no badge
-       * @type {import('youtubei.js/dist/src/parser/classes/LiveChatAuthorBadge').default}
+       * @type {import('youtubei.js').YTNodes.LiveChatAuthorBadge}
        */
       const badge = comment.author.badges.find(badge => badge.type === 'LiveChatAuthorBadge' && badge.custom_thumbnail)
 
       const parsedComment = {
         message: autolinker.link(parseLocalTextRuns(comment.message.runs, 20)),
         author: {
-          name: comment.author.name.text,
+          name: comment.author.name,
           thumbnailUrl: comment.author.thumbnails.at(-1).url,
           isOwner: comment.author.id === this.channelId,
           isModerator: comment.author.is_moderator,
@@ -205,7 +222,7 @@ export default defineComponent({
 
       if (badge) {
         parsedComment.badge = {
-          url: badge.custom_thumbnail.at(-1).url,
+          url: badge.custom_thumbnail.at(-1)?.url,
           tooltip: badge.tooltip ?? ''
         }
       }
@@ -214,7 +231,7 @@ export default defineComponent({
     },
 
     /**
-     * @param {import('youtubei.js/dist/src/parser/classes/livechat/items/LiveChatPaidMessage').default} superChat
+     * @param {import('youtubei.js').YTNodes.LiveChatPaidMessage} superChat
      */
     parseLiveChatSuperChat: function (superChat) {
       const parsedComment = {

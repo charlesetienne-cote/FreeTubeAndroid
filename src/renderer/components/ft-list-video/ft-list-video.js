@@ -69,7 +69,6 @@ export default defineComponent({
       watchProgress: 0,
       publishedText: '',
       isLive: false,
-      isFavorited: false,
       isUpcoming: false,
       isPremium: false,
       hideViews: false
@@ -99,7 +98,7 @@ export default defineComponent({
     inHistory: function () {
       // When in the history page, showing relative dates isn't very useful.
       // We want to show the exact date instead
-      return this.$router.currentRoute.name === 'history'
+      return this.$route.name === 'history'
     },
 
     invidiousUrl: function () {
@@ -152,15 +151,14 @@ export default defineComponent({
     },
 
     dropdownOptions: function () {
-      const options = []
-      options.push(
+      const options = [
         {
           label: this.watched
             ? this.$t('Video.Remove From History')
             : this.$t('Video.Mark As Watched'),
           value: 'history'
         }
-      )
+      ]
       if (!this.hideSharingActions) {
         options.push(
           {
@@ -241,14 +239,6 @@ export default defineComponent({
       }
     },
 
-    hideLiveStreams: function() {
-      return this.$store.getters.getHideLiveStreams
-    },
-
-    hideUpcomingPremieres: function () {
-      return this.$store.getters.getHideUpcomingPremieres
-    },
-
     hideVideoViews: function () {
       return this.$store.getters.getHideVideoViews
     },
@@ -295,9 +285,9 @@ export default defineComponent({
 
     displayTitle: function () {
       if (this.showDistractionFreeTitles) {
-        return toDistractionFreeTitle(this.data.title)
+        return toDistractionFreeTitle(this.title)
       } else {
-        return this.data.title
+        return this.title
       }
     },
 
@@ -327,7 +317,12 @@ export default defineComponent({
       return this.$i18n.locale.replace('_', '-')
     },
   },
-  mounted: function () {
+  watch: {
+    historyIndex() {
+      this.checkIfWatched()
+    },
+  },
+  created: function () {
     this.parseVideoData()
     this.checkIfWatched()
   },
@@ -495,7 +490,10 @@ export default defineComponent({
 
       if (historyIndex !== -1) {
         this.watched = true
-        this.watchProgress = this.historyCache[historyIndex].watchProgress
+        if (this.saveWatchedProgress) {
+          // For UX consistency, no progress reading if writing disabled
+          this.watchProgress = this.historyCache[historyIndex].watchProgress
+        }
 
         if (this.historyCache[historyIndex].published !== '') {
           const videoPublished = this.historyCache[historyIndex].published

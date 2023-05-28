@@ -192,9 +192,13 @@ const state = {
   expandSideBar: false,
   forceLocalBackendForLegacy: false,
   hideActiveSubscriptions: false,
+  hideChannelCommunity: false,
+  hideChannelPlaylists: false,
+  hideChannelShorts: false,
   hideChannelSubscriptions: false,
   hideCommentLikes: false,
   hideComments: false,
+  hideFeaturedChannels: false,
   channelsHidden: '[]',
   hideVideoDescription: false,
   hideLiveChat: false,
@@ -281,6 +285,7 @@ const state = {
   fetchSubscriptionsAutomatically: true,
   settingsPassword: '',
   allowDashAv1Formats: false,
+  commentAutoLoadEnabled: false,
   showThumbnailInMediaControls: true
 }
 
@@ -350,6 +355,8 @@ const stateWithSideEffects = {
     defaultValue: 1,
     sideEffectsHandler: (_, value) => {
       sessionStorage.setItem('volume', value)
+      value === 0 ? sessionStorage.setItem('muted', 'true') : sessionStorage.setItem('muted', 'false')
+      sessionStorage.setItem('defaultVolume', value)
     }
   },
 

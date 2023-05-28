@@ -176,11 +176,8 @@ export default defineComponent({
             case 'playlist':
             case 'search':
             case 'channel':
-              isYoutubeLink = true
-              break
             case 'hashtag':
-              // TODO: Implement a hashtag related view
-              // isYoutubeLink is already `false`
+              isYoutubeLink = true
               break
 
             case 'invalid_url':
@@ -233,6 +230,7 @@ export default defineComponent({
       this.searchState.showOptions = true
       const isArrow = event.key === 'ArrowDown' || event.key === 'ArrowUp'
       if (isArrow) {
+        event.preventDefault()
         if (event.key === 'ArrowDown') {
           this.searchState.selectedOption = (this.searchState.selectedOption + 1) % this.visibleDataList.length
         } else if (event.key === 'ArrowUp') {
@@ -267,8 +265,9 @@ export default defineComponent({
         return
       }
       // get list of items that match input
+      const lowerCaseInputData = this.inputData.toLowerCase()
       const visList = this.dataList.filter(x => {
-        if (x.toLowerCase().indexOf(this.inputData.toLowerCase()) !== -1) {
+        if (x.toLowerCase().indexOf(lowerCaseInputData) !== -1) {
           return true
         } else {
           return false

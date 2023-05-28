@@ -52,6 +52,24 @@
           :default-value="hideChapters"
           @change="updateHideChapters"
         />
+        <ft-toggle-switch
+          :label="$t('Settings.Distraction Free Settings.Hide Featured Channels')"
+          :compact="true"
+          :default-value="hideFeaturedChannels"
+          @change="updateHideFeaturedChannels"
+        />
+        <ft-toggle-switch
+          :label="$t('Settings.Distraction Free Settings.Hide Channel Playlists')"
+          :compact="true"
+          :default-value="hideChannelPlaylists"
+          @change="updateHideChannelPlaylists"
+        />
+        <ft-toggle-switch
+          :label="$t('Settings.Distraction Free Settings.Hide Channel Shorts')"
+          :compact="true"
+          :default-value="hideChannelShorts"
+          @change="updateHideChannelShorts"
+        />
       </div>
       <div class="switchColumn">
         <ft-toggle-switch
@@ -107,6 +125,12 @@
           :compact="true"
           :default-value="showDistractionFreeTitles"
           @change="updateShowDistractionFreeTitles"
+        />
+        <ft-toggle-switch
+          :label="$t('Settings.Distraction Free Settings.Hide Channel Community')"
+          :compact="true"
+          :default-value="hideChannelCommunity"
+          @change="updateHideChannelCommunity"
         />
       </div>
     </div>

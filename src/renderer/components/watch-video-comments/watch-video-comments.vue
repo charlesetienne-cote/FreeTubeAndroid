@@ -3,7 +3,7 @@
     class="card"
   >
     <h4
-      v-if="commentData.length === 0 && !isLoading"
+      v-if="canPerformInitialCommentLoading"
       class="getCommentsTitle"
       role="button"
       tabindex="0"
@@ -233,12 +233,12 @@
     <div
       v-else-if="showComments && !isLoading"
     >
-      <h3 class="center">
+      <h3 class="noCommentMsg">
         {{ $t("There are no comments available for this video") }}
       </h3>
     </div>
     <h4
-      v-if="commentData.length > 0 && !isLoading && showComments && nextPageToken"
+      v-if="canPerformMoreCommentLoading"
       class="getMoreComments"
       role="button"
       tabindex="0"
@@ -251,6 +251,13 @@
     <ft-loader
       v-if="isLoading"
     />
+    <div
+      v-observe-visibility="observeVisibilityOptions"
+    >
+      <!--
+        Dummy element to be observed by Intersection Observer
+      -->
+    </div>
   </ft-card>
 </template>
 

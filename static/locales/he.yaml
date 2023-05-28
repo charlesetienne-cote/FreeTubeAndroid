@@ -81,7 +81,7 @@ Subscriptions:
     המנויים שלכם כרגע ריקה. תתחילו להוסיף הרשמות כדי לראות אותן כאן.'
   'Getting Subscriptions. Please wait.': 'אוסף מנויים. אנא המתן.'
   Refresh Subscriptions: 'רענון מנויים'
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: לפרופיל
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: לפרופיל
     זה יש מספר רב של מנויים. עובר לעדכונים בעזרת RSS על מנת להימנע מהגבלות רוחב פס
   Load More Videos: לטעון סרטונים נוספים
   Error Channels: ערוצים עם שגיאות
@@ -268,6 +268,8 @@ Settings:
     Enter Fullscreen on Display Rotate: מעבר למסך מלא עם סיבוב התצוגה
     Skip by Scrolling Over Video Player: אפשר לדלג על ידי גלילה על נגן הווידאו
     Allow DASH AV1 formats: לאפשר תצורות DASH AV1
+    Comment Auto Load:
+      Comment Auto Load: טעינת תגובות אוטומטית
   Privacy Settings:
     Privacy Settings: 'הגדרות פרטיות'
     Remember History: 'זכור את היסטוריית הצפייה'
@@ -387,6 +389,10 @@ Settings:
     Hide Channels Placeholder: שם או מזהה ערוץ
     Display Titles Without Excessive Capitalisation: להציג כותרות בלי הגזמה באותיות
       גדולות
+    Hide Featured Channels: הסתרת ערוצים מומלצים
+    Hide Channel Playlists: הסתרת רשימת נגינה של ערוץ
+    Hide Channel Community: הסתרת קהילת הערוץ
+    Hide Channel Shorts: הסתרת ה־Shorts של הערוץ
   The app needs to restart for changes to take effect. Restart and apply change?: צריך
     להפעיל את היישומון מחדש כדי שהשינויים ייכנסו לתוקף. להפעיל מחדש ולהחיל את השינוי?
   Proxy Settings:
@@ -598,11 +604,18 @@ Channel:
   This channel does not allow searching: הערוץ הזה לא מאפשר חיפוש
   Channel Tabs: לשוניות ערוצים
   This channel does not exist: הערוץ הזה לא קיים
-  This channel is age resticted and currently cannot be viewed in FreeTube.: הערוץ
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: הערוץ
     מוגבל לפי גיל וכרגע אי אפשר לצפות בו ב־FreeTube.
   Community:
     This channel currently does not have any posts: אין רשומות בערוץ הזה כרגע
     Community: קהילה
+  Live:
+    Live: חי
+    This channel does not currently have any live streams: לערוץ הזה אין שידורים חיים
+      כרגע
+  Shorts:
+    Shorts: Shorts
+    This channel does not currently have any shorts: אין כרגע Shorts בערוץ הזה
 Video:
   Mark As Watched: 'סמנו כנצפה'
   Remove From History: 'מחקו מהיסטוריית הצפייה'
@@ -630,15 +643,14 @@ Video:
   # As in a Live Video
   Live: 'שידור חי'
   Live Now: 'בשידור חי'
-  Live Chat: 'צ''אט'
-  Enable Live Chat: 'אפשר צ''אט'
-  Live Chat is currently not supported in this build.: 'הצ''אט כרגע לא נתמך בגרסה
-    זו.'
+  Live Chat: 'צ׳אט'
+  Enable Live Chat: 'הפעלת צ׳אט'
+  Live Chat is currently not supported in this build.: 'הצ׳אט כרגע לא נתמך בגרסה זו.'
   'Chat is disabled or the Live Stream has ended.': 'הצ׳אט נחסם או שהשידור החי נגמר.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'הצ''אט מופעל.
-    ההודעות יופיעו פה כאשר יישלחו.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'מנגנון
-    הצ''אט כרגע לא נתמך ע"י ה-API של Invidious. דרוש חיבור ישיר ל-YouTube.'
+  Live chat is enabled. Chat messages will appear here once sent.: 'הצ׳אט מופעל. ההודעות
+    תופענה פה כאשר תישלחנה.'
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'מנגנון
+    הצ׳אט כרגע לא נתמך ע״י ה־API של Invidious. דרוש חיבור ישיר ל־YouTube.'
   Published:
     Jan: 'בינו׳'
     Feb: 'בפבר׳'
@@ -741,6 +753,8 @@ Video:
   Scroll to Bottom: גלילה לתחתית
   Show Super Chat Comment: הצגת הערת סופר צ׳אט
   Upcoming: בקרוב
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': הצ׳אט
+    לא זמין לשידור הזה. יכול להיות שהוא הושבת על ידי המעלה.
 Videos:
   #& Sort By
   Sort By:
@@ -827,10 +841,8 @@ Shuffle is now enabled: 'ערבוב מופעל'
 The playlist has been reversed: 'רשימת נגינה זו התהפכה'
 Playing Next Video: 'הסרטון הבא מתנגן'
 Playing Previous Video: 'הסרטון הקודם מתנגן'
-Playing next video in 5 seconds.  Click to cancel: 'הסרטון הבא יתנגן תוך 5 שניות.
-  יבוטל בלחיצה.'
 Canceled next video autoplay: 'ניגון הסרטון הבא אוטומטית בוטל'
-'The playlist has ended.  Enable loop to continue playing': 'רשימת הנגינה הסתיימה.  יש
+'The playlist has ended. Enable loop to continue playing': 'רשימת הנגינה הסתיימה.  יש
   להפעיל לולאה כדי להמשיך לנגן'
 
 Yes: 'כן'
@@ -847,9 +859,9 @@ Tooltips:
     Invidious Instance: העותק של Invidious שאליו FreeTube יתחבר לקבלת פניות API.
     Thumbnail Preference: כל התמונות הממוזערות ברחבי FreeTube יוחלפו בפריים מתוך הסרטון
       במקום התמונה הממוזערת כברירת המחדל.
-    External Link Handling: "נא לבחור את התנהגות ברירת המחדל כשנלחץ קישור שלא ניתן\
-      \ לפתוח ב־FreeTube.\nכברירת מחדל FreeTube יפתח את הקישור שנלחץ בדפדפן ברירת\
-      \ המחדל שלך.\n"
+    External Link Handling: "נא לבחור את התנהגות ברירת המחדל כשנלחץ קישור שלא ניתן
+      לפתוח ב־FreeTube.\nכברירת מחדל FreeTube יפתח את הקישור שנלחץ בדפדפן ברירת המחדל
+      שלך.\n"
   Player Settings:
     Force Local Backend for Legacy Formats: עובד רק כאשר ה־API של Invidious הוא ברירת
       המחדל שלך. כאשר האפשרות פעילה, ה־API המקומי יופעל וישתמש בתצורות המיושנות שהוחזרו
@@ -946,3 +958,6 @@ Clipboard:
     חיבור מאובטח
 Preferences: העדפות
 Ok: אישור
+Hashtag:
+  This hashtag does not currently have any videos: לתגית ההקבץ הזו אין סרטונים כרגע
+  Hashtag: תגית הקבץ

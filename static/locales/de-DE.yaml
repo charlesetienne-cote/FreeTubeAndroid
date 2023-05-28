@@ -77,7 +77,7 @@ Subscriptions:
   'Getting Subscriptions.  Please wait.': Rufe Abonnements ab. Bitte warten.
   Refresh Subscriptions: Abonnements aktualisieren
   Getting Subscriptions. Please wait.: Abonnements werden geladen. Bitte warten.
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Dieses
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Dieses
     Profil hat eine große Anzahl von Abonnements.  RSS zur Vermeidung von Geschwindigkeitsbeschränkungen
     erzwingen
   Load More Videos: Mehr Videos laden
@@ -405,6 +405,7 @@ Settings:
     Hide Channels Placeholder: Kanalname oder Kanal-ID
     Display Titles Without Excessive Capitalisation: Titel ohne übermäßige Großschreibung
       anzeigen
+    Hide Channel Playlists: Kanal-Wiedergabelisten ausblenden
   The app needs to restart for changes to take effect. Restart and apply change?: Um
     die Änderungen anzuwenden muss die Anwendung neustarten. Jetzt neustarten und
     Änderungen aktivieren?
@@ -580,12 +581,12 @@ Channel:
     Location: Standort
     Joined: Beigetreten
   Added channel to your subscriptions: Der Kanal wurde deinen Abonnements hinzugefügt
-  Removed subscription from {count} other channel(s): Abonnement von {count} anderem/n
-    Kanal/Kanälen entfernt
+  Removed subscription from {count} other channel(s): Es wurden {count} andere/n Kanäle/n
+    deabonniert
   Channel has been removed from your subscriptions: Der Kanal wurde von deinen Abonnements
     entfernt
   Channel Tabs: Kanal-Registerkarten
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Dieser
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Dieser
     Kanal ist altersbeschränkt und kann derzeit nicht in FreeTube angesehen werden.
   This channel does not allow searching: Dieser Kanal erlaubt keine Suche
   This channel does not exist: Dieser Kanal existiert nicht
@@ -593,6 +594,10 @@ Channel:
     This channel currently does not have any posts: Dieser Kanal enthält derzeit keine
       Beiträge
     Community: Gemeinschaft
+  Live:
+    Live: Live
+    This channel does not currently have any live streams: Dieser Kanal hat derzeit
+      keine Live-Streams
 Video:
   Open in YouTube: In YouTube öffnen
   Copy YouTube Link: YouTube-Link kopieren
@@ -614,9 +619,9 @@ Video:
     Version nicht unterstützt.
   'Chat is disabled or the Live Stream has ended.': Der Chat ist deaktiviert oder
     der Livestream ist beendet.
-  Live chat is enabled.  Chat messages will appear here once sent.: Der Live-Chat
-    ist aktiviert.  Chatnachrichten tauchen hier auf, wenn sie abgesendet wurden.
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': Live-Chat
+  Live chat is enabled. Chat messages will appear here once sent.: Der Live-Chat ist
+    aktiviert.  Chatnachrichten tauchen hier auf, wenn sie abgesendet wurden.
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': Live-Chat
     ist in der aktuellen Invidious-API nicht unterstützt.  Eine direkte Verbindung
     zu YouTube wird benötigt.
   Published:
@@ -737,6 +742,8 @@ Video:
   Show Super Chat Comment: Super-Chat-Kommentar anzeigen
   Scroll to Bottom: Nach unten scrollen
   Upcoming: Demnächst
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Live-Chat
+    ist für diesen Stream nicht verfügbar. Möglicherweise wurde es vom Uploader deaktiviert.
 Videos:
   #& Sort By
   Sort By:
@@ -830,10 +837,8 @@ Shuffle is now disabled: Zufallswiedergabe ist jetzt deaktiviert
 Shuffle is now enabled: Zufallswiedergabe ist jetzt aktiviert
 Playing Next Video: Spiele nächstes Video
 Playing Previous Video: Spiele vorheriges Video
-Playing next video in 5 seconds.  Click to cancel: Spiele nächstes Video in 5 Sekunden.
-  Klicke um abzubrechen.
 Canceled next video autoplay: Wiedergabe des nächsten Videos abgebrochen
-'The playlist has ended.  Enable loop to continue playing': 'Ende der Wiedergabeliste
+'The playlist has ended. Enable loop to continue playing': 'Ende der Wiedergabeliste
   erreicht.  Aktiviere Wiederholung um weiter abzuspielen'
 
 Yes: Ja
@@ -901,9 +906,9 @@ Tooltips:
     Region for Trending: Die Trendregion erlaubt es dir auszuwählen, aus welchem Land
       die Trends angezeigt werden sollen. Nicht alle Optionen werden auch von YouTube
       unterstützt.
-    External Link Handling: "Wähle das Standardverhalten, wenn ein Link angeklickt\
-      \ wird, der nicht in FreeTube geöffnet werden kann.\nStandardmäßig wird FreeTube\
-      \ den angeklickten Link in deinem Standardbrowser öffnen.\n"
+    External Link Handling: "Wähle das Standardverhalten, wenn ein Link angeklickt
+      wird, der nicht in FreeTube geöffnet werden kann.\nStandardmäßig wird FreeTube
+      den angeklickten Link in deinem Standardbrowser öffnen.\n"
   Subscription Settings:
     Fetch Feeds from RSS: Sobald aktiviert wird FreeTube RSS anstatt der Standardmethode
       nutzen, um deine Abos zu aktualisieren. RSS ist schneller und verhindert das

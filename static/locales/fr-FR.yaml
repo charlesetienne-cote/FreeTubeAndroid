@@ -78,7 +78,7 @@ Subscriptions:
     veuillez patienter.'
   Getting Subscriptions. Please wait.: Obtention des abonnements. Veuillez patienter.
   Refresh Subscriptions: Actualiser les abonnements
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Ce
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Ce
     profil comporte un grand nombre d'abonnements.  Le flux RSS outrepassera la limite
     fixée
   Load More Videos: Charger plus de vidéos
@@ -282,6 +282,8 @@ Settings:
     Enter Fullscreen on Display Rotate: Entrer en plein écran sur l'affichage Rotation
     Skip by Scrolling Over Video Player: Sauter en faisant défiler le lecteur vidéo
     Allow DASH AV1 formats: Autoriser les formats DASH AV1
+    Comment Auto Load:
+      Comment Auto Load: Chargement automatique des commentaires
   Subscription Settings:
     Subscription Settings: 'Paramètres des abonnements'
     Hide Videos on Watch: 'Masquer les vidéos visionnées'
@@ -416,6 +418,7 @@ Settings:
     Hide Channels Placeholder: Nom ou identifiant de la chaîne
     Display Titles Without Excessive Capitalisation: Afficher les titres sans majuscules
       excessives
+    Hide Channel Playlists: Masquer les listes de lecture des chaînes
   The app needs to restart for changes to take effect. Restart and apply change?: L'application
     doit être redémarrée pour que les changements prennent effet. Redémarrer et appliquer
     les changements ?
@@ -599,9 +602,21 @@ Channel:
     abonnements
   This channel does not exist: Cette chaîne n'existe pas
   This channel does not allow searching: Cette chaîne ne permet pas la recherche
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Cette
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Cette
     chaîne est limitée par l'âge et ne peut actuellement pas être visionnée dans FreeTube.
   Channel Tabs: Onglets des chaînes
+  Community:
+    Community: Communauté
+    This channel currently does not have any posts: Cette chaîne n'a actuellement
+      aucune publication
+  Live:
+    Live: En direct
+    This channel does not currently have any live streams: Cette chaîne n'a actuellement
+      aucun flux en direct
+  Shorts:
+    Shorts: Shorts
+    This channel does not currently have any shorts: Cette chaîne n'a actuellement
+      aucun shorts
 Video:
   Mark As Watched: 'Marquer comme vu'
   Remove From History: 'Retirer de l''historique'
@@ -627,9 +642,9 @@ Video:
     actuellement pas pris en charge dans cette version.'
   'Chat is disabled or the Live Stream has ended.': 'Le tchat est désactivé ou la
     diffusion en direct est terminée.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Le tchat en direct
+  Live chat is enabled. Chat messages will appear here once sent.: 'Le tchat en direct
     est activé. Les messages de tchat apparaîtront ici une fois envoyés.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Le
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Le
     tchat en direct n''est actuellement pas pris en charge avec l''API Invidious.
     Une connexion directe à YouTube est requise.'
   Published:
@@ -738,13 +753,16 @@ Video:
     Bandwidth: Bande passante
     Video ID: Identifiant vidéo
     Buffered: En mémoire tampon
-    Dropped / Total Frames: Images perdues / Nombre total d’images
+    Dropped / Total Frames: Images perdues / Nombre total d'images
   Premieres on: Avant-première le
   Premieres in: Première dans
   Premieres: Avant-première
   Show Super Chat Comment: Afficher le commentaire Super Chat
   Scroll to Bottom: Faire défiler jusqu'en bas
   Upcoming: À venir
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Le
+    chat en direct n'est pas disponible pour ce flux. Il a peut-être été désactivé
+    par le téléchargeur.
 Videos:
   #& Sort By
   Sort By:
@@ -837,10 +855,8 @@ Shuffle is now disabled: 'Mode aléatoire désactivé'
 Shuffle is now enabled: 'Mode aléatoire activé'
 Playing Next Video: 'Lecture de la vidéo suivante'
 Playing Previous Video: 'Lecture de la vidéo précédente'
-Playing next video in 5 seconds.  Click to cancel: 'Lecture de la vidéo suivante dans
-  5 secondes. Cliquer pour annuler.'
 Canceled next video autoplay: 'Annuler la lecture automatique'
-'The playlist has ended.  Enable loop to continue playing': 'Fin de la liste de lecture.
+'The playlist has ended. Enable loop to continue playing': 'Fin de la liste de lecture.
   Activer la lecture en boucle pour continuer'
 
 Yes: 'Oui'
@@ -947,9 +963,9 @@ Tooltips:
     Region for Trending: Ceci vous permet de choisir les vidéos tendance du pays que
       vous souhaitez afficher. Attention, certains pays affichés ne sont pas pris
       en charge par YouTube.
-    External Link Handling: "Choisissez le comportement par défaut quand on clique\
-      \ sur un lien qui ne peut être ouvert dans FreeTube.\nPar défaut, FreeTube ouvrira\
-      \ le lien dans votre navigateur par défaut.\n"
+    External Link Handling: "Choisissez le comportement par défaut quand on clique
+      sur un lien qui ne peut être ouvert dans FreeTube.\nPar défaut, FreeTube ouvrira
+      le lien dans votre navigateur par défaut.\n"
   Privacy Settings:
     Remove Video Meta Files: Lorsqu'il est activé, FreeTube supprime automatiquement
       les MétaFichiers créés pendant la lecture de la vidéo, dès que la page de la

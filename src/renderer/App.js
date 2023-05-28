@@ -53,9 +53,6 @@ export default defineComponent({
     }
   },
   computed: {
-    isOpen: function () {
-      return this.$store.getters.getIsSideNavOpen
-    },
     showProgressBar: function () {
       return this.$store.getters.getShowProgressBar
     },
@@ -68,14 +65,9 @@ export default defineComponent({
     checkForBlogPosts: function () {
       return this.$store.getters.getCheckForBlogPosts
     },
-    searchSettings: function () {
-      return this.$store.getters.getSearchSettings
-    },
-    profileList: function () {
-      return this.$store.getters.getProfileList
-    },
     windowTitle: function () {
-      if (this.$route.meta.title !== 'Channel' && this.$route.meta.title !== 'Watch') {
+      const routeTitle = this.$route.meta.title
+      if (routeTitle !== 'Channel' && routeTitle !== 'Watch' && routeTitle !== 'Hashtag') {
         let title =
         this.$route.meta.path === '/home'
           ? packageDetails.productName
@@ -87,9 +79,6 @@ export default defineComponent({
       } else {
         return null
       }
-    },
-    defaultProfile: function () {
-      return this.$store.getters.getDefaultProfile
     },
     externalPlayer: function () {
       return this.$store.getters.getExternalPlayer
@@ -446,13 +435,11 @@ export default defineComponent({
           }
 
           case 'hashtag': {
-            // TODO: Implement a hashtag related view
-            let message = 'Hashtags have not yet been implemented, try again later'
-            if (this.$te(message) && this.$t(message) !== '') {
-              message = this.$t(message)
-            }
-
-            showToast(message)
+            const { hashtag } = result
+            openInternalPath({
+              path: `/hashtag/${encodeURIComponent(hashtag)}`,
+              doCreateNewWindow
+            })
             break
           }
 

@@ -75,7 +75,7 @@ Subscriptions:
   'Getting Subscriptions.  Please wait.': 'Получение подписок. Пожалуйста, подождите.'
   Refresh Subscriptions: Обновить подписки
   Getting Subscriptions. Please wait.: Получение подписок, подождите.
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Эта
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Эта
     учётная запись имеет большое количество подписок. Принудительно используется RSS,
     чтобы избежать ограничения скорости
   Load More Videos: Загрузить больше видео
@@ -271,6 +271,8 @@ Settings:
       дисплея
     Skip by Scrolling Over Video Player: Пропустить, прокручивая видеопроигрыватель
     Allow DASH AV1 formats: Разрешить форматы DASH AV1
+    Comment Auto Load:
+      Comment Auto Load: Самозагрузка комментариев
   Subscription Settings:
     Subscription Settings: 'Подписки'
     Hide Videos on Watch: 'Скрывать видео после просмотра'
@@ -381,7 +383,7 @@ Settings:
     Hide Popular Videos: Скрыть популярные видео
     Hide Trending Videos: Скрыть видео в тренде
     Hide Recommended Videos: Скрыть рекомендуемые видео
-    Distraction Free Settings: Отвлекающие факторы
+    Distraction Free Settings: Настройки причин отвлечения внимания
     Hide Comment Likes: Скрыть лайки в комментариях
     Hide Channel Subscribers: Скрыть подписчиков канала
     Hide Video Likes And Dislikes: Скрыть лайки и дизлайки к видео
@@ -398,6 +400,10 @@ Settings:
     Hide Channels: Скрыть видео с каналов
     Display Titles Without Excessive Capitalisation: Отображать заголовки без чрезмерного
       использования заглавных букв
+    Hide Featured Channels: Скрыть избранные каналы
+    Hide Channel Playlists: Скрыть подборки канала
+    Hide Channel Community: Скрыть сообщество канала
+    Hide Channel Shorts: Скрыть короткие видео канала
   The app needs to restart for changes to take effect. Restart and apply change?: Чтобы
     изменения вступили в силу, необходимо перезапустить приложение. Перезапустить
     и применить изменения?
@@ -455,8 +461,8 @@ Settings:
   Experimental Settings:
     Experimental Settings: Пробные настройки
     Replace HTTP Cache: Заменить HTTP-кэш
-    Warning: Эти настройки являются пробными, они вызывают сбои при включении. Желательно
-      сделать резервные копии. Используйте на своё усмотрение!
+    Warning: Эти настройки являются пробными, они могут привести к вылетам приложения
+      при включении. Желательно сделать резервные копии. Используйте на своё усмотрение!
   Password Dialog:
     Password: Пароль
     Password Incorrect: Неверный пароль
@@ -555,7 +561,7 @@ Channel:
     Featured Channels: 'Избранные каналы'
     Tags:
       Tags: Метки
-      Search for: Поиск по "{tag}"
+      Search for: Поиск по «{tag}»
     Details: Подробности
     Joined: Присоединился
     Location: Расположение
@@ -566,12 +572,20 @@ Channel:
   This channel does not exist: Этого канала не существует
   This channel does not allow searching: Этот канал не позволяет выполнять поиск
   Channel Tabs: Вкладки каналов
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Этот
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Этот
     канал ограничен по возрасту и в настоящее время не может быть просмотрен во FreeTube.
   Community:
     Community: Сообщество
     This channel currently does not have any posts: На этом канале в настоящее время
       нет никаких записей
+  Live:
+    Live: Прямой показ
+    This channel does not currently have any live streams: На этом канале в настоящее
+      время нет прямых показов
+  Shorts:
+    Shorts: Короткие видео
+    This channel does not currently have any shorts: На этом канале пока что нет коротких
+      видео
 Video:
   Mark As Watched: 'Отметить как просмотренное'
   Remove From History: 'Удалить из истории'
@@ -598,9 +612,9 @@ Video:
     в этой версии не поддерживается.'
   'Chat is disabled or the Live Stream has ended.': 'Чат отключен или прямая трансляция
     закончилась.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Чат трансляции
+  Live chat is enabled. Chat messages will appear here once sent.: 'Чат трансляции
     включен. Сообщения чата будут отображаться здесь после отправки.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Чат
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Чат
     трансляции в настоящее время не поддерживается набором функций Invidious. Требуется
     прямое подключение к YouTube.'
   Published:
@@ -714,6 +728,8 @@ Video:
   Show Super Chat Comment: Показать комментарий «Супер Чата»
   Scroll to Bottom: Прокрутите вниз
   Upcoming: Предстоящее
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Прямой
+    чат недоступен для этого показа. Возможно, он был отключён загрузчиком.
 Videos:
   #& Sort By
   Sort By:
@@ -806,10 +822,8 @@ Shuffle is now disabled: 'Перемешивание теперь отключе
 Shuffle is now enabled: 'Перемешивание теперь включено'
 Playing Next Video: 'Воспроизведение следующего видео'
 Playing Previous Video: 'Воспроизведение предыдущего видео'
-Playing next video in 5 seconds.  Click to cancel: 'Воспроизведение следующего видео
-  через 5 секунд. Нажмите, чтобы отменить.'
 Canceled next video autoplay: 'Отменено автовоспроизведение следующего видео'
-'The playlist has ended.  Enable loop to continue playing': 'Подборка закончилась.
+'The playlist has ended. Enable loop to continue playing': 'Подборка закончилась.
   Включите повторение, чтобы продолжить воспроизведение'
 
 Yes: 'Да'
@@ -880,9 +894,9 @@ Tooltips:
       функций Invidious требует подключения к серверу Invidious.
     Region for Trending: Регион трендов позволяет выбрать, в какой стране будут отображаться
       трендовые видео. Не все отображаемые страны поддерживаются YouTube.
-    External Link Handling: "Выберите действие при нажатии на ссылку, которая не может\
-      \ быть открыта во FreeTube.\nПо умолчанию FreeTube откроет ссылку в вашем браузере\
-      \ по умолчанию.\n"
+    External Link Handling: "Выберите действие при нажатии на ссылку, которая не может
+      быть открыта во FreeTube.\nПо умолчанию FreeTube откроет ссылку в вашем браузере
+      по умолчанию.\n"
   Subscription Settings:
     Fetch Feeds from RSS: Если эта настройка включена, FreeTube будет получать вашу
       ленту подписок с помощью RSS, а не как обычно. RSS работает быстрее и предотвращает
@@ -989,3 +1003,7 @@ Chapters:
     текущий раздел: {chapterName}'
 Preferences: Настройки
 Ok: Хорошо
+Hashtag:
+  Hashtag: Распределительная метка
+  This hashtag does not currently have any videos: Этой распределительной метки пока
+    нет ни у одного видео

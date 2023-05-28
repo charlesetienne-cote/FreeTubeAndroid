@@ -25,7 +25,6 @@ export default defineComponent({
       thumbnail: 'https://i.ytimg.com/vi/JGwWNGJdvx8/mqdefault.jpg',
       channelName: '#RedMusic: Just Hits',
       videoCount: 200,
-      description: ''
     }
   },
   computed: {
@@ -45,7 +44,7 @@ export default defineComponent({
       return this.$store.getters.getDefaultPlayback
     }
   },
-  mounted: function () {
+  created: function () {
     if (this.data.dataSource === 'local') {
       this.parseLocalData()
     } else {

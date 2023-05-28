@@ -7,6 +7,10 @@ function getCurrentInstance() {
 }
 
 export function invidiousAPICall({ resource, id = '', params = {}, doLogError = true, subResource = '' }) {
+  if (store.getters.getProxyVideos) {
+    // pass local flag to the invidious endpoint
+    params.local = 'true'
+  }
   return new Promise((resolve, reject) => {
     const requestUrl = getCurrentInstance() + '/api/v1/' + resource + '/' + id + (!isNullOrEmpty(subResource) ? `/${subResource}` : '') + '?' + new URLSearchParams(params).toString()
     fetch(requestUrl)
@@ -101,6 +105,10 @@ export async function invidiousGetCommentReplies({ id, replyToken }) {
 }
 
 export function youtubeImageUrlToInvidious(url, currentInstance = null) {
+  if (url == null) {
+    return null
+  }
+
   if (currentInstance === null) {
     currentInstance = getCurrentInstance()
   }
@@ -130,6 +138,8 @@ function parseInvidiousCommentData(response) {
     comment.numReplies = comment.replies?.replyCount ?? 0
     comment.replyToken = comment.replies?.continuation ?? ''
     comment.isHearted = comment.creatorHeart !== undefined
+    comment.isMember = comment.isSponsor
+    comment.memberIconUrl = youtubeImageUrlToInvidious(comment.sponsorIconUrl)
     comment.replies = []
     comment.time = toLocalePublicationString({
       publishText: comment.publishedText
@@ -139,21 +149,28 @@ function parseInvidiousCommentData(response) {
   })
 }
 
-export async function invidiousGetCommunityPosts(channelId) {
+export async function invidiousGetCommunityPosts(channelId, continuation = null) {
   const payload = {
     resource: 'channels',
     id: channelId,
-    subResource: 'community'
+    subResource: 'community',
+    params: {}
+  }
+
+  if (continuation) {
+    payload.params.continuation = continuation
   }
 
   const response = await invidiousAPICall(payload)
   response.comments = response.comments.map(communityPost => parseInvidiousCommunityData(communityPost))
-  return response.comments
+  return { posts: response.comments, continuation: response.continuation ?? null }
 }
 
 function parseInvidiousCommunityData(data) {
   return {
-    postText: data.contentHtml,
+    // use #/ to support channel YT links.
+    // ex post: https://www.youtube.com/post/UgkxMpGt1SVlHwA1afwqDr2DZLn-hmJJQqKo
+    postText: data.contentHtml.replaceAll('href="/', 'href="#/'),
     postId: data.commentId,
     authorThumbnails: data.authorThumbnails.map(thumbnail => {
       thumbnail.url = youtubeImageUrlToInvidious(thumbnail.url)
@@ -173,6 +190,15 @@ function parseInvidiousCommunityAttachments(data) {
     return null
   }
 
+  // I've only seen this appear when a video was made private.
+  // This is not currently supported on local api.
+  if (data.error) {
+    return {
+      type: 'error',
+      message: data.error
+    }
+  }
+
   if (data.type === 'image') {
     return {
       type: data.type,
@@ -184,7 +210,7 @@ function parseInvidiousCommunityAttachments(data) {
   }
 
   if (data.type === 'video') {
-    data.videoThumbnails = data.videoThumbnails.map(thumbnail => {
+    data.videoThumbnails = data.videoThumbnails?.map(thumbnail => {
       thumbnail.url = youtubeImageUrlToInvidious(thumbnail.url)
       return thumbnail
     })
@@ -215,7 +241,7 @@ function parseInvidiousCommunityAttachments(data) {
       content: data.choices.map(choice => {
         return {
           text: choice.text,
-          image: choice.image.map(thumbnail => {
+          image: choice.image?.map(thumbnail => {
             thumbnail.url = youtubeImageUrlToInvidious(thumbnail.url)
             return thumbnail
           })
@@ -224,5 +250,59 @@ function parseInvidiousCommunityAttachments(data) {
     }
   }
 
+  if (data.type === 'playlist') {
+    return {
+      type: data.type,
+      content: data
+    }
+  }
+
   console.error('New Invidious Community Post Type: ' + data.type)
+}
+
+/**
+ * video.js only supports MP4 DASH not WebM DASH
+ * so we filter out the WebM DASH formats
+ * @param {any[]} formats
+ * @param {boolean} allowAv1 Use the AV1 formats if they are available
+ */
+export function filterInvidiousFormats(formats, allowAv1 = false) {
+  const audioFormats = []
+  const h264Formats = []
+  const av1Formats = []
+
+  formats.forEach(format => {
+    const mimeType = format.type
+
+    if (mimeType.startsWith('audio/mp4')) {
+      audioFormats.push(format)
+    } else if (allowAv1 && mimeType.startsWith('video/mp4; codecs="av01')) {
+      av1Formats.push(format)
+    } else if (mimeType.startsWith('video/mp4; codecs="avc')) {
+      h264Formats.push(format)
+    }
+  })
+
+  // Disabled AV1 as a workaround to https://github.com/FreeTubeApp/FreeTube/issues/3382
+  // Which is caused by Invidious API limitation on AV1 formats (see related issues)
+  // Commented code to be restored after Invidious issue fixed
+  //
+  // if (allowAv1 && av1Formats.length > 0) {
+  //   return [...audioFormats, ...av1Formats]
+  // } else {
+  //   return [...audioFormats, ...h264Formats]
+  // }
+  return [...audioFormats, ...h264Formats]
+}
+
+export async function getHashtagInvidious(hashtag, page) {
+  const payload = {
+    resource: 'hashtag',
+    id: hashtag,
+    params: {
+      page
+    }
+  }
+  const response = await invidiousAPICall(payload)
+  return response.results
 }

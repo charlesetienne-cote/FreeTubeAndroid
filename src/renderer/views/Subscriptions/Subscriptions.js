@@ -54,10 +54,6 @@ export default defineComponent({
       return this.$store.getters.getUseRssFeeds
     },
 
-    profileList: function () {
-      return this.$store.getters.getProfileList
-    },
-
     activeVideoList: function () {
       if (this.videoList.length < this.dataLimit) {
         return this.videoList
@@ -158,7 +154,7 @@ export default defineComponent({
       let useRss = this.useRssFeeds
       if (this.activeSubscriptionList.length >= 125 && !useRss) {
         showToast(
-          this.$t('Subscriptions["This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting"]'),
+          this.$t('Subscriptions["This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting"]'),
           10000
         )
         useRss = true
@@ -249,11 +245,11 @@ export default defineComponent({
             return x.id === video.authorId
           })
 
-          const historyIndex = this.historyCache.findIndex((x) => {
-            return x.videoId === video.videoId
-          })
-
           if (this.hideWatchedSubs) {
+            const historyIndex = this.historyCache.findIndex((x) => {
+              return x.videoId === video.videoId
+            })
+
             return channelIndex !== -1 && historyIndex === -1
           } else {
             return channelIndex !== -1
@@ -365,14 +361,14 @@ export default defineComponent({
         }
 
         invidiousAPICall(subscriptionsPayload).then(async (result) => {
-          // For my own sanity, until all invidious servers are upgraded to the new version
-          let videos = result
-          // Check if the new version is in use before assuming that it is:
-          if ('videos' in result) {
-            videos = result.videos
-          }
-          resolve(await Promise.all(videos.map((video) => {
-            video.publishedDate = new Date(video.published * 1000)
+          resolve(await Promise.all(result.videos.map((video) => {
+            if (video.liveNow) {
+              video.publishedDate = new Date().getTime()
+            } else if (video.isUpcoming) {
+              video.publishedDate = new Date(video.premiereTimestamp * 1000)
+            } else {
+              video.publishedDate = new Date(video.published * 1000)
+            }
             return video
           })))
         }).catch((err) => {

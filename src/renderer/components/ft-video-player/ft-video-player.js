@@ -22,11 +22,23 @@ import { getPicturesPath, showSaveDialog, showToast } from '../../helpers/utils'
 // videojs-http-streaming calls this hook everytime it makes a request,
 // so we can use it to convert the Range header into the range query parameter for the streaming URLs
 videojs.Vhs.xhr.beforeRequest = (options) => {
-  if (options.headers?.Range && new URL(options.uri).hostname.endsWith('.googlevideo.com')) {
-    options.uri += `&range=${options.headers.Range.split('=')[1]}`
-    delete options.headers.Range
+  // pass in the optional base so it doesn't error for `dashFiles/videoId.xml` (DASH manifest in dev mode)
+  if (new URL(options.uri, window.location.origin).hostname.endsWith('.googlevideo.com')) {
+    // The official clients use POST requests with this body for the DASH requests, so we should do that too
+    options.method = 'POST'
+    options.body = 'x\x00' // protobuf: { 15: 0 } (no idea what it means but this is what YouTube uses)
+
+    if (options.headers?.Range) {
+      options.uri += `&range=${options.headers.Range.split('=')[1]}`
+      delete options.headers.Range
+    }
   }
 }
+
+// videojs-http-streaming spits out a warning every time you access videojs.Vhs.BANDWIDTH_VARIANCE
+// so we'll get the value once here, to stop it spamming the console
+// https://github.com/videojs/http-streaming/blob/main/src/config.js#L8-L10
+const VHS_BANDWIDTH_VARIANCE = videojs.Vhs.BANDWIDTH_VARIANCE
 
 export default defineComponent({
   name: 'FtVideoPlayer',
@@ -44,10 +56,6 @@ export default defineComponent({
       default: () => { return [] }
     },
     dashSrc: {
-      type: Array,
-      default: null
-    },
-    hlsSrc: {
       type: Array,
       default: null
     },
@@ -74,13 +82,18 @@ export default defineComponent({
     chapters: {
       type: Array,
       default: () => { return [] }
+    },
+    audioTracks: {
+      type: Array,
+      default: () => ([])
     }
   },
   data: function () {
     return {
-      id: '',
       powerSaveBlocker: null,
       volume: 1,
+      muted: false,
+      /** @type {(import('video.js').VideoJsPlayer|null)} */
       player: null,
       useDash: false,
       useHls: false,
@@ -91,7 +104,6 @@ export default defineComponent({
       selectedMimeType: '',
       selectedFPS: 0,
       using60Fps: false,
-      maxFramerate: 0,
       activeSourceList: [],
       activeAdaptiveFormats: [],
       playerStats: null,
@@ -122,6 +134,7 @@ export default defineComponent({
             'screenshotButton',
             'playbackRateMenuButton',
             'loopButton',
+            'audioTrackButton',
             'chaptersButton',
             'descriptionsButton',
             'subsCapsButton',
@@ -149,7 +162,10 @@ export default defineComponent({
     },
 
     defaultQuality: function () {
-      return parseInt(this.$store.getters.getDefaultQuality)
+      const valueFromStore = this.$store.getters.getDefaultQuality
+      if (valueFromStore === 'auto') { return valueFromStore }
+
+      return parseInt(valueFromStore)
     },
 
     defaultCaptionSettings: function () {
@@ -159,10 +175,6 @@ export default defineComponent({
         console.error(e)
         return {}
       }
-    },
-
-    defaultVideoFormat: function () {
-      return this.$store.getters.getDefaultVideoFormat
     },
 
     autoplayVideos: function () {
@@ -303,26 +315,54 @@ export default defineComponent({
       this.toggleScreenshotButton()
     }
   },
+  created: function () {
+    this.dataSetup.playbackRates = this.playbackRates
+
+    if (this.format === 'audio') {
+      // hide the PIP button for the audio formats
+      const controlBarItems = this.dataSetup.controlBar.children
+      const index = controlBarItems.indexOf('pictureInPictureToggle')
+      controlBarItems.splice(index, 1)
+    }
+
+    if (this.format === 'legacy' || this.audioTracks.length === 0) {
+      // hide the audio track selector for the legacy formats
+      // and Invidious(it doesn't give us the information for multiple audio tracks yet)
+      const controlBarItems = this.dataSetup.controlBar.children
+      const index = controlBarItems.indexOf('audioTrackButton')
+      controlBarItems.splice(index, 1)
+    }
+  },
   mounted: function () {
     const volume = sessionStorage.getItem('volume')
+    const muted = sessionStorage.getItem('muted')
 
     if (volume !== null) {
       this.volume = volume
     }
 
-    this.dataSetup.playbackRates = this.playbackRates
+    if (muted !== null) {
+      // as sessionStorage stores string values which are truthy by default so we must check with 'true'
+      // otherwise 'false' will be returned as true as well
+      this.muted = (muted === 'true')
+    }
+
+    if (this.format === 'dash') {
+      this.determineDefaultQualityDash()
+    }
 
     this.createFullWindowButton()
     this.createLoopButton()
     this.createToggleTheatreModeButton()
     this.createScreenshotButton()
     this.determineFormatType()
-    this.determineMaxFramerate()
 
     if ('mediaSession' in navigator) {
       navigator.mediaSession.setActionHandler('play', () => this.player.play())
       navigator.mediaSession.setActionHandler('pause', () => this.player.pause())
     }
+
+    window.addEventListener('beforeunload', this.stopPowerSaveBlocker)
   },
   beforeDestroy: function () {
     document.removeEventListener('keydown', this.keyboardShortcutHandler)
@@ -341,10 +381,8 @@ export default defineComponent({
       navigator.mediaSession.playbackState = 'none'
     }
 
-    if (process.env.IS_ELECTRON && this.powerSaveBlocker !== null) {
-      const { ipcRenderer } = require('electron')
-      ipcRenderer.send(IpcChannels.STOP_POWER_SAVE_BLOCKER, this.powerSaveBlocker)
-    }
+    this.stopPowerSaveBlocker()
+    window.removeEventListener('beforeunload', this.stopPowerSaveBlocker)
   },
   methods: {
     initializePlayer: async function () {
@@ -354,11 +392,16 @@ export default defineComponent({
           await this.determineDefaultQualityLegacy()
         }
 
-        if (this.format === 'audio') {
-          // hide the PIP button for the audio formats
-          const controlBarItems = this.dataSetup.controlBar.children
-          const index = controlBarItems.indexOf('pictureInPictureToggle')
-          controlBarItems.splice(index, 1)
+        // regardless of what DASH qualities you enable or disable in the qualityLevels plugin
+        // the first segments videojs-http-streaming requests are chosen based on the available bandwidth, which is set to 0.5MB/s by default
+        // overriding that to be the same as the quality we requested, makes videojs-http-streamming pick the correct quality
+        const playerBandwidthOption = {}
+
+        if (this.useDash && this.defaultQuality !== 'auto') {
+          // https://github.com/videojs/http-streaming#bandwidth
+          // Cannot be too high to fix https://github.com/FreeTubeApp/FreeTube/issues/595
+          // (when default quality is low like 240p)
+          playerBandwidthOption.bandwidth = this.selectedBitrate * VHS_BANDWIDTH_VARIANCE + 1
         }
 
         this.player = videojs(this.$refs.video, {
@@ -368,7 +411,8 @@ export default defineComponent({
               limitRenditionByPlayerDimensions: false,
               smoothQualityChange: false,
               allowSeeksWithinUnsafeLiveWindow: true,
-              handlePartialData: true
+              handlePartialData: true,
+              ...playerBandwidthOption
             }
           }
         })
@@ -389,7 +433,47 @@ export default defineComponent({
           }
         })
 
+        // disable any quality the isn't the default one, as soon as it gets added
+        // we don't need to disable any qualities for auto
+        if (this.useDash && this.defaultQuality !== 'auto') {
+          const qualityLevels = this.player.qualityLevels()
+          qualityLevels.on('addqualitylevel', ({ qualityLevel }) => {
+            qualityLevel.enabled = qualityLevel.bitrate === this.selectedBitrate
+          })
+        }
+
+        // for the DASH formats, videojs-http-streaming takes care of the audio track management for us,
+        // thanks to the values in the DASH manifest
+        // so we only need a custom implementation for the audio only formats
+        if (this.format === 'audio' && this.audioTracks.length > 0) {
+          /** @type {import('../../views/Watch/Watch.js').AudioTrack[]} */
+          const audioTracks = this.audioTracks
+
+          const audioTrackList = this.player.audioTracks()
+          audioTracks.forEach(({ id, kind, label, language, isDefault: enabled }) => {
+            audioTrackList.addTrack(new videojs.AudioTrack({
+              id, kind, label, language, enabled,
+            }))
+          })
+
+          audioTrackList.on('change', () => {
+            let trackId
+            // doesn't support foreach so we need to use an indexed for loop here
+            for (let i = 0; i < audioTrackList.length; i++) {
+              const track = audioTrackList[i]
+
+              if (track.enabled) {
+                trackId = track.id
+                break
+              }
+            }
+
+            this.changeAudioTrack(trackId)
+          })
+        }
+
         this.player.volume(this.volume)
+        this.player.muted(this.muted)
         this.player.playbackRate(this.defaultPlayback)
         this.player.textTrackSettings.setValues(this.defaultCaptionSettings)
         // Remove big play button
@@ -510,6 +594,8 @@ export default defineComponent({
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'none'
           }
+
+          this.stopPowerSaveBlocker()
         })
 
         this.player.on('error', (error, message) => {
@@ -518,9 +604,11 @@ export default defineComponent({
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'none'
           }
+
+          this.stopPowerSaveBlocker()
         })
 
-        this.player.on('play', async function () {
+        this.player.on('play', async () => {
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'playing'
           }
@@ -532,16 +620,12 @@ export default defineComponent({
           }
         })
 
-        this.player.on('pause', function () {
+        this.player.on('pause', () => {
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'paused'
           }
 
-          if (process.env.IS_ELECTRON && this.powerSaveBlocker !== null) {
-            const { ipcRenderer } = require('electron')
-            ipcRenderer.send(IpcChannels.STOP_POWER_SAVE_BLOCKER, this.powerSaveBlocker)
-            this.powerSaveBlocker = null
-          }
+          this.stopPowerSaveBlocker()
         })
 
         this.player.on(this.statsModalEventName, () => {
@@ -699,10 +783,21 @@ export default defineComponent({
     },
 
     updateVolume: function (_event) {
-      // 0 means muted
       // https://docs.videojs.com/html5#volume
-      const volume = this.player.muted() ? 0 : this.player.volume()
-      sessionStorage.setItem('volume', volume)
+      if (sessionStorage.getItem('muted') === 'false' && this.player.volume() === 0) {
+        // If video is muted by dragging volume slider, it doesn't change 'muted' in sessionStorage to true
+        // hence compare it with 'false' and set volume to defaultVolume.
+        const volume = parseFloat(sessionStorage.getItem('defaultVolume'))
+        const muted = true
+        sessionStorage.setItem('volume', volume)
+        sessionStorage.setItem('muted', muted)
+      } else {
+        // If volume isn't muted by dragging the slider, muted and volume values are carried over to next video.
+        const volume = this.player.volume()
+        const muted = this.player.muted()
+        sessionStorage.setItem('volume', volume)
+        sessionStorage.setItem('muted', muted)
+      }
     },
 
     mouseScrollVolume: function (event) {
@@ -773,30 +868,50 @@ export default defineComponent({
       }
     },
 
+    /**
+     * @param {string} trackId
+     */
+    changeAudioTrack: function (trackId) {
+      // changing the player sources resets it, so we need to store the values that get reset,
+      // before we change the sources and restore them afterwards
+      const isPaused = this.player.paused()
+      const currentTime = this.player.currentTime()
+      const playbackRate = this.player.playbackRate()
+      const selectedQualityIndex = this.player.currentSources().findIndex(quality => quality.selected)
+
+      const newSourceList = this.audioTracks.find(audioTrack => audioTrack.id === trackId).sourceList
+
+      // video.js doesn't pick up changes to the sources in the HTML after it's initial load
+      // updating the sources of an existing player requires calling player.src() instead
+      // which accepts a different object that what use for the html sources
+
+      const newSources = newSourceList.map((source, index) => {
+        return {
+          src: source.url,
+          type: source.type,
+          label: source.qualityLabel,
+          selected: index === selectedQualityIndex
+        }
+      })
+
+      this.player.one('canplay', () => {
+        this.player.currentTime(currentTime)
+        this.player.playbackRate(playbackRate)
+
+        // need to call play to restore the player state, even if we want to pause afterwards
+        this.player.play().then(() => {
+          if (isPaused) { this.player.pause() }
+        })
+      })
+
+      this.player.src(newSources)
+    },
+
     determineFormatType: function () {
       if (this.format === 'dash') {
         this.enableDashFormat()
       } else {
         this.enableLegacyFormat()
-      }
-    },
-
-    determineMaxFramerate: async function() {
-      if (this.dashSrc.length === 0) {
-        this.maxFramerate = 60
-        return
-      }
-
-      try {
-        const data = await fs.readFile(this.dashSrc[0].url)
-
-        if (data.includes('frameRate="60"')) {
-          this.maxFramerate = 60
-        } else {
-          this.maxFramerate = 30
-        }
-      } catch {
-        this.maxFramerate = 60
       }
     },
 
@@ -875,92 +990,67 @@ export default defineComponent({
     },
 
     determineDefaultQualityDash: function () {
+      // TODO add settings and filtering for 60fps and HDR
+
       if (this.defaultQuality === 'auto') {
-        this.setDashQualityLevel('auto')
-      }
-
-      let formatsToTest
-
-      if (typeof this.activeAdaptiveFormats !== 'undefined' && this.activeAdaptiveFormats.length > 0) {
-        formatsToTest = this.activeAdaptiveFormats.filter((format) => {
-          return format.height === this.defaultQuality
-        })
-
-        if (formatsToTest.length === 0) {
-          formatsToTest = this.activeAdaptiveFormats.filter((format) => {
-            return format.height < this.defaultQuality
-          })
-        }
-
-        formatsToTest = formatsToTest.sort((a, b) => {
-          if (a.height === b.height) {
-            return b.bitrate - a.bitrate
-          } else {
-            return b.height - a.height
-          }
-        })
+        this.selectedResolution = 'auto'
+        this.selectedFPS = 'auto'
+        this.selectedBitrate = 'auto'
+        this.selectedMimeType = 'auto'
       } else {
-        formatsToTest = this.player.qualityLevels().levels_.filter((format) => {
+        const videoFormats = this.adaptiveFormats.filter(format => {
+          return (format.mimeType || format.type).startsWith('video') &&
+            typeof format.height === 'number'
+        })
+
+        // Select the quality that is identical to the users chosen default quality if it's available
+        // otherwise select the next lowest quality
+
+        let formatsToTest = videoFormats.filter(format => {
+          // For short videos (or vertical videos?)
+          // Height > width (e.g. H: 1280, W: 720)
+          if (typeof format.width === 'number' && format.height > format.width) {
+            return format.width === this.defaultQuality
+          }
+
           return format.height === this.defaultQuality
         })
 
         if (formatsToTest.length === 0) {
-          formatsToTest = this.player.qualityLevels().levels_.filter((format) => {
+          formatsToTest = videoFormats.filter(format => {
+            // For short videos (or vertical videos?)
+            // Height > width (e.g. H: 1280, W: 720)
+            if (typeof format.width === 'number' && format.height > format.width) {
+              return format.width < this.defaultQuality
+            }
+
             return format.height < this.defaultQuality
           })
         }
 
-        formatsToTest = formatsToTest.sort((a, b) => {
+        formatsToTest.sort((a, b) => {
           if (a.height === b.height) {
+            // Higher bitrate for video formats with HDR qualities
+            // `height` and `fps` are the same but `bitrate` would be higher
             return b.bitrate - a.bitrate
           } else {
             return b.height - a.height
           }
         })
+
+        const selectedFormat = formatsToTest[0]
+        this.selectedBitrate = selectedFormat.bitrate
+        this.selectedResolution = `${selectedFormat.width}x${selectedFormat.height}`
+        this.selectedFPS = selectedFormat.fps
+        this.selectedMimeType = selectedFormat.mimeType || selectedFormat.type
       }
-
-      // TODO: Test formats to determine if HDR / 60 FPS and skip them based on
-      // User settings
-      this.setDashQualityLevel(formatsToTest[0].bitrate)
-
-      // Old logic. Revert if needed
-      /* this.player.qualityLevels().levels_.sort((a, b) => {
-        if (a.height === b.height) {
-          return a.bitrate - b.bitrate
-        } else {
-          return a.height - b.height
-        }
-      }).forEach((ql, index, arr) => {
-        const height = ql.height
-        const width = ql.width
-        const quality = width < height ? width : height
-        let upperLevel = null
-
-        if (index < arr.length - 1) {
-          upperLevel = arr[index + 1]
-        }
-
-        if (this.defaultQuality === quality && upperLevel === null) {
-          this.setDashQualityLevel(height, true)
-        } else if (upperLevel !== null) {
-          const upperHeight = upperLevel.height
-          const upperWidth = upperLevel.width
-          const upperQuality = upperWidth < upperHeight ? upperWidth : upperHeight
-
-          if (this.defaultQuality >= quality && this.defaultQuality === upperQuality) {
-            this.setDashQualityLevel(height, true)
-          } else if (this.defaultQuality >= quality && this.defaultQuality < upperQuality) {
-            this.setDashQualityLevel(height)
-          }
-        } else if (index === 0 && quality > this.defaultQuality) {
-          this.setDashQualityLevel(height)
-        } else if (index === (arr.length - 1) && quality < this.defaultQuality) {
-          this.setDashQualityLevel(height)
-        }
-      }) */
     },
 
     setDashQualityLevel: function (bitrate) {
+      if (bitrate === this.selectedBitrate) {
+        return
+      }
+
       let adaptiveFormat = null
 
       if (bitrate !== 'auto') {
@@ -971,24 +1061,39 @@ export default defineComponent({
 
       let qualityLabel = adaptiveFormat ? adaptiveFormat.qualityLabel : ''
 
-      this.player.qualityLevels().levels_.sort((a, b) => {
-        if (a.height === b.height) {
-          return a.bitrate - b.bitrate
-        } else {
-          return a.height - b.height
-        }
-      }).forEach((ql, index, arr) => {
-        if (bitrate === 'auto' || bitrate === ql.bitrate) {
+      const qualityLevels = Array.from(this.player.qualityLevels())
+      if (bitrate === 'auto') {
+        qualityLevels.forEach(ql => {
           ql.enabled = true
-          ql.enabled_(true)
-          if (bitrate !== 'auto' && qualityLabel === '') {
-            qualityLabel = ql.height + 'p'
+        })
+      } else {
+        const previousBitrate = this.selectedBitrate
+
+        // if it was previously set to a specific quality we can disable just that and enable just the new one
+        // if it was previously set to auto, it means all qualitylevels were enabled, so we need to disable them
+
+        if (previousBitrate !== 'auto') {
+          const qualityLevel = qualityLevels.find(ql => bitrate === ql.bitrate)
+          qualityLevel.enabled = true
+
+          if (qualityLabel === '') {
+            qualityLabel = qualityLevel.height + 'p'
           }
+
+          qualityLevels.find(ql => previousBitrate === ql.bitrate).enabled = false
         } else {
-          ql.enabled = false
-          ql.enabled_(false)
+          qualityLevels.forEach(ql => {
+            if (bitrate === ql.bitrate) {
+              ql.enabled = true
+              if (qualityLabel === '') {
+                qualityLabel = ql.height + 'p'
+              }
+            } else {
+              ql.enabled = false
+            }
+          })
         }
-      })
+      }
 
       const selectedQuality = bitrate === 'auto' ? 'auto' : qualityLabel
 
@@ -1154,17 +1259,24 @@ export default defineComponent({
     },
 
     framebyframe: function (step) {
+      if (this.format === 'audio') {
+        return
+      }
+
       this.player.pause()
-      const quality = this.useDash ? this.player.qualityLevels()[this.player.qualityLevels().selectedIndex] : {}
-      let fps = 30
-      // Non-Dash formats are 30fps only
-      if (this.maxFramerate === 60 && quality.height >= 480) {
-        for (let i = 0; i < this.adaptiveFormats.length; i++) {
-          if (this.adaptiveFormats[i].bitrate === quality.bitrate) {
-            fps = this.adaptiveFormats[i].fps ? this.adaptiveFormats[i].fps : 30
-            break
-          }
-        }
+
+      let fps
+      if (this.useDash) {
+        const qualityLevels = this.player.qualityLevels()
+        fps = qualityLevels[qualityLevels.selectedIndex].frameRate
+      } else {
+        // legacy formats
+        const currentPlayerSourceUrl = this.player.currentSource().src
+        fps = this.sourceList.find(source => source.url === currentPlayerSourceUrl)?.fps
+      }
+
+      if (isNaN(fps)) {
+        fps = 30
       }
 
       // The 3 lines below were taken from the videojs-framebyframe node module by Helena Rasche
@@ -1195,13 +1307,16 @@ export default defineComponent({
     },
 
     toggleCaptions: function () {
-      const tracks = this.player.textTracks().tracks_
+      // skip videojs-http-streaming's segment-metadata track
+      // https://github.com/videojs/http-streaming#segment-metadata
+      const trackIndex = this.useDash ? 1 : 0
 
-      if (tracks.length > 1) {
-        if (tracks[1].mode === 'showing') {
-          tracks[1].mode = 'disabled'
+      const tracks = this.player.textTracks()
+      if (tracks.length > trackIndex) {
+        if (tracks[trackIndex].mode === 'showing') {
+          tracks[trackIndex].mode = 'disabled'
         } else {
-          tracks[1].mode = 'showing'
+          tracks[trackIndex].mode = 'showing'
         }
       }
     },
@@ -1494,6 +1609,8 @@ export default defineComponent({
       const adaptiveFormats = this.adaptiveFormats
       const activeAdaptiveFormats = this.activeAdaptiveFormats
       const setDashQualityLevel = this.setDashQualityLevel
+      const defaultQuality = this.defaultQuality
+      const defaultBitrate = this.selectedBitrate
 
       const VjsButton = videojs.getComponent('Button')
       class dashQualitySelector extends VjsButton {
@@ -1511,12 +1628,16 @@ export default defineComponent({
              <ul class="vjs-menu-content" role="menu">`
           const endingHtml = '</ul></div>'
 
-          let qualityHtml = `<li class="vjs-menu-item quality-item" role="menuitemradio" tabindex="-1" aria-checked="false" aria-disabled="false">
+          const defaultIsAuto = defaultQuality === 'auto'
+
+          let qualityHtml = `<li class="vjs-menu-item quality-item ${defaultIsAuto ? 'quality-selected' : ''}" role="menuitemradio" tabindex="-1" aria-checked="false" aria-disabled="false">
             <span class="vjs-menu-item-text">Auto</span>
             <span class="vjs-control-text" aria-live="polite"></span>
           </li>`
 
-          levels.levels_.sort((a, b) => {
+          let currentQualityLabel
+
+          Array.from(levels).sort((a, b) => {
             if (b.height === a.height) {
               return b.bitrate - a.bitrate
             } else {
@@ -1547,7 +1668,13 @@ export default defineComponent({
               bitrate = quality.bitrate
             }
 
-            qualityHtml += `<li class="vjs-menu-item quality-item" role="menuitemradio" tabindex="-1" aria-checked="false" aria-disabled="false" fps="${fps}" bitrate="${bitrate}">
+            const isSelected = !defaultIsAuto && bitrate === defaultBitrate
+
+            if (isSelected) {
+              currentQualityLabel = qualityLabel
+            }
+
+            qualityHtml += `<li class="vjs-menu-item quality-item ${isSelected ? 'quality-selected' : ''}" role="menuitemradio" tabindex="-1" aria-checked="false" aria-disabled="false" fps="${fps}" bitrate="${bitrate}">
               <span class="vjs-menu-item-text" fps="${fps}" bitrate="${bitrate}">${qualityLabel}</span>
               <span class="vjs-control-text" aria-live="polite"></span>
             </li>`
@@ -1570,13 +1697,14 @@ export default defineComponent({
           button.title = 'Select Quality'
           button.innerHTML = beginningHtml + qualityHtml + endingHtml
 
+          button.querySelector('#vjs-current-quality').innerText = defaultIsAuto ? 'auto' : currentQualityLabel
+
           return button.children[0]
         }
       }
 
       videojs.registerComponent('dashQualitySelector', dashQualitySelector)
       this.player.controlBar.addChild('dashQualitySelector', {}, this.player.controlBar.children_.length - 1)
-      this.determineDefaultQualityDash()
     },
 
     sortCaptions: function (captionList) {
@@ -1976,6 +2104,14 @@ export default defineComponent({
             this.takeScreenshot()
             break
         }
+      }
+    },
+
+    stopPowerSaveBlocker: function() {
+      if (process.env.IS_ELECTRON && this.powerSaveBlocker !== null) {
+        const { ipcRenderer } = require('electron')
+        ipcRenderer.send(IpcChannels.STOP_POWER_SAVE_BLOCKER, this.powerSaveBlocker)
+        this.powerSaveBlocker = null
       }
     },
 

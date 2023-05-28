@@ -85,7 +85,7 @@ Subscriptions:
   # channels that were likely deleted
   Error Channels: Channels with Errors
   Latest Subscriptions: Latest Subscriptions
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: This
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: This
     profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting
   'Your Subscription list is currently empty. Start adding subscriptions to see them here.': Your Subscription list is currently empty. Start adding subscriptions to see them here.
   Disabled Automatic Fetching: You have disabled automatic subscription fetching. Refresh subscriptions to see them here.
@@ -280,6 +280,8 @@ Settings:
       Error:
         Forbidden Characters: Forbidden Characters
         Empty File Name: Empty File Name
+    Comment Auto Load:
+      Comment Auto Load: Comment Auto Load
   External Player Settings:
     External Player Settings: External Player Settings
     External Player: External Player
@@ -334,6 +336,10 @@ Settings:
     Hide Chapters: Hide Chapters
     Hide Channels: Hide Videos From Channels
     Hide Channels Placeholder: Channel Name or ID
+    Hide Featured Channels: Hide Featured Channels
+    Hide Channel Playlists: Hide Channel Playlists
+    Hide Channel Community: Hide Channel Community
+    Hide Channel Shorts: Hide Channel Shorts
   Data Settings:
     Data Settings: Data Settings
     Select Import Type: Select Import Type
@@ -525,7 +531,7 @@ Channel:
   Sort By: Sort By
   This channel does not exist: This channel does not exist
   This channel does not allow searching: This channel does not allow searching
-  This channel is age resticted and currently cannot be viewed in FreeTube.: This channel is age resticted and currently cannot be viewed in FreeTube.
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: This channel is age-restricted and currently cannot be viewed in FreeTube.
   Channel Tabs: Channel Tabs
   Videos:
     Videos: Videos
@@ -535,6 +541,13 @@ Channel:
       Newest: Newest
       Oldest: Oldest
       Most Popular: Most Popular
+  Shorts:
+    Shorts: Shorts
+    This channel does not currently have any shorts: This channel does not currently have any shorts
+  Live:
+    Live: Live
+    This channel does not currently have any live streams: This channel does not currently
+      have any live streams
   Playlists:
     Playlists: Playlists
     This channel does not currently have any playlists: This channel does not currently
@@ -599,11 +612,12 @@ Video:
     supported in this build.
   'Chat is disabled or the Live Stream has ended.': Chat is disabled or the Live Stream
     has ended.
-  Live chat is enabled.  Chat messages will appear here once sent.: Live chat is enabled.  Chat
+  Live chat is enabled. Chat messages will appear here once sent.: Live chat is enabled.  Chat
     messages will appear here once sent.
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': Live
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': Live
     Chat is currently not supported with the Invidious API.  A direct connection to
     YouTube is required.
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': 'Live Chat is unavailable for this stream. It may have been disabled by the uploader.'
   Show Super Chat Comment: Show Super Chat Comment
   Scroll to Bottom: Scroll to Bottom
   Download Video: Download Video
@@ -858,7 +872,7 @@ Canceled next video autoplay: Canceled next video autoplay
 
 Default Invidious instance has been set to {instance}: Default Invidious instance has been set to {instance}
 Default Invidious instance has been cleared: Default Invidious instance has been cleared
-'The playlist has ended.  Enable loop to continue playing': 'The playlist has ended.  Enable
+'The playlist has ended. Enable loop to continue playing': 'The playlist has ended.  Enable
   loop to continue playing'
 Age Restricted:
   This {videoOrPlaylist} is age restricted: This {videoOrPlaylist} is age restricted
@@ -872,6 +886,10 @@ Downloading failed: 'There was an issue downloading "{videoTitle}"'
 Screenshot Success: Saved screenshot as "{filePath}"
 Screenshot Error: Screenshot failed. {error}
 
+Hashtag:
+  Hashtag: Hashtag
+  This hashtag does not currently have any videos: This hashtag does not currently
+      have any videos
 Yes: Yes
 No: No
 Ok: Ok
