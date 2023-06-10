@@ -9,7 +9,7 @@ WORKDIR /app
 COPY . .
 COPY --from=dep /app/node_modules ./node_modules
 RUN yarn pack:web
-# Removing node_modules and src at build layer to reduce image size.
+# Removing node_modules and src at build stage to reduce image size.
 RUN rm -r node_modules src
 
 
