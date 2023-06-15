@@ -29,7 +29,7 @@ import {
   parseLocalTextRuns,
   parseLocalWatchNextVideo
 } from '../../helpers/api/local'
-import { filterInvidiousFormats, invidiousGetVideoInformation, youtubeImageUrlToInvidious } from '../../helpers/api/invidious'
+import { filterInvidiousFormats, getProxyUrl, invidiousGetVideoInformation, youtubeImageUrlToInvidious } from '../../helpers/api/invidious'
 
 /**
  * @typedef {object} AudioSource
@@ -329,14 +329,6 @@ export default defineComponent({
 
       try {
         let result = await getLocalVideoInfo(this.videoId)
-        // if we need to proxy videos through invidious
-        if (!process.env.IS_ELECTRON || this.proxyVideos) {
-          result.streaming_data.formats.forEach(format => {
-            if (format.url.indexOf('.googlevideo.com/') !== -1) {
-              format.url = `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
-            }
-          })
-        }
         this.isFamilyFriendly = result.basic_info.is_family_safe
 
         this.recommendedVideos = result.watch_next_feed
@@ -489,7 +481,11 @@ export default defineComponent({
 
         if (this.isLive && !this.isUpcoming) {
           try {
-            const formats = await getFormatsFromHLSManifest(result.streaming_data.hls_manifest_url)
+            let hlsUrl = result.streaming_data.hls_manifest_url
+            if (this.proxyVideos || !process.env.IS_ELECTRON) {
+              hlsUrl = getProxyUrl(hlsUrl)
+            }
+            const formats = await getFormatsFromHLSManifest(hlsUrl)
 
             this.videoSourceList = formats
               .sort((formatA, formatB) => {
@@ -890,14 +886,6 @@ export default defineComponent({
           } else {
             this.videoLengthSeconds = result.lengthSeconds
             this.videoSourceList = result.formatStreams.reverse()
-            // if we need to proxy videos through invidious
-            if (!process.env.IS_ELECTRON || this.proxyVideos) {
-              result.formatStreams.forEach(format => {
-                if (format.url.indexOf('.googlevideo.com/') !== -1) {
-                  format.url = `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
-                }
-              })
-            }
             this.downloadLinks = result.adaptiveFormats.concat(this.videoSourceList).map((format) => {
               const qualityLabel = format.qualityLabel || format.bitrate
               const itag = parseInt(format.itag)
