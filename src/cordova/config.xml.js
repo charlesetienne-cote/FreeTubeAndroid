@@ -1,4 +1,3 @@
-
 const pkg = require('../../package.json')
 const fs = require('fs')
 const util = require('util')

@@ -1,4 +1,3 @@
-
 import { defineComponent } from 'vue'
 import { mapActions } from 'vuex'
 import FtSettingsSection from '../ft-settings-section/ft-settings-section.vue'
