@@ -6,6 +6,7 @@ import cordova from 'cordova'
 import { PlayerCache } from './PlayerCache'
 import {
   CHANNEL_HANDLE_REGEX,
+  escapeHTML,
   extractNumberFromString,
   getUserDataPath,
   toLocalePublicationString
@@ -618,8 +619,12 @@ export function parseLocalTextRuns(runs, emojiSize = 16, options = { looseChanne
   const parsedRuns = []
 
   for (const run of runs) {
+    // may contain HTML, so we need to escape it, as we don't render unwanted HTML
+    // example: https://youtu.be/Hh_se2Zqsdk (see pinned comment)
+    const text = escapeHTML(run.text)
+
     if (run instanceof Misc.EmojiRun) {
-      const { emoji, text } = run
+      const { emoji } = run
 
       // empty array if video creator removes a channel emoji so we ignore.
       // eg: pinned comment here https://youtu.be/v3wm83zoSSY
@@ -644,7 +649,7 @@ export function parseLocalTextRuns(runs, emojiSize = 16, options = { looseChanne
         parsedRuns.push(`<img src="${emoji.image[0].url}" alt="${altText}" width="${emojiSize}" height="${emojiSize}" loading="lazy" style="vertical-align: middle">`)
       }
     } else {
-      const { text, bold, italics, strikethrough, endpoint } = run
+      const { bold, italics, strikethrough, endpoint } = run
 
       if (endpoint) {
         switch (endpoint.metadata.page_type) {
