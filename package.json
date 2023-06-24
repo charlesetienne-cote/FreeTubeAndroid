@@ -83,7 +83,7 @@
     "vue-tiny-slider": "^0.1.39",
     "vuex": "^3.6.2",
     "youtubei.js": "^5.1.0",
-    "jintr-patch": "https://github.com/MarmadileManteater/Jinter.git#reorder-package-export-conditions"
+    "jintr-patch": "https://github.com/LuanRT/Jinter.git"
   },
   "devDependencies": {
     "@babel/core": "^7.22.5",
