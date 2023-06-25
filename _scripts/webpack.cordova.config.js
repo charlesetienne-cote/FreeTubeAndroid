@@ -27,7 +27,8 @@ const config = {
     {
       electron: '{}',
       cordova: 'cordova',
-      'music-controls': 'MusicControls'
+      'music-controls': 'MusicControls',
+      'universal-links': 'universalLinks'
     }
   ],
   module: {

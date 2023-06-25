@@ -15,6 +15,7 @@ import packageDetails from '../../package.json'
 import { openExternalLink, openInternalPath, showToast } from './helpers/utils'
 import cordova from 'cordova'
 import 'core-js/stable'
+import universalLinks from 'universal-links'
 
 let ipcRenderer = null
 
@@ -135,6 +136,16 @@ export default defineComponent({
   },
   mounted: function () {
     if (process.env.IS_CORDOVA) {
+      universalLinks.subscribe('youtube_shortended', (event) => {
+        this.$router.push({ path: `/watch${event.path}` })
+      })
+      universalLinks.subscribe('youtube', (event) => {
+        const { url } = event
+        const uri = new URL(url)
+        // handle youtube link expects the host to be youtube
+        uri.host = 'youtube.com'
+        this.handleYoutubeLink(uri.toString())
+      })
       if ('plugins' in cordova && 'backgroundMode' in cordova.plugins) {
         const { backgroundMode } = cordova.plugins
         backgroundMode.setDefaults({

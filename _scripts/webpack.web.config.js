@@ -26,7 +26,8 @@ const config = {
       electron: '{}',
       cordova: '{}',
       'music-controls': '{}',
-      'youtubei.js': '{}'
+      'youtubei.js': '{}',
+      'universal-links': '{}'
     },
   module: {
     rules: [

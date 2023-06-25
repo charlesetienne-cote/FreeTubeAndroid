@@ -34,7 +34,8 @@ const config = {
   },
   externals: {
     cordova: 'browserify/lib/_empty.js',
-    'music-controls': 'browserify/lib/_empty.js'
+    'music-controls': 'browserify/lib/_empty.js',
+    'universal-links': 'browserify/lib/_empty.js'
   },
   module: {
     rules: [
