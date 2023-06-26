@@ -22,6 +22,7 @@
   <universal-links>
     <host name="youtu.be" scheme="https" event="youtube_shortended" />
     <host name="youtube.com" scheme="https" event="youtube" />
+    <host name="www.youtube.com" scheme="https" event="youtube" />
     <host name="m.youtube.com" scheme="https" event="youtube" />
   </universal-links>
 </widget>
