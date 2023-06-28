@@ -1,4 +1,3 @@
-
 const pkg = require('../../package.json')
 
 module.exports = {
@@ -23,7 +22,8 @@ module.exports = {
     'cordova-plugin-save-dialog': '^1.1.1',
     'cordova-plugin-theme-detection': '^1.3.0',
     'cordova-plugin-device': '^2.1.0',
-    'cordova-plugin-advanced-http': '^3.3.1'
+    'cordova-plugin-advanced-http': '^3.3.1',
+    'cordova-universal-links-fix-plugin': '^1.2.7'
   },
   cordova: {
     platforms: [
@@ -36,7 +36,8 @@ module.exports = {
       'cordova-plugin-background-mode': {},
       'cordova-plugin-theme-detection': {},
       'cordova-plugin-save-dialog': {},
-      'cordova-plugin-advanced-http': {}
+      'cordova-plugin-advanced-http': {},
+      'cordova-universal-links-fix-plugin': {}
     }
   }
 }

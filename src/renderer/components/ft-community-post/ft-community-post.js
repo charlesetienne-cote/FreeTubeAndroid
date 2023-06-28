@@ -1,18 +1,16 @@
-import Vue from 'vue'
+import { defineComponent } from 'vue'
 import FtListVideo from '../ft-list-video/ft-list-video.vue'
 import FtListPlaylist from '../ft-list-playlist/ft-list-playlist.vue'
 
 import autolinker from 'autolinker'
 import VueTinySlider from 'vue-tiny-slider'
 
-import {
-  toLocalePublicationString
-} from '../../helpers/utils'
+import { toLocalePublicationString } from '../../helpers/utils'
 import { youtubeImageUrlToInvidious } from '../../helpers/api/invidious'
 
 import 'tiny-slider/dist/tiny-slider.css'
 
-export default Vue.extend({
+export default defineComponent({
   name: 'FtCommunityPost',
   components: {
     'ft-list-playlist': FtListPlaylist,
@@ -23,14 +21,6 @@ export default Vue.extend({
     data: {
       type: Object,
       required: true
-    },
-    playlistId: {
-      type: String,
-      default: null
-    },
-    forceListType: {
-      type: String,
-      default: null
     },
     appearance: {
       type: String,
@@ -66,7 +56,7 @@ export default Vue.extend({
       return this.$store.getters.getListType
     }
   },
-  mounted: function () {
+  created: function () {
     this.parseVideoData()
   },
   methods: {

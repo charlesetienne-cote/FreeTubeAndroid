@@ -25,7 +25,10 @@
         {{ publishedText }}
       </p>
     </div>
-    <p v-html="postText" />
+    <p
+      class="postText"
+      v-html="postText"
+    />
     <tiny-slider
       v-if="type === 'multiImage' && postContent.content.length > 0"
       v-bind="tinySliderOptions"
@@ -104,11 +107,6 @@
         class="thumbs-up-icon"
         :icon="['fas', 'thumbs-up']"
       /> {{ voteCount }}</span>
-      <span class="dislikeCount"><font-awesome-icon
-        class="thumbs-down-icon"
-        :icon="['fas', 'thumbs-down']"
-        flip="horizontal"
-      /></span>
       <span class="commentCount">
         <font-awesome-icon
           class="comment-count-icon"
@@ -119,5 +117,5 @@
 </template>
 
 <script src="./ft-community-post.js" />
-<style src="./ft-community-post.scss" lang="scss" />
+<style scoped src="./ft-community-post.scss" lang="scss" />
 <style src="./slider-style.css" lang="css" />

@@ -67,13 +67,11 @@
               class="shareIcon"
             />
 
-            <ft-button
+            <ft-subscribe-button
               v-if="!hideUnsubscribeButton && (!errorMessage || isSubscribed)"
-              :label="subscribedText"
-              background-color="var(--primary-color)"
-              text-color="var(--text-with-main-color)"
-              class="subscribeButton"
-              @click="handleSubscription"
+              :channel-id="id"
+              :channel-name="channelName"
+              :channel-thumbnail="thumbnailUrl"
             />
           </div>
         </div>
@@ -101,6 +99,35 @@
               {{ $t("Channel.Videos.Videos").toUpperCase() }}
             </div>
             <div
+              v-if="!hideChannelShorts"
+              id="shortsTab"
+              class="tab"
+              :class="(currentTab==='shorts')?'selectedTab':''"
+              role="tab"
+              aria-selected="true"
+              aria-controls="shortPanel"
+              tabindex="0"
+              @click="changeTab('shorts')"
+              @keydown.left.right.enter.space="changeTab('shorts', $event)"
+            >
+              {{ $t("Channel.Shorts.Shorts").toUpperCase() }}
+            </div>
+            <div
+              v-if="!hideLiveStreams"
+              id="liveTab"
+              class="tab"
+              :class="(currentTab==='live')?'selectedTab':''"
+              role="tab"
+              aria-selected="true"
+              aria-controls="livePanel"
+              tabindex="0"
+              @click="changeTab('live')"
+              @keydown.left.right.enter.space="changeTab('live', $event)"
+            >
+              {{ $t("Channel.Live.Live").toUpperCase() }}
+            </div>
+            <div
+              v-if="!hideChannelPlaylists"
               id="playlistsTab"
               class="tab"
               role="tab"
@@ -114,6 +141,7 @@
               {{ $t("Channel.Playlists.Playlists").toUpperCase() }}
             </div>
             <div
+              v-if="!hideChannelCommunity"
               id="communityTab"
               class="tab"
               role="tab"
@@ -155,123 +183,48 @@
       v-if="!isLoading && !errorMessage && (isFamilyFriendly || !showFamilyFriendlyOnly)"
       class="card"
     >
-      <div
+      <channel-about
         v-if="currentTab === 'about'"
         id="aboutPanel"
-        class="aboutTab"
-      >
-        <h2
-          v-if="description"
-        >
-          {{ $t("Channel.About.Channel Description") }}
-        </h2>
-        <div
-          v-if="description"
-          class="aboutInfo"
-          v-html="description"
-        />
-        <h2
-          v-if="joined || views !== null || location"
-        >
-          {{ $t('Channel.About.Details') }}
-        </h2>
-        <table
-          v-if="joined || views !== null || location"
-          class="aboutDetails"
-        >
-          <tr
-            v-if="joined"
-          >
-            <th
-              scope="row"
-            >
-              {{ $t('Channel.About.Joined') }}
-            </th>
-            <td>{{ formattedJoined }}</td>
-          </tr>
-          <tr
-            v-if="views !== null"
-          >
-            <th
-              scope="row"
-            >
-              {{ $t('Video.Views') }}
-            </th>
-            <td>{{ formattedViews }}</td>
-          </tr>
-          <tr
-            v-if="location"
-          >
-            <th
-              scope="row"
-            >
-              {{ $t('Channel.About.Location') }}
-            </th>
-            <td>{{ location }}</td>
-          </tr>
-        </table>
-        <h2
-          v-if="tags.length > 0"
-        >
-          {{ $t('Channel.About.Tags.Tags') }}
-        </h2>
-        <ul
-          v-if="tags.length > 0"
-          class="aboutTags"
-        >
-          <li
-            v-for="tag in tags"
-            :key="tag"
-            class="aboutTag"
-          >
-            <router-link
-              v-if="!hideSearchBar"
-              class="aboutTagLink"
-              :title="$t('Channel.About.Tags.Search for', { tag })"
-              :to="{
-                path: `/search/${encodeURIComponent(tag)}`,
-                query: searchSettings
-              }"
-            >
-              {{ tag }}
-            </router-link>
-            <span
-              v-else
-              class="aboutTagLink"
-            >
-              {{ tag }}
-            </span>
-          </li>
-        </ul>
-        <h2
-          v-if="relatedChannels.length > 0"
-        >
-          {{ $t("Channel.About.Featured Channels") }}
-        </h2>
-        <ft-flex-box
-          v-if="relatedChannels.length > 0"
-        >
-          <ft-channel-bubble
-            v-for="(channel, index) in relatedChannels"
-            :key="index"
-            :channel-name="channel.name"
-            :channel-id="channel.id"
-            :channel-thumbnail="channel.thumbnailUrl"
-            role="link"
-            @click="goToChannel(channel.id)"
-          />
-        </ft-flex-box>
-      </div>
+        :description="description"
+        :joined="joined"
+        :views="views"
+        :location="location"
+        :tags="tags"
+        :related-channels="relatedChannels"
+      />
       <ft-select
+        v-if="showVideoSortBy"
         v-show="currentTab === 'videos' && latestVideos.length > 0"
         class="sortSelect"
-        :value="videoSelectValues[0]"
-        :select-names="videoSelectNames"
-        :select-values="videoSelectValues"
+        :value="videoShortLiveSelectValues[0]"
+        :select-names="videoShortLiveSelectNames"
+        :select-values="videoShortLiveSelectValues"
         :placeholder="$t('Search Filters.Sort By.Sort By')"
         @change="videoSortBy = $event"
       />
       <ft-select
+        v-if="!hideChannelShorts && showShortSortBy"
+        v-show="currentTab === 'shorts' && latestShorts.length > 0"
+        class="sortSelect"
+        :value="videoShortLiveSelectValues[0]"
+        :select-names="videoShortLiveSelectNames"
+        :select-values="videoShortLiveSelectValues"
+        :placeholder="$t('Search Filters.Sort By.Sort By')"
+        @change="shortSortBy = $event"
+      />
+      <ft-select
+        v-if="!hideLiveStreams && showLiveSortBy"
+        v-show="currentTab === 'live' && latestLive.length > 0"
+        class="sortSelect"
+        :value="videoShortLiveSelectValues[0]"
+        :select-names="videoShortLiveSelectNames"
+        :select-values="videoShortLiveSelectValues"
+        :placeholder="$t('Search Filters.Sort By.Sort By')"
+        @change="liveSortBy = $event"
+      />
+      <ft-select
+        v-if="!hideChannelPlaylists && showPlaylistSortBy"
         v-show="currentTab === 'playlists' && latestPlaylists.length > 0"
         class="sortSelect"
         :value="playlistSelectValues[0]"
@@ -302,21 +255,50 @@
           </p>
         </ft-flex-box>
         <ft-element-list
-          v-show="currentTab === 'playlists'"
+          v-if="!hideChannelShorts && currentTab === 'shorts'"
+          id="shortPanel"
+          :data="latestShorts"
+          role="tabpanel"
+          aria-labelledby="shortsTab"
+        />
+        <ft-flex-box
+          v-if="!hideChannelShorts && currentTab === 'shorts' && latestShorts.length === 0"
+        >
+          <p class="message">
+            {{ $t("Channel.Shorts.This channel does not currently have any shorts") }}
+          </p>
+        </ft-flex-box>
+        <ft-element-list
+          v-if="!hideLiveStreams"
+          v-show="currentTab === 'live'"
+          id="livePanel"
+          :data="latestLive"
+          role="tabpanel"
+          aria-labelledby="liveTab"
+        />
+        <ft-flex-box
+          v-if="!hideLiveStreams && currentTab === 'live' && latestLive.length === 0"
+        >
+          <p class="message">
+            {{ $t("Channel.Live.This channel does not currently have any live streams") }}
+          </p>
+        </ft-flex-box>
+        <ft-element-list
+          v-if="!hideChannelPlaylists && currentTab === 'playlists'"
           id="playlistPanel"
           :data="latestPlaylists"
           role="tabpanel"
           aria-labelledby="playlistsTab"
         />
         <ft-flex-box
-          v-if="currentTab === 'playlists' && latestPlaylists.length === 0"
+          v-if="!hideChannelPlaylists && currentTab === 'playlists' && latestPlaylists.length === 0"
         >
           <p class="message">
             {{ $t("Channel.Playlists.This channel does not currently have any playlists") }}
           </p>
         </ft-flex-box>
         <ft-element-list
-          v-show="currentTab === 'community'"
+          v-if="!hideChannelCommunity && currentTab === 'community'"
           id="communityPanel"
           :data="latestCommunityPosts"
           role="tabpanel"
@@ -324,7 +306,7 @@
           display="list"
         />
         <ft-flex-box
-          v-if="currentTab === 'community' && latestCommunityPosts.length === 0"
+          v-if="!hideChannelCommunity && currentTab === 'community' && latestCommunityPosts.length === 0"
         >
           <p class="message">
             {{ $t("Channel.Community.This channel currently does not have any posts") }}

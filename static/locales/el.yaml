@@ -78,7 +78,7 @@ Subscriptions:
     από εδώ.'
   'Getting Subscriptions. Please wait.': 'Ανάκτηση Εγγραφών/Συνδρομών. Παρακαλώ περιμένετε.'
   Refresh Subscriptions: 'Ανανέωση Εγγραφών/Συνδρομών'
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Αυτό
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Αυτό
     το προφίλ διαθέτει ήδη ένα μεγάλο αριθμό Εγγραφών. Εξαναγκασμένη εναλλαγή σε λειτουργία
     RSS για αποφυγή περιορισμού των κλήσεων
   Load More Videos: Φόρτωση περισσότερων Βίντεο
@@ -280,6 +280,8 @@ Settings:
     Enter Fullscreen on Display Rotate: Μετάβαση στην Πλήρη Οθόνη κατά την Περιστροφή
       Οθόνης
     Allow DASH AV1 formats: Να επιτρέπονται οι μορφές DASH AV1
+    Comment Auto Load:
+      Comment Auto Load: Αυτόματη Φόρτωση Σχολίων
   Privacy Settings:
     Privacy Settings: 'Ρυθμίσεις απορρήτου'
     Remember History: 'Διατήρηση ιστορικού'
@@ -406,6 +408,15 @@ Settings:
     Hide Video Description: Απόκρυψη Περιγραφής Βίντεο
     Display Titles Without Excessive Capitalisation: Εμφάνιση Τίτλων Χωρίς Υπερβολική
       Χρήση Κεφαλαίων
+    Sections:
+      Side Bar: Πλαϊνή Μπάρα
+      Channel Page: Σελίδα Καναλιού
+      Watch Page: Σελίδα Παρακολούθησης
+      General: Γενικά
+    Hide Featured Channels: Απόκρυψη Προτεινόμενων Καναλιών
+    Hide Channel Playlists: Απόκρυψη Λιστών Αναπαραγωγής Καναλιών
+    Hide Channel Community: Απόκρυψη Κοινότητας Καναλιού
+    Hide Channel Shorts: Απόκρυψη Shorts Καναλιού
   The app needs to restart for changes to take effect. Restart and apply change?: Η
     εφαρμογή πρέπει να κάνει επανεκκίνηση για να εφαρμοστούν οι αλλαγές. Επανεκκίνηση
     και εφαρμογή αλλαγών;
@@ -622,12 +633,12 @@ Channel:
     Featured Channels: 'Προτεινόμενα κανάλια'
     Tags:
       Tags: Ετικέτες
-      Search for: Αναζήτηση για "{ετικέτα}"
+      Search for: Αναζήτηση για «{tag}»
     Details: Λεπτομέριες
     Location: Τοποθεσία
     Joined: Εγγράφηκαν
   This channel does not allow searching: Αυτό το κανάλι δεν επιτρέπει την αναζήτηση
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Αυτό
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Αυτό
     το κανάλι έχει περιορισμό ηλικίας και προς το παρόν δεν μπορεί να προβληθεί στο
     FreeTube.
   Channel Tabs: Καρτέλες Καναλιών
@@ -636,6 +647,14 @@ Channel:
     Community: Κοινότητα
     This channel currently does not have any posts: Αυτό το κανάλι προς το παρόν δεν
       έχει αναρτήσεις
+  Live:
+    Live: Ζωντανά
+    This channel does not currently have any live streams: Αυτό το κανάλι δεν έχει
+      προς το παρόν ζωντανές ροές
+  Shorts:
+    Shorts: Shorts
+    This channel does not currently have any shorts: Αυτό το κανάλι δεν έχει προς
+      το παρόν κανένα shorts
 Video:
   Mark As Watched: 'Επισήμανση ως παρακολουθημένο'
   Remove From History: 'Κατάργηση από το ιστορικό'
@@ -663,16 +682,16 @@ Video:
   # As in a Live Video
   Live: 'Ζωντανά'
   Live Now: 'Ζωντανά τώρα'
-  Live Chat: 'Ζωντανή συζήτηση'
-  Enable Live Chat: 'Ενεργοποίηση της Ζωντανής συζήτησης'
-  Live Chat is currently not supported in this build.: 'Η ζωντανή συζήτηση δεν υποστηρίζεται
+  Live Chat: 'Ζωντανή συνομιλία'
+  Enable Live Chat: 'Ενεργοποίηση Ζωντανής συνομιλίας'
+  Live Chat is currently not supported in this build.: 'Η ζωντανή συνομιλία δεν υποστηρίζεται
     προς το παρόν σε αυτήν την έκδοση.'
   'Chat is disabled or the Live Stream has ended.': 'Η συνομιλία είναι απενεργοποιημένη
     ή η ζωντανή ροή έχει τερματιστεί.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Η ζωντανή συζήτηση
+  Live chat is enabled. Chat messages will appear here once sent.: 'Η ζωντανή συνομιλία
     είναι ενεργοποιημένη.  Τα μηνύματα συνομιλίας θα εμφανίζονται εδώ μόλις σταλούν.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Η
-    ζωντανή συζήτηση δεν υποστηρίζεται προς το παρόν με το Invidious API. Απαιτείται
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Η
+    ζωντανή συνομιλία δεν υποστηρίζεται προς το παρόν με το Invidious API. Απαιτείται
     άμεση σύνδεση με το YouTube.'
   Published:
     Jan: 'Ιαν'
@@ -778,6 +797,9 @@ Video:
   Scroll to Bottom: Κύλιση προς τα Κάτω
   Premieres: Πρεμιέρες
   Upcoming: Επερχόμενο
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': "Η
+    Zωντανή συνομιλία δεν είναι διαθέσιμη για αυτήν τη ροή.\nΜπορεί να έχει απενεργοποιηθεί
+    από τον χρήστη."
 Videos:
   #& Sort By
   Sort By:
@@ -873,11 +895,9 @@ Shuffle is now enabled: 'Η τυχαία αναπαραγωγή ενεργοπο
 The playlist has been reversed: 'Η λίστα αναπαραγωγής έχει αντιστραφεί'
 Playing Next Video: 'Αναπαραγωγή του επόμενου βίντεο'
 Playing Previous Video: 'Αναπαραγωγή προηγούμενου βίντεο'
-Playing next video in 5 seconds.  Click to cancel: 'Αναπαραγωγή επόμενου βίντεο σε
-  5 δευτερόλεπτα. Κάντε κλικ για ακύρωση.'
 Canceled next video autoplay: 'Η αναπαραγωγή του επόμενου βίντεο έχει ακυρωθεί'
-'The playlist has ended.  Enable loop to continue playing': 'Η λίστα αναπαραγωγής
-  έχει τελειώσει. Ενεργοποιήστε τη λειτουργία επανάληψης για συνέχιση της αναπαραγωγής'
+'The playlist has ended. Enable loop to continue playing': 'Η λίστα αναπαραγωγής έχει
+  τελειώσει. Ενεργοποιήστε τη λειτουργία επανάληψης για συνέχιση της αναπαραγωγής'
 
 Yes: 'Ναι'
 No: 'Όχι'
@@ -936,10 +956,10 @@ Tooltips:
       απαιτεί έναν Invidious server για να συνδεθεί.
     Invidious Instance: Το στιγμιότυπο Invidious στο οποίο το FreeTube θα συνδεθεί
       για κλήσεις διεπαφής.
-    External Link Handling: "Επιλέξτε την προεπιλεγμένη συμπεριφορά όταν κάνετε κλικ\
-      \ σε έναν σύνδεσμο, ο οποίος δεν μπορεί να ανοίξει στο FreeTube.\nΑπό προεπιλογή,\
-      \ το FreeTube θα ανοίξει τον σύνδεσμο που έχει πατηθεί στο προεπιλεγμένο πρόγραμμα\
-      \ περιήγησης.\n"
+    External Link Handling: "Επιλέξτε την προεπιλεγμένη συμπεριφορά όταν κάνετε κλικ
+      σε έναν σύνδεσμο, ο οποίος δεν μπορεί να ανοίξει στο FreeTube.\nΑπό προεπιλογή,
+      το FreeTube θα ανοίξει τον σύνδεσμο που έχει πατηθεί στο προεπιλεγμένο πρόγραμμα
+      περιήγησης.\n"
   Privacy Settings:
     Remove Video Meta Files: Όταν είναι ενεργοποιημένο, το FreeTube διαγράφει αυτόματα
       τα μετα-αρχεία που δημιουργήθηκαν κατά την αναπαραγωγή βίντεο, όταν η σελίδα
@@ -1022,3 +1042,7 @@ Age Restricted:
 Ok: Εντάξει
 Preferences: Προτιμήσεις
 Screenshot Success: Αποθηκευμένο στιγμιότυπο οθόνης ως "{filePath}"
+Hashtag:
+  Hashtag: Hashtag
+  This hashtag does not currently have any videos: Αυτό το hashtag δεν έχει προς το
+    παρόν κανένα βίντεο

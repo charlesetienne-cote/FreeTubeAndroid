@@ -73,7 +73,7 @@ Subscriptions:
   'Getting Subscriptions.  Please wait.': '登録を取得中。お待ちください...'
   Refresh Subscriptions: 登録チャンネルの更新
   Getting Subscriptions. Please wait.: 登録チャンネルの内容を取得中。しばらくお待ちください。
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: このプロファイルの登録チャンネル数が多いようです。接続制限を回避するため
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: このプロファイルの登録チャンネル数が多いようです。接続制限を回避するため
     RSS を使用します
   Load More Videos: もっと見る
   Error Channels: エラーが発生したチャンネル
@@ -519,9 +519,12 @@ Channel:
     Community: コミュニティ
   This channel does not exist: このチャンネルは存在しません
   This channel does not allow searching: このチャンネルでは検索できません
-  This channel is age resticted and currently cannot be viewed in FreeTube.: このチャンネルは年齢制限があり、現在
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: このチャンネルは年齢制限があり、現在
     FreeTube では視聴できません。
-  Channel Tabs: チャネル タブ
+  Channel Tabs: チャンネル タブ
+  Live:
+    This channel does not currently have any live streams: このチャンネルは現在、ライブ配信を行っていません
+    Live: ライブ配信
 Video:
   Open in YouTube: 'YouTube で表示'
   Copy YouTube Link: 'YouTube リンクのコピー'
@@ -541,8 +544,8 @@ Video:
   Enable Live Chat: 'ライブチャットの有効化'
   Live Chat is currently not supported in this build.: '現在、このビルドはライブチャットに未対応です。'
   'Chat is disabled or the Live Stream has ended.': 'チャットが無効化されているか、ライブ配信は終了しています。'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'ライブチャットは有効です。チャットが送信されるとここに表示されます。'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': '現在、ライブチャットは
+  Live chat is enabled. Chat messages will appear here once sent.: 'ライブチャットは有効です。チャットが送信されるとここに表示されます。'
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': '現在、ライブチャットは
     Invidious API では未対応です。直接 YouTube への接続が必要です。'
   Published:
     Jan: '1 月'
@@ -657,6 +660,7 @@ Video:
   Show Super Chat Comment: Super Chat のコメント表示
   Scroll to Bottom: 下までスクロール
   Upcoming: 今後の配信予定
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': この配信ではライブチャットは使用できません。配信者によって無効に設定されているようです。
 Videos:
   #& Sort By
   Sort By:
@@ -740,9 +744,8 @@ Shuffle is now disabled: 'シャッフル再生を無効にしました'
 Shuffle is now enabled: 'シャッフル再生を有効にしました'
 Playing Next Video: '次の動画の再生'
 Playing Previous Video: '前の動画を再生'
-Playing next video in 5 seconds.  Click to cancel: '5 秒後に次の動画を再生します。クリックするとキャンセルします。'
 Canceled next video autoplay: '次の動画の自動再生をキャンセルしました'
-'The playlist has ended.  Enable loop to continue playing': '再生リストの最後に到達しました。再生を続けるにはループを有効にします'
+'The playlist has ended. Enable loop to continue playing': '再生リストの最後に到達しました。再生を続けるにはループを有効にします'
 
 Yes: 'はい'
 No: 'いいえ'

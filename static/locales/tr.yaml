@@ -81,7 +81,7 @@ Subscriptions:
     listeniz şu anda boş. Aboneliklerinizi görebilmek için abone olmaya başlayın.'
   'Getting Subscriptions. Please wait.': 'Abonelikler yükleniyor. Lütfen bekleyin.'
   Refresh Subscriptions: 'Abonelikleri Yenile'
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Bu
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Bu
     profilin çok sayıda abonesi var.  Hız sınırlamalarından kaçınmak için RSS zorlanıyor
   Load More Videos: Daha Fazla Video Yükle
   Error Channels: Hatalı Kanallar
@@ -274,6 +274,8 @@ Settings:
     Enter Fullscreen on Display Rotate: Ekran Döndürüldüğünde Tam Ekrana Geç
     Skip by Scrolling Over Video Player: Video Oynatıcı Üzerinde Kaydırarak Atla
     Allow DASH AV1 formats: DASH AV1 biçimlerine izin ver
+    Comment Auto Load:
+      Comment Auto Load: Yorumları Otomatik Yükle
   Privacy Settings:
     Privacy Settings: 'Gizlilik Ayarları'
     Remember History: 'Geçmişi Hatırla'
@@ -399,6 +401,15 @@ Settings:
     Hide Channels: Kanallardan Videoları Gizle
     Display Titles Without Excessive Capitalisation: Başlıkları Aşırı Büyük Harf Kullanmadan
       Görüntüle
+    Hide Featured Channels: Öne Çıkan Kanalları Gizle
+    Hide Channel Playlists: Kanal Oynatma Listelerini Gizle
+    Hide Channel Community: Kanal Topluluğunu Gizle
+    Hide Channel Shorts: Kanal Kısa Videolarını Gizle
+    Sections:
+      Side Bar: Kenar Çubuğu
+      Channel Page: Kanal Sayfası
+      Watch Page: İzleme Sayfası
+      General: Genel
   The app needs to restart for changes to take effect. Restart and apply change?: Değişikliklerin
     etkili olması için uygulamanın yeniden başlatılması gerekiyor. Yeniden başlatılsın
     ve değişiklikler uygulansın mı?
@@ -590,16 +601,16 @@ Channel:
   Sort By: 'Sırala'
   Videos:
     Videos: 'Videolar'
-    This channel does not currently have any videos: 'Bu kanalda şu anda hiç video
-      yok'
+    This channel does not currently have any videos: 'Bu kanalda şu anda herhangi
+      bir video yok'
     Sort Types:
       Newest: 'En yeni'
       Oldest: 'En eski'
       Most Popular: 'En Popüler'
   Playlists:
     Playlists: 'Oynatma Listeleri'
-    This channel does not currently have any playlists: 'Bu kanalda şu anda hiç oynatma
-      listesi yok'
+    This channel does not currently have any playlists: 'Bu kanalda şu anda herhangi
+      bir oynatma listesi yok'
     Sort Types:
       Last Video Added: 'Son Eklenen Video'
       Newest: 'En yeni'
@@ -610,11 +621,11 @@ Channel:
     Featured Channels: 'Öne Çıkan Kanallar'
     Tags:
       Tags: Etiketler
-      Search for: '"{tag}" için ara'
+      Search for: '“{tag}” için ara'
     Details: Ayrıntılar
     Joined: Katıldı
     Location: Konum
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Bu kanal
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Bu kanal
     yaş sınırlamasına tabidir ve şu anda FreeTube'da görüntülenememektedir.
   Channel Tabs: Kanal Sekmeleri
   This channel does not allow searching: Bu kanal aramaya izin vermiyor
@@ -623,6 +634,14 @@ Channel:
     Community: Topluluk
     This channel currently does not have any posts: Bu kanalda şu anda herhangi bir
       gönderi yok
+  Live:
+    Live: Canlı
+    This channel does not currently have any live streams: Bu kanalda şu anda herhangi
+      bir canlı yayın yok
+  Shorts:
+    Shorts: Kısa Videolar
+    This channel does not currently have any shorts: Bu kanalda şu anda hiç kısa video
+      yok
 Video:
   Mark As Watched: 'İzlendi Olarak İşaretle'
   Remove From History: 'Geçmişden Kaldır'
@@ -655,9 +674,9 @@ Video:
   Live Chat is currently not supported in this build.: 'Canlı Sohbet bu sürümde desteklenmiyor.'
   'Chat is disabled or the Live Stream has ended.': 'Sohbet devre dışı bırakıldı veya
     Canlı Yayın sona erdi.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Canlı Sohbet
-    etkinleştirildi. Sohbet mesajları gönderildikten sonra burada görünecektir.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Canlı
+  Live chat is enabled. Chat messages will appear here once sent.: 'Canlı Sohbet etkinleştirildi.
+    Sohbet mesajları gönderildikten sonra burada görünecektir.'
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Canlı
     Sohbet şu anda Invidious API ile desteklenmemektedir. YouTube ile doğrudan bağlantı
     gerekli.'
   Published:
@@ -763,6 +782,9 @@ Video:
   Scroll to Bottom: Aşağıya Kaydır
   Show Super Chat Comment: Süper Sohbet Yorumunu Göster
   Upcoming: Yakında
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Canlı
+    sohbet bu yayın için kullanılamıyor. Yükleyen tarafından devre dışı bırakılmış
+    olabilir.
 Videos:
   #& Sort By
   Sort By:
@@ -851,10 +873,8 @@ Shuffle is now enabled: 'Karıştır artık etkin'
 The playlist has been reversed: 'Çalma listesi tersine çevrildi'
 Playing Next Video: 'Sonraki Video Oynatılıyor'
 Playing Previous Video: 'Önceki Video Oynatılıyor'
-Playing next video in 5 seconds.  Click to cancel: 'Sonraki video 5 saniye içinde
-  oynatılacak. İptal etmek için tıklatın.'
 Canceled next video autoplay: 'Sonraki videoyu otomatik oynatma iptal edildi'
-'The playlist has ended.  Enable loop to continue playing': 'Çalma listesi sona erdi.  Çalmaya
+'The playlist has ended. Enable loop to continue playing': 'Çalma listesi sona erdi.  Çalmaya
   devam etmek için döngüyü etkinleştir'
 
 Yes: 'Evet'
@@ -905,9 +925,9 @@ Tooltips:
     Region for Trending: Öne çıkanların bölgesi, hangi ülkenin öne çıkan videolarını
       görüntülemek istediğinizi seçmenize olanak tanır. Görüntülenen ülkelerden bazıları
       YouTube tarafından desteklenmemektedir.
-    External Link Handling: "FreeTube'da açılamayan bir bağlantı tıklandığında öntanımlı\
-      \ davranışı seçin.\nÖntanımlı olarak FreeTube, tıklanan bağlantıyı öntanımlı\
-      \ tarayıcınızda açacaktır.\n"
+    External Link Handling: "FreeTube'da açılamayan bir bağlantı tıklandığında öntanımlı
+      davranışı seçin.\nÖntanımlı olarak FreeTube, tıklanan bağlantıyı öntanımlı tarayıcınızda
+      açacaktır.\n"
   Privacy Settings:
     Remove Video Meta Files: Etkinleştirildiğinde, izleme sayfası kapatıldığında video
       oynatma sırasında oluşturulan meta dosyaları otomatik olarak silinir.
@@ -986,3 +1006,7 @@ Chapters:
     bölüm: {chapterName}'
 Preferences: Tercihler
 Ok: Tamam
+Hashtag:
+  Hashtag: Hashtag
+  This hashtag does not currently have any videos: Bu hashtag'in şu anda herhangi
+    bir videosu yok

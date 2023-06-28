@@ -79,7 +79,7 @@ Subscriptions:
     # On Subscriptions Page
   Subscriptions: 'Áskriftir'
   Latest Subscriptions: 'Síðustu áskriftir'
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: 'Þetta
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: 'Þetta
     notkunarsnið er með mikinn fjölda áskrifta. Þvinga notkun á RSS til að forðast
     takmarkanir á magni'
   'Your Subscription list is currently empty. Start adding subscriptions to see them here.': 'Listi
@@ -115,10 +115,10 @@ User Playlists:
     leitinni þinni
 History:
   # On History Page
-  History: 'Vinnsluferill'
+  History: 'Áhorf'
   Watch History: 'Áhorfsferill'
-  Your history list is currently empty.: 'Listi með vinnsluferli er tómur í augnablikinu.'
-  Search bar placeholder: Leita í vinnsluferli
+  Your history list is currently empty.: 'Listi með áhorfsferli er tómur í augnablikinu.'
+  Search bar placeholder: Leita í áhorfsferli
   Empty Search Message: Það eru engin myndskeið í ferlinum þínum sem samsvara leitinni
     þinni
 Settings:
@@ -282,9 +282,11 @@ Settings:
     Enter Fullscreen on Display Rotate: Fara í skjáfylli við snúning á skjá
     Skip by Scrolling Over Video Player: Sleppa með því að skruna ofan á myndspilara
     Allow DASH AV1 formats: Leyfa DASH AV1 snið
+    Comment Auto Load:
+      Comment Auto Load: Hlaða sjálfkrafa inn athugasemdum
   Privacy Settings:
     Privacy Settings: 'Stillingar gagnaleyndar'
-    Remember History: 'Muna vinnsluferil'
+    Remember History: 'Muna áhorfsferil'
     Save Watched Progress: 'Vista framvindu áhorfs'
     Clear Search Cache: 'Hreinsa skyndiminni leitar'
     Are you sure you want to clear out your search cache?: 'Ertu viss um að þú viljir
@@ -328,6 +330,15 @@ Settings:
     Hide Channels: Fela myndskeið úr rásum
     Hide Channels Placeholder: Heiti eða auðkenni rásar
     Display Titles Without Excessive Capitalisation: Birta titla án umfram-hástafa
+    Sections:
+      Side Bar: Hliðarspjald
+      Channel Page: Rásasíða
+      Watch Page: Áhorfssíða
+      General: Almennt
+    Hide Channel Shorts: Fela stuttmyndir rása
+    Hide Channel Playlists: Fela spilunarlista rása
+    Hide Channel Community: Fela samfélag rása
+    Hide Featured Channels: Fela rásir í deiglunni
   Data Settings:
     Data Settings: 'Stillingar gagna'
     Select Import Type: 'Veldu tegund innflutnings'
@@ -341,8 +352,8 @@ Settings:
     Export FreeTube: 'Flytja út FreeTube'
     Export YouTube: 'Flytja út YouTube'
     Export NewPipe: 'Flytja út NewPipe'
-    Import History: 'Flytja inn vinnsluferil'
-    Export History: 'Flytja út vinnsluferil'
+    Import History: 'Flytja inn áhorfsferil'
+    Export History: 'Flytja út áhorfsferil'
     Profile object has insufficient data, skipping item: 'Atriði notkunarsniðs er
       ekki með næg gögn, sleppi þessu'
     All subscriptions and profiles have been successfully imported: 'Innflutningur
@@ -354,10 +365,10 @@ Settings:
     Invalid subscriptions file: 'Ógild áskriftaskrá'
     This might take a while, please wait: 'Þetta getur tekið dálítinn tíma, sýndu
       smá þolinmæði'
-    Invalid history file: 'Ógild vinnsluferilskrá'
+    Invalid history file: 'Ógild áhorfsferilskrá'
     Subscriptions have been successfully exported: 'Úflutningur á áskriftum tókst'
-    History object has insufficient data, skipping item: 'Atriði vinnsluferils er
-      ekki með næg gögn, sleppi þessu'
+    History object has insufficient data, skipping item: 'Atriði áhorfsferils er ekki
+      með næg gögn, sleppi þessu'
     All watched history has been successfully imported: 'Allur áhorfsferillinn var
       fluttur inn'
     All watched history has been successfully exported: 'Allur áhorfsferillinn var
@@ -549,20 +560,31 @@ Channel:
     Featured Channels: 'Rásir í deiglunni'
     Tags:
       Tags: Merki
-      Search for: Leita að "{tag}"
+      Search for: Leita að „{tag}“
     Details: Nánar
     Joined: Skráði sig
     Location: Staðsetning
   This channel does not exist: Þessi rás er ekki til
   This channel does not allow searching: Þessi rás gefur ekki kost á að leita
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Þessi
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Þessi
     rás er með aldurstakmark og er í augnablikinu ekki hægt að skoða í FreeTube.
   Channel Tabs: Rásaflipar
+  Live:
+    Live: Í beinni
+    This channel does not currently have any live streams: Þessi rás er í augnablikinu
+      ekki með nein bein streymi
+  Community:
+    Community: Samfélag
+    This channel currently does not have any posts: Þessi rás er ekki með neinar færslur
+  Shorts:
+    Shorts: Stuttmyndir
+    This channel does not currently have any shorts: Þessi rás er í augnablikinu ekki
+      með neinar stuttmyndir
 Video:
   Mark As Watched: 'Merkja sem búið að horfa á'
-  Remove From History: 'Fjarlægja úr vinnsluferli'
+  Remove From History: 'Fjarlægja úr áhorfsferli'
   Video has been marked as watched: 'Myndskeið hefur verið merkt sem skoðað'
-  Video has been removed from your history: 'Myndskeið hefur verið fjarlægt úr vinnsluferlinum
+  Video has been removed from your history: 'Myndskeið hefur verið fjarlægt úr áhorfsferlinum
     þínum'
   Save Video: 'Vista myndskeið'
   Video has been saved: 'Myndskeið hefur verið vistað'
@@ -600,9 +622,9 @@ Video:
     í þessari byggingarútgáfu.'
   'Chat is disabled or the Live Stream has ended.': 'Spjall er óvirkt eða að beinu
     streymi er lokið.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Beint spjall
-    er virkt. Skilaboð spjallsins munu birtast hér.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Spjall
+  Live chat is enabled. Chat messages will appear here once sent.: 'Beint spjall er
+    virkt. Skilaboð spjallsins munu birtast hér.'
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Spjall
     í beinni er ekki stutt í Invidious API-kerfisviðmótinu. Nauðsynlegt er að vera
     með beina tengingu við YouTube.'
   Download Video: 'Sækja myndskeið'
@@ -701,6 +723,9 @@ Video:
   Show Super Chat Comment: Birta athugasemd Super Chat
   Scroll to Bottom: Skruna neðst
   Upcoming: Á næstunni
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Spjall
+    í beinni er ekki tiltækt fyrir þetta streymi. Sá sem sendi þetta inn gæti hafa
+    gert það óvirkt.
 Videos:
   #& Sort By
   Sort By:
@@ -793,9 +818,9 @@ Tooltips:
     Region for Trending: 'Landssvæði sem skal miða vinsældir við gerir þér kleift
       að velja í hvaða landi aukning á vinsældum í umræðunni skal miða við. Ekki eru
       öll löndin sem birtast raunverulega studd af YouTube.'
-    External Link Handling: "Veldu sjálfgefna hegðun þegar smellt er á tengil sem\
-      \ ekki er hægt að opna í FreeTube.\nSjálfgefið mun FreeTube opna viðkomandi\
-      \ tengil í sjálfgefna vafranum þínum.\n"
+    External Link Handling: "Veldu sjálfgefna hegðun þegar smellt er á tengil sem
+      ekki er hægt að opna í FreeTube.\nSjálfgefið mun FreeTube opna viðkomandi tengil
+      í sjálfgefna vafranum þínum.\n"
   Player Settings:
     Force Local Backend for Legacy Formats: 'Virkar bara þegar Invidious API-kerfisviðmótið
       er sjálfgefið hjá þér. Þegar þetta er virkt, mun staðværa API-kerfisviðmótið
@@ -873,7 +898,7 @@ Playing Next Video Interval: 'Spila næsta myndskeið strax. Smelltu til að hæ
   við. | Spila næsta myndskeið eftir {nextVideoInterval} sekúndur. Smelltu til að
   hætta við.'
 Canceled next video autoplay: 'Hætti við sjálfvirka afspilun næsta myndskeiðs'
-'The playlist has ended.  Enable loop to continue playing': 'Spilunarlistinn er kominn
+'The playlist has ended. Enable loop to continue playing': 'Spilunarlistinn er kominn
   út á enda. Virkjaðu óendanlega endurtekningu til að halda afspilun áfram'
 
 Yes: 'Já'
@@ -924,3 +949,7 @@ Chapters:
     núverandi kafli: {chapterName}'
 Preferences: Kjörstillingar
 Ok: Í lagi
+Hashtag:
+  Hashtag: Myllumerki
+  This hashtag does not currently have any videos: Þetta myllumerki er í augnablikinu
+    ekki með nein myndskeið

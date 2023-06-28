@@ -82,7 +82,7 @@ Subscriptions:
   'Getting Subscriptions. Please wait.': 'Getting Subscriptions. Please wait.'
   Refresh Subscriptions: 'Refresh Subscriptions'
   Load More Videos: Load more videos
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: This
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: This
     profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting
   Error Channels: Channels with errors
   Disabled Automatic Fetching: You have disabled automatic subscription fetching.
@@ -272,6 +272,8 @@ Settings:
       File Name Label: Filename pattern
     Skip by Scrolling Over Video Player: Skip by scrolling over video player
     Allow DASH AV1 formats: Allow DASH AV1 formats
+    Comment Auto Load:
+      Comment Auto Load: Comment auto load
   External Player Settings:
     External Player Settings: External Player Settings
     External Player: External Player
@@ -405,6 +407,15 @@ Settings:
     Hide Channels Placeholder: Channel name or ID
     Display Titles Without Excessive Capitalisation: Display Titles Without Excessive
       Capitalisation
+    Hide Featured Channels: Hide featured channels
+    Hide Channel Playlists: Hide channel playlists
+    Hide Channel Community: Hide channel community
+    Hide Channel Shorts: Hide channel shorts
+    Sections:
+      Side Bar: Side Bar
+      General: General
+      Channel Page: Channel Page
+      Watch Page: Watch Page
   The app needs to restart for changes to take effect. Restart and apply change?: The
     app needs to restart for changes to take effect. Do you want to restart and apply
     the changes?
@@ -440,7 +451,7 @@ Settings:
   Download Settings:
     Download Settings: Download Settings
     Ask Download Path: Ask for download path
-    Choose Path: Choose Path
+    Choose Path: Choose path
     Download Behavior: Download behaviour
     Open in web browser: Open in web browser
     Download in app: Download in app
@@ -452,8 +463,8 @@ Settings:
   Experimental Settings:
     Replace HTTP Cache: Replace HTTP cache
     Experimental Settings: Experimental settings
-    Warning: These settings are experimental; they may cause crashes while enabled.
-      Making back-ups is highly recommended. Use at your own risk!
+    Warning: These settings are experimental, they may cause crashes while enabled.
+      Making backups is highly recommended. Use at your own risk!
   Password Dialog:
     Password: Password
     Enter Password To Unlock: Enter password to unlock settings
@@ -589,12 +600,20 @@ Channel:
   This channel does not exist: This channel does not exist
   Channel Tabs: Channel tabs
   This channel does not allow searching: This channel does not allow searching
-  This channel is age resticted and currently cannot be viewed in FreeTube.: This
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: This
     channel is age resticted and currently cannot be viewed in FreeTube.
   Community:
     This channel currently does not have any posts: This channel currently does not
       have any posts
     Community: Community
+  Live:
+    This channel does not currently have any live streams: This channel does not currently
+      have any live streams
+    Live: Live
+  Shorts:
+    Shorts: Shorts
+    This channel does not currently have any shorts: This channel does not currently
+      have any shorts
 Video:
   Mark As Watched: 'Mark As Watched'
   Remove From History: 'Remove From History'
@@ -628,9 +647,9 @@ Video:
     supported in this build.'
   'Chat is disabled or the Live Stream has ended.': 'Chat is disabled or the Live
     Stream has ended.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Live chat is
-    enabled.  Chat messages will appear here once sent.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Live
+  Live chat is enabled. Chat messages will appear here once sent.: 'Live chat is enabled.  Chat
+    messages will appear here once sent.'
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Live
     Chat is currently not supported with the Invidious API.  A direct connection to
     YouTube is required.'
   Published:
@@ -737,6 +756,8 @@ Video:
   Show Super Chat Comment: Show Super Chat comment
   Scroll to Bottom: Scroll to bottom
   Upcoming: Upcoming
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Live
+    Chat is unavailable for this stream. It may have been disabled by the uploader.
 Videos:
   #& Sort By
   Sort By:
@@ -825,10 +846,8 @@ Shuffle is now enabled: 'Shuffle is now enabled'
 The playlist has been reversed: 'The playlist has been reversed'
 Playing Next Video: 'Playing Next Video'
 Playing Previous Video: 'Playing Previous Video'
-Playing next video in 5 seconds.  Click to cancel: 'Playing next video in 5 seconds.
-  Click to cancel.'
 Canceled next video autoplay: 'Cancelled next video autoplay'
-'The playlist has ended.  Enable loop to continue playing': 'The playlist has ended.  Enable
+'The playlist has ended. Enable loop to continue playing': 'The playlist has ended.  Enable
   loop to continue playing'
 
 Yes: 'Yes'
@@ -877,9 +896,9 @@ Tooltips:
     Preferred API Backend: Choose the back-end that FreeTube uses to obtain data.
       The local API is a built-in extractor. The Invidious API requires an Invidious
       server to connect to.
-    External Link Handling: "Choose the default behaviour when a link, which cannot\
-      \ be opened in FreeTube, is clicked.\nBy default FreeTube will open the clicked\
-      \ link in your default browser.\n"
+    External Link Handling: "Choose the default behaviour when a link, which cannot
+      be opened in FreeTube, is clicked.\nBy default FreeTube will open the clicked
+      link in your default browser.\n"
   External Player Settings:
     External Player: Choosing an external player will display an icon, for opening
       the video (playlist if supported) in the external player, on the thumbnail.
@@ -951,3 +970,7 @@ Clipboard:
     a secure connection
 Preferences: Preferences
 Ok: OK
+Hashtag:
+  Hashtag: Hashtag
+  This hashtag does not currently have any videos: This hashtag does not currently
+    have any videos

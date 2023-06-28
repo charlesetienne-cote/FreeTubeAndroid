@@ -27,7 +27,8 @@ const config = {
     {
       electron: '{}',
       cordova: 'cordova',
-      'music-controls': 'MusicControls'
+      'music-controls': 'MusicControls',
+      'universal-links': 'universalLinks'
     }
   ],
   module: {
@@ -39,7 +40,12 @@ const config = {
       },
       {
         test: /\.vue$/,
-        loader: 'vue-loader'
+        loader: 'vue-loader',
+        options: {
+          compilerOptions: {
+            whitespace: 'condense',
+          }
+        }
       },
       {
         test: /\.scss$/,
@@ -76,10 +82,6 @@ const config = {
         ],
       },
       {
-        test: /\.html$/,
-        use: 'vue-html-loader',
-      },
-      {
         test: /\.(png|jpe?g|gif|tif?f|bmp|webp|svg)(\?.*)?$/,
         type: 'asset/resource',
         generator: {
@@ -113,7 +115,19 @@ const config = {
     new webpack.DefinePlugin({
       'process.env.IS_ELECTRON': false,
       'process.env.IS_ELECTRON_MAIN': false,
-      'process.env.IS_CORDOVA': true
+      'process.env.IS_CORDOVA': true,
+
+      // video.js' vhs-utils supports both atob() in web browsers and Buffer in node
+      // As the FreeTube web build only runs in web browsers, we can override their check for atob() here: https://github.com/videojs/vhs-utils/blob/main/src/decode-b64-to-uint8-array.js#L3
+      // overriding that check means we don't need to include a Buffer polyfill
+      // https://caniuse.com/atob-btoa
+
+      // NOTE FOR THE FUTURE: this override won't work with vite as their define does a find and replace in the code for production builds,
+      // but uses globals in development builds to save build time, so this would replace the actual atob() function with true if used with vite
+      // this works in webpack as webpack does a find and replace in the source code for both development and production builds
+      // https://vitejs.dev/config/shared-options.html#define
+      // https://webpack.js.org/plugins/define-plugin/
+      'window.atob': true
     }),
     new webpack.ProvidePlugin({
       process: 'process/browser',
@@ -134,22 +148,17 @@ const config = {
   ],
   resolve: {
     alias: {
-      vue$: 'vue/dist/vue.esm.js'
+      vue$: 'vue/dist/vue.esm.js',
+      'jintr': 'jintr-patch',
+      'youtubei.js$': 'youtubei.js/web',
+      // video.js's mpd-parser uses @xmldom/xmldom so that it can support both node and web browsers
+      // As FreeTube only runs in electron and web browsers, we can use the native DOMParser class, instead of the "polyfill"
+      // https://caniuse.com/mdn-api_domparser
+      '@xmldom/xmldom$': path.resolve(__dirname, '_domParser.js')
     },
     fallback: {
-      buffer: require.resolve('buffer/'),
-      dns: require.resolve('browserify/lib/_empty.js'),
-      'fs/promises': require.resolve('browserify/lib/_empty.js'),
-      http: require.resolve('stream-http'),
-      https: require.resolve('https-browserify'),
-      net: require.resolve('browserify/lib/_empty.js'),
-      os: require.resolve('os-browserify/browser.js'),
+      'fs/promises': path.resolve(__dirname, '_empty.js'),
       path: require.resolve('path-browserify'),
-      stream: require.resolve('stream-browserify'),
-      timers: require.resolve('timers-browserify'),
-      tls: require.resolve('browserify/lib/_empty.js'),
-      vm: require.resolve('vm-browserify'),
-      zlib: require.resolve('browserify-zlib')
     },
     extensions: ['.js', '.vue']
   },

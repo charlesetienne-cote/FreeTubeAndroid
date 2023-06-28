@@ -73,7 +73,7 @@ Subscriptions:
   'Getting Subscriptions.  Please wait.': '抓取訂閱中。請稍等。'
   Refresh Subscriptions: 重新整理訂閱內容的影片
   Getting Subscriptions. Please wait.: 正在取得訂閱中，請稍候....
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: 這個設定檔有大量訂閱。
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: 這個設定檔有大量訂閱。
     強制RSS已防止速率限制
   Load More Videos: 載入更多影片
   Error Channels: 有錯誤的頻道
@@ -254,6 +254,8 @@ Settings:
     Enter Fullscreen on Display Rotate: 在顯示旋轉時進入全螢幕
     Skip by Scrolling Over Video Player: 捲動影片播放器跳過
     Allow DASH AV1 formats: 允許 DASH AV1 格式
+    Comment Auto Load:
+      Comment Auto Load: 留言自動載入
   Subscription Settings:
     Subscription Settings: '訂閱設定'
     Hide Videos on Watch: '觀看時隱藏影片'
@@ -364,6 +366,15 @@ Settings:
     Hide Channels Placeholder: 頻道名稱或 ID
     Hide Channels: 隱藏頻道中的影片
     Display Titles Without Excessive Capitalisation: 顯示沒有過多大寫的標題
+    Hide Featured Channels: 隱藏精選頻道
+    Hide Channel Playlists: 隱藏頻道播放清單
+    Hide Channel Community: 隱藏頻道社群
+    Hide Channel Shorts: 隱藏頻道短片
+    Sections:
+      Side Bar: 側邊欄
+      Watch Page: 觀看頁面
+      General: 一般
+      Channel Page: 頻道頁面
   The app needs to restart for changes to take effect. Restart and apply change?: 此變更需要重啟讓修改生效。重啟並且套用變更?
   Proxy Settings:
     Error getting network information. Is your proxy configured properly?: 取得網路資訊時發生錯誤。您的代理伺服器設定正確嗎？
@@ -520,7 +531,7 @@ Channel:
   Added channel to your subscriptions: 已新增頻道至您的訂閱
   Removed subscription from {count} other channel(s): 從{count}個其他頻道移除訂閱
   Channel has been removed from your subscriptions: 頻道已從您的訂閱中移除
-  This channel is age resticted and currently cannot be viewed in FreeTube.: 此頻道有年齡限制，目前無法在
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: 此頻道有年齡限制，目前無法在
     FreeTube 中檢視。
   Channel Tabs: 頻道分頁
   This channel does not exist: 此頻道不存在
@@ -528,6 +539,12 @@ Channel:
   Community:
     Community: 社群
     This channel currently does not have any posts: 此頻道目前沒有任何貼文
+  Live:
+    Live: 直播
+    This channel does not currently have any live streams: 此頻道目前沒有任何直播
+  Shorts:
+    Shorts: 短片
+    This channel does not currently have any shorts: 此頻道目前沒有任何短片
 Video:
   Open in YouTube: '在YouTube中開啟'
   Copy YouTube Link: '複製YouTube連結'
@@ -547,8 +564,8 @@ Video:
   Enable Live Chat: '啟用直播聊天室'
   Live Chat is currently not supported in this build.: '直播聊天室在此版本中目前不被支援。'
   'Chat is disabled or the Live Stream has ended.': '直播聊天室功能被停用或者直播已經結束。'
-  Live chat is enabled.  Chat messages will appear here once sent.: '直播聊天結束。 聊天訊息一旦傳送將出現在這裡。'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': '直播聊天室目前不被Invidious
+  Live chat is enabled. Chat messages will appear here once sent.: '直播聊天結束。 聊天訊息一旦傳送將出現在這裡。'
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': '直播聊天室目前不被Invidious
     API支援。 需要直接連線YouTube。'
   Published:
     Jan: '一月'
@@ -662,6 +679,7 @@ Video:
   Show Super Chat Comment: 顯示超級聊天留言
   Scroll to Bottom: 捲動至底部
   Upcoming: 即將到來
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': 即時聊天在此串流不可用。其可能被上傳者停用了。
 Videos:
   #& Sort By
   Sort By:
@@ -745,9 +763,8 @@ Shuffle is now disabled: '隨機播放現在被停用'
 Shuffle is now enabled: '隨機播放現在被停用'
 Playing Next Video: '將播放下一影片'
 Playing Previous Video: '將播放上一影片'
-Playing next video in 5 seconds.  Click to cancel: '下一部影片將在5秒後播放。點擊取消。'
 Canceled next video autoplay: '取消自動播放下一部影片'
-'The playlist has ended.  Enable loop to continue playing': '播放清單已播放完畢。 開啟循環播放來繼續播放'
+'The playlist has ended. Enable loop to continue playing': '播放清單已播放完畢。 開啟循環播放來繼續播放'
 
 Yes: '是'
 No: '否'
@@ -875,3 +892,6 @@ Chapters:
   'Chapters list hidden, current chapter: {chapterName}': 章節清單已隱藏，目前章節：{chapterName}
 Preferences: 偏好設定
 Ok: 確定
+Hashtag:
+  Hashtag: 主題標籤
+  This hashtag does not currently have any videos: 此標籤目前沒有任何影片

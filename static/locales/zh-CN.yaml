@@ -73,7 +73,7 @@ Subscriptions:
   'Getting Subscriptions.  Please wait.': '获取订阅中。 请稍等。'
   Refresh Subscriptions: 刷新订阅
   Getting Subscriptions. Please wait.: 获取订阅中。 请稍候。
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: 这个配置文件有大量订阅。
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: 这个配置文件有大量订阅。
     强制RSS已防止速率限制
   Load More Videos: 加载更多视频
   Error Channels: 有错误的频道
@@ -252,6 +252,8 @@ Settings:
     Enter Fullscreen on Display Rotate: 屏幕旋转时进入全屏
     Skip by Scrolling Over Video Player: 从视频播放器一侧滚动到另一侧来跳过视频
     Allow DASH AV1 formats: 允许 DASH AV1 格式
+    Comment Auto Load:
+      Comment Auto Load: 自动加载评论
   Subscription Settings:
     Subscription Settings: '订阅设置'
     Hide Videos on Watch: '观看时隐藏视频'
@@ -362,6 +364,15 @@ Settings:
     Hide Channels: 隐藏频道中的视频
     Hide Channels Placeholder: 频道名称或 ID
     Display Titles Without Excessive Capitalisation: 不用过度大写字母的方式显示标题名称
+    Hide Featured Channels: 隐藏精选频道
+    Hide Channel Playlists: 隐藏频道播放列表
+    Hide Channel Community: 隐藏频道社区
+    Hide Channel Shorts: 隐藏频道短视频
+    Sections:
+      Side Bar: 侧边栏
+      Channel Page: 频道页
+      Watch Page: 观看页
+      General: 常规
   The app needs to restart for changes to take effect. Restart and apply change?: 应用需要重启让修改生效。重启以应用修改？
   Proxy Settings:
     Proxy Protocol: 代理协议
@@ -509,7 +520,7 @@ Channel:
   Removed subscription from {count} other channel(s): 从{count}个其他频道移除订阅
   Added channel to your subscriptions: 已新增频道至您的订阅
   Channel has been removed from your subscriptions: 频道已从您的订阅中移除
-  This channel is age resticted and currently cannot be viewed in FreeTube.: 此频道对观众年龄进行了限制，当前无法在
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: 此频道对观众年龄进行了限制，当前无法在
     FreeTube 中查看。
   Channel Tabs: 频道标签页
   This channel does not exist: 此频道不存在
@@ -517,6 +528,12 @@ Channel:
   Community:
     Community: 社区
     This channel currently does not have any posts: 此频道当前没有任何帖子
+  Live:
+    Live: 直播
+    This channel does not currently have any live streams: 此频道当前没有任何直播流
+  Shorts:
+    This channel does not currently have any shorts: 此频道目前没有任何短视频
+    Shorts: 短视频
 Video:
   Open in YouTube: '在YouTube中打开'
   Copy YouTube Link: '复制YouTube链接'
@@ -536,8 +553,8 @@ Video:
   Enable Live Chat: '允许在线聊天'
   Live Chat is currently not supported in this build.: '在线聊天在此版本中目前不被支持。'
   'Chat is disabled or the Live Stream has ended.': '聊天被禁用或者在线直播已结束。'
-  Live chat is enabled.  Chat messages will appear here once sent.: '在线聊天结束。 聊天信息一旦发送将出现在这里。'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': '在线聊天目前不被Invidious
+  Live chat is enabled. Chat messages will appear here once sent.: '在线聊天结束。 聊天信息一旦发送将出现在这里。'
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': '在线聊天目前不被Invidious
     API支持。 需要直接连接YouTube。'
   Published:
     Jan: '一月'
@@ -652,6 +669,7 @@ Video:
   Scroll to Bottom: 滚动到底部
   Show Super Chat Comment: 显示超级聊天评论
   Upcoming: 即将到来
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': 实时聊天对此音视频流不可用。上传者可能禁用了它。
 Videos:
   #& Sort By
   Sort By:
@@ -735,9 +753,8 @@ Shuffle is now disabled: '随机播放现在被禁用'
 Shuffle is now enabled: '随机播放现在被禁用'
 Playing Next Video: '将播放下一视频'
 Playing Previous Video: '将播放上一视频'
-Playing next video in 5 seconds.  Click to cancel: '下一视频将在5秒后播放。点击取消。'
 Canceled next video autoplay: '取消的自动播放下一视频'
-'The playlist has ended.  Enable loop to continue playing': '播放列表已结束。 允许循环播放以继续播放'
+'The playlist has ended. Enable loop to continue playing': '播放列表已结束。 允许循环播放以继续播放'
 
 Yes: '是'
 No: '否'
@@ -827,7 +844,7 @@ Search Bar:
 Are you sure you want to open this link?: 您确定要打开此链接吗？
 Unknown YouTube url type, cannot be opened in app: 未知的 YouTube url 类型，不能在应用程序中打开
 External link opening has been disabled in the general settings: 外部链接打开在常规设置中被禁用
-Hashtags have not yet been implemented, try again later: 哈希标签功能尚未实现，请稍后再试
+Hashtags have not yet been implemented, try again later: 话题标签功能尚未实现，请稍后再试
 Default Invidious instance has been set to {instance}: 默认的 Invidious 实例已被设置为 {instance}
 Playing Next Video Interval: 马上播放下一个视频。单击取消。| {nextVideoInterval} 秒内播放下个视频。单击取消。 |
   {nextVideoInterval} 秒内播放下个视频。单击取消。
@@ -864,3 +881,6 @@ Chapters:
   'Chapters list hidden, current chapter: {chapterName}': 章节列表隐藏，当前章节：{chapterName}
 Preferences: 选项
 Ok: 好
+Hashtag:
+  Hashtag: 话题标签
+  This hashtag does not currently have any videos: 此话题标签下当前没有任何短视频

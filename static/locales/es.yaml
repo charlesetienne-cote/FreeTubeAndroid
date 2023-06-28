@@ -1,5 +1,5 @@
 # Put the name of your locale in the same language
-Locale Name: 'Español (España)'
+Locale Name: 'español (España)'
 FreeTube: 'FreeTube'
 # Currently on Subscriptions, Playlists, and History
 'This part of the app is not ready yet. Come back later when progress has been made.': >-
@@ -76,7 +76,7 @@ Subscriptions:
     lista de suscripciones está vacía. Suscríbete a canales para verlos aquí.'
   'Getting Subscriptions. Please wait.': 'Obteniendo suscripciones. Por favor, espere.'
   Refresh Subscriptions: 'Recargar suscripciones'
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Este
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Este
     perfil tiene muchas suscripciones. Forzar RSS para evitar la limitación de velocidad
   Load More Videos: Cargar más vídeos
   Error Channels: Canales con errores
@@ -273,6 +273,8 @@ Settings:
     Skip by Scrolling Over Video Player: Omitir al desplazarse sobre el reproductor
       de vídeo
     Allow DASH AV1 formats: Permitir formatos DASH AV1
+    Comment Auto Load:
+      Comment Auto Load: Cargar los comentarios automáticamente
   Privacy Settings:
     Privacy Settings: 'Privacidad'
     Remember History: 'Recordar historial'
@@ -397,6 +399,15 @@ Settings:
     Hide Channels Placeholder: Nombre o ID del canal
     Display Titles Without Excessive Capitalisation: Mostrar títulos sin demasiadas
       mayúsculas
+    Hide Featured Channels: Ocultar los canales recomendados
+    Hide Channel Playlists: Ocultar las listas de reproducción de los canales
+    Hide Channel Community: Ocultar los canal de la comunidad
+    Hide Channel Shorts: Ocultar los canales de vídeos cortos
+    Sections:
+      Side Bar: Barra lateral
+      Channel Page: Página del canal
+      Watch Page: Ver la página
+      General: General
   The app needs to restart for changes to take effect. Restart and apply change?: ¿Quieres
     reiniciar FreeTube ahora para aplicar los cambios?
   Proxy Settings:
@@ -597,7 +608,7 @@ Channel:
     Featured Channels: 'Canales destacados'
     Tags:
       Tags: Etiquetas
-      Search for: Buscar por "{tag}"
+      Search for: Buscar por «{tag}»
     Details: Detalles
     Joined: Ingresó en
     Location: Ubicación
@@ -608,13 +619,21 @@ Channel:
     tus suscripciones
   This channel does not exist: Este canal no existe
   This channel does not allow searching: Este canal no permite realizar búsquedas
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Este
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Este
     canal tiene restricciones de edad y actualmente no puede verse en FreeTube.
   Channel Tabs: Ficha del Canal
   Community:
     This channel currently does not have any posts: Este canal no tiene actualmente
       ningún mensaje
     Community: Comunidad
+  Live:
+    Live: En directo
+    This channel does not currently have any live streams: Este canal no tiene actualmente
+      ninguna retransmisión en directo
+  Shorts:
+    Shorts: Cortos
+    This channel does not currently have any shorts: Este canal no tiene actualmente
+      ningún vídeo corto
 Video:
   Mark As Watched: 'Marcar como visto'
   Remove From History: 'Borrar del historial'
@@ -642,9 +661,9 @@ Video:
     soportado de momento en esta versión.'
   'Chat is disabled or the Live Stream has ended.': 'El chat está desactivado o la
     emisión ha acabado.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'El chat en directo
+  Live chat is enabled. Chat messages will appear here once sent.: 'El chat en directo
     está activado. Los mensajes aparecerán aquí en cuanto se envíen.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Actualmente
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Actualmente
     el chat no funciona con la API de Invidious. Se requiere una conexión directa
     con YouTube.'
   Published:
@@ -758,6 +777,9 @@ Video:
   Show Super Chat Comment: Mostrar los comentarios del Super Chat
   Scroll to Bottom: Desplazarse hacia abajo
   Upcoming: Próximamente
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': El
+    chat en vivo no está disponible para esta transmisión. Tal vez estaba deshabilitado
+    antes de la retransmisión.
 Videos:
   #& Sort By
   Sort By:
@@ -848,10 +870,8 @@ Shuffle is now disabled: 'Reproducción aleatoria desactivada'
 Shuffle is now enabled: 'Reproducción aleatoria activada'
 Playing Next Video: 'Reproduciendo el vídeo siguiente'
 Playing Previous Video: 'Reproduciendo el vídeo anterior'
-Playing next video in 5 seconds.  Click to cancel: 'El video siguiente comenzará en
-  5 segundos. Click para cancelar.'
 Canceled next video autoplay: 'La reproducción del vídeo siguiente se ha cancelado'
-'The playlist has ended.  Enable loop to continue playing': 'Esta lista de reproducción
+'The playlist has ended. Enable loop to continue playing': 'Esta lista de reproducción
   ha finalizado. Activa la reproducción en bucle para continuar con ella'
 
 Yes: 'Sí'
@@ -909,9 +929,9 @@ Tooltips:
     Preferred API Backend: Elija el motor que debe utilizar FreeTube para obtener
       datos. La API local es un extractor incorporado. La API de Invidious requiere
       de un servidor Invidious al cual conectarse.
-    External Link Handling: "Elija el comportamiento por defecto cuando se hace clic\
-      \ en un enlace que no se pueda abrirse en FreeTube. \nPor defecto, FreeTube\
-      \ abrirá el enlace en el que se hizo clic en su navegador predeterminado.\n"
+    External Link Handling: "Elija el comportamiento por defecto cuando se hace clic
+      en un enlace que no se pueda abrirse en FreeTube. \nPor defecto, FreeTube abrirá
+      el enlace en el que se hizo clic en su navegador predeterminado.\n"
   Privacy Settings:
     Remove Video Meta Files: Cuando se active, FreeTube eliminará automáticamente
       meta-archivos creados durante la reproducción del vídeo una vez se cierre la
@@ -991,3 +1011,7 @@ Chapters:
   Chapters: Capítulos
 Preferences: Preferencias
 Ok: De acuerdo
+Hashtag:
+  Hashtag: Hashtag
+  This hashtag does not currently have any videos: Este hashtag no tiene actualmente
+    ningún vídeo

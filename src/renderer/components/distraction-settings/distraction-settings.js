@@ -59,11 +59,20 @@ export default defineComponent({
     hideSharingActions: function () {
       return this.$store.getters.getHideSharingActions
     },
-    backendPreference: function () {
-      return this.$store.getters.getBackendPreference
-    },
     hideChapters: function () {
       return this.$store.getters.getHideChapters
+    },
+    hideFeaturedChannels: function() {
+      return this.$store.getters.getHideFeaturedChannels
+    },
+    hideChannelShorts: function() {
+      return this.$store.getters.getHideChannelShorts
+    },
+    hideChannelPlaylists: function() {
+      return this.$store.getters.getHideChannelPlaylists
+    },
+    hideChannelCommunity: function() {
+      return this.$store.getters.getHideChannelCommunity
     },
     showDistractionFreeTitles: function () {
       return this.$store.getters.getShowDistractionFreeTitles
@@ -104,7 +113,11 @@ export default defineComponent({
       'updateHideSharingActions',
       'updateHideChapters',
       'updateChannelsHidden',
-      'updateShowDistractionFreeTitles'
+      'updateShowDistractionFreeTitles',
+      'updateHideFeaturedChannels',
+      'updateHideChannelShorts',
+      'updateHideChannelPlaylists',
+      'updateHideChannelCommunity'
     ])
   }
 })

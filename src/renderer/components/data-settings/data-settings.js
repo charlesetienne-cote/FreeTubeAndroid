@@ -9,6 +9,7 @@ import { MAIN_PROFILE_ID } from '../../../constants'
 import { calculateColorLuminance, getRandomColor } from '../../helpers/colors'
 import {
   copyToClipboard,
+  escapeHTML,
   getTodayDateStrLocalTimezone,
   readFileFromDialog,
   showOpenDialog,
@@ -29,7 +30,6 @@ export default defineComponent({
   },
   data: function () {
     return {
-      showImportSubscriptionsPrompt: false,
       showExportSubscriptionsPrompt: false,
       subscriptionsPromptValues: [
         'freetube',
@@ -41,20 +41,11 @@ export default defineComponent({
     }
   },
   computed: {
-    rememberHistory: function () {
-      return this.$store.getters.getRememberHistory
-    },
-    saveWatchedProgress: function () {
-      return this.$store.getters.getSaveWatchedProgress
-    },
     backendPreference: function () {
       return this.$store.getters.getBackendPreference
     },
     backendFallback: function () {
       return this.$store.getters.getBackendFallback
-    },
-    currentInvidiousInstance: function () {
-      return this.$store.getters.getCurrentInvidiousInstance
     },
     profileList: function () {
       return this.$store.getters.getProfileList
@@ -140,18 +131,18 @@ export default defineComponent({
         textDecode = this.convertOldFreeTubeFormatToNew(textDecode)
       }
 
+      const requiredKeys = [
+        '_id',
+        'name',
+        'bgColor',
+        'textColor',
+        'subscriptions'
+      ]
+
       textDecode.forEach((profileData) => {
         // We would technically already be done by the time the data is parsed,
         // however we want to limit the possibility of malicious data being sent
         // to the app, so we'll only grab the data we need here.
-
-        const requiredKeys = [
-          '_id',
-          'name',
-          'bgColor',
-          'textColor',
-          'subscriptions'
-        ]
 
         const profileObject = {}
         Object.keys(profileData).forEach((key) => {
@@ -226,12 +217,13 @@ export default defineComponent({
       this.setProgressBarPercentage(0)
       let count = 0
 
+      const splitCSVRegex = /(?:,|\n|^)("(?:(?:"")|[^"])*"|[^\n",]*|(?:\n|$))/g
+
       const ytsubs = youtubeSubscriptions.slice(1).map(yt => {
-        const splitCSVRegex = /(?:,|\n|^)("(?:(?:"")*[^"]*)*"|[^\n",]*|(?:\n|$))/g
         return [...yt.matchAll(splitCSVRegex)].map(s => {
           let newVal = s[1]
           if (newVal.startsWith('"')) {
-            newVal = newVal.substring(1, newVal.length - 2).replace('""', '"')
+            newVal = newVal.substring(1, newVal.length - 2).replaceAll('""', '"')
           }
           return newVal
         })
@@ -596,12 +588,7 @@ export default defineComponent({
       let opmlData = '<opml version="1.1"><body><outline text="YouTube Subscriptions" title="YouTube Subscriptions">'
 
       this.profileList[0].subscriptions.forEach((channel) => {
-        const escapedName = channel.name
-          .replaceAll('&', '&amp;')
-          .replaceAll('<', '&lt;')
-          .replaceAll('>', '&gt;')
-          .replaceAll('"', '&quot;')
-          .replaceAll('\'', '&apos;')
+        const escapedName = escapeHTML(channel.name)
 
         const channelOpmlString = `<outline text="${escapedName}" title="${escapedName}" type="rss" xmlUrl="https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}"/>`
         opmlData += channelOpmlString
@@ -679,7 +666,7 @@ export default defineComponent({
         filters: [
           {
             name: this.$t('Settings.Data Settings.History File'),
-            extensions: ['db']
+            extensions: ['db', 'json']
           }
         ]
       }
@@ -696,30 +683,41 @@ export default defineComponent({
         showToast(`${message}: ${err}`)
         return
       }
-      textDecode = textDecode.split('\n')
+
+      response.filePaths.forEach(filePath => {
+        if (filePath.endsWith('.db')) {
+          this.importFreeTubeHistory(textDecode.split('\n'))
+        } else if (filePath.endsWith('.json')) {
+          this.importYouTubeHistory(JSON.parse(textDecode))
+        }
+      })
+    },
+
+    importFreeTubeHistory(textDecode) {
       textDecode.pop()
+
+      const requiredKeys = [
+        '_id',
+        'author',
+        'authorId',
+        'description',
+        'isLive',
+        'lengthSeconds',
+        'paid',
+        'published',
+        'timeWatched',
+        'title',
+        'type',
+        'videoId',
+        'viewCount',
+        'watchProgress'
+      ]
 
       textDecode.forEach((history) => {
         const historyData = JSON.parse(history)
         // We would technically already be done by the time the data is parsed,
         // however we want to limit the possibility of malicious data being sent
         // to the app, so we'll only grab the data we need here.
-        const requiredKeys = [
-          '_id',
-          'author',
-          'authorId',
-          'description',
-          'isLive',
-          'lengthSeconds',
-          'paid',
-          'published',
-          'timeWatched',
-          'title',
-          'type',
-          'videoId',
-          'viewCount',
-          'watchProgress'
-        ]
 
         const historyObject = {}
 
@@ -734,6 +732,90 @@ export default defineComponent({
         if (Object.keys(historyObject).length < (requiredKeys.length - 2)) {
           showToast(this.$t('Settings.Data Settings.History object has insufficient data, skipping item'))
         } else {
+          this.updateHistory(historyObject)
+        }
+      })
+
+      showToast(this.$t('Settings.Data Settings.All watched history has been successfully imported'))
+    },
+
+    importYouTubeHistory(historyData) {
+      const filterPredicate = item =>
+        item.products.includes('YouTube') &&
+        item.titleUrl != null && // removed video doesnt contain url...
+        item.titleUrl.includes('www.youtube.com/watch?v') &&
+        item.details == null // dont import ads
+
+      const filteredHistoryData = historyData.filter(filterPredicate)
+
+      // remove 'Watched' and translated variants from start of title
+      // so we get the common string prefix for all the titles
+      const getCommonStart = (allTitles) => {
+        const watchedTitle = allTitles[0].split(' ')
+        allTitles.forEach((title) => {
+          const splitTitle = title.split(' ')
+          for (let wtIndex = 0; wtIndex <= watchedTitle.length; wtIndex++) {
+            if (!splitTitle.includes(watchedTitle[wtIndex])) {
+              watchedTitle.splice(wtIndex, watchedTitle.length - wtIndex)
+            }
+          }
+        })
+
+        return watchedTitle.join(' ')
+      }
+
+      const commonStart = getCommonStart(filteredHistoryData.map(e => e.title))
+      // We would technically already be done by the time the data is parsed,
+      // however we want to limit the possibility of malicious data being sent
+      // to the app, so we'll only grab the data we need here.
+
+      const keyMapping = {
+        title: [{ importKey: 'title', predicate: item => item.slice(commonStart.length) }], // Removes the "Watched " term on the title
+        titleUrl: [{ importKey: 'videoId', predicate: item => item.replaceAll(/https:\/\/www\.youtube\.com\/watch\?v=/gi, '') }], // Extracts the video ID
+        time: [{ importKey: 'timeWatched', predicate: item => new Date(item).valueOf() }],
+        subtitles: [
+          { importKey: 'author', predicate: item => item[0].name ?? '' },
+          { importKey: 'authorId', predicate: item => item[0].url?.replaceAll(/https:\/\/www\.youtube\.com\/channel\//gi, '') ?? '' },
+        ],
+      }
+
+      const knownKeys = [
+        'header',
+        'description',
+        'products',
+        'details',
+        'activityControls',
+      ].concat(Object.keys(keyMapping))
+
+      filteredHistoryData.forEach(element => {
+        const historyObject = {}
+
+        Object.keys(element).forEach((key) => {
+          if (!knownKeys.includes(key)) {
+            showToast(`Unknown data key: ${key}`)
+          } else {
+            const mapping = keyMapping[key]
+
+            if (mapping && Array.isArray(mapping)) {
+              mapping.forEach(item => {
+                historyObject[item.importKey] = item.predicate(element[key])
+              })
+            }
+          }
+        })
+
+        if (Object.keys(historyObject).length < keyMapping.length - 1) {
+          showToast(this.$t('Settings.Data Settings.History object has insufficient data, skipping item'))
+        } else {
+          // YouTube history export does not have this data, setting some defaults.
+          historyObject.type = 'video'
+          historyObject.published = historyObject.timeWatched ?? 1
+          historyObject.description = ''
+          historyObject.lengthSeconds = null
+          historyObject.watchProgress = 1
+          historyObject.isLive = false
+          historyObject.paid = false
+
           this.updateHistory(historyObject)
         }
       })
@@ -786,33 +868,34 @@ export default defineComponent({
       }
       const playlists = JSON.parse(data)
 
+      const requiredKeys = [
+        'playlistName',
+        'videos'
+      ]
+
+      const optionalKeys = [
+        '_id',
+        'protected',
+        'removeOnWatched'
+      ]
+
+      const requiredVideoKeys = [
+        'videoId',
+        'title',
+        'author',
+        'authorId',
+        'published',
+        'lengthSeconds',
+        'timeAdded',
+        'isLive',
+        'paid',
+        'type'
+      ]
+
       playlists.forEach(async (playlistData) => {
         // We would technically already be done by the time the data is parsed,
         // however we want to limit the possibility of malicious data being sent
         // to the app, so we'll only grab the data we need here.
-        const requiredKeys = [
-          'playlistName',
-          'videos'
-        ]
-
-        const optionalKeys = [
-          '_id',
-          'protected',
-          'removeOnWatched'
-        ]
-
-        const requiredVideoKeys = [
-          'videoId',
-          'title',
-          'author',
-          'authorId',
-          'published',
-          'lengthSeconds',
-          'timeAdded',
-          'isLive',
-          'paid',
-          'type'
-        ]
 
         const playlistObject = {}
 
@@ -853,11 +936,11 @@ export default defineComponent({
 
           if (existingPlaylist !== undefined) {
             playlistObject.videos.forEach((video) => {
-              const existingVideo = existingPlaylist.videos.find((x) => {
+              const videoExists = existingPlaylist.videos.some((x) => {
                 return x.videoId === video.videoId
               })
 
-              if (existingVideo === undefined) {
+              if (!videoExists) {
                 const payload = {
                   playlistName: existingPlaylist.playlistName,
                   videoData: video

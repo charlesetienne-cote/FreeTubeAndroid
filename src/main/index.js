@@ -298,11 +298,7 @@ function runApp() {
         if (imageCache.has(url)) {
           const cached = imageCache.get(url)
 
-          // eslint-disable-next-line n/no-callback-literal
-          callback({
-            mimeType: cached.mimeType,
-            data: cached.data
-          })
+          callback(cached)
           return
         }
 
@@ -745,6 +741,8 @@ function runApp() {
             // Update app menu on related setting update
             case 'hideTrendingVideos':
             case 'hidePopularVideos':
+            case 'backendFallback':
+            case 'backendPreference':
             case 'hidePlaylists':
               await setMenu()
               break
@@ -977,7 +975,7 @@ function runApp() {
 
   // ************************************************* //
 
-  app.once('window-all-closed', () => {
+  app.on('window-all-closed', () => {
     // Clear cache and storage if it's the last window
     session.defaultSession.clearCache()
     session.defaultSession.clearStorageData({
@@ -993,11 +991,15 @@ function runApp() {
       ]
     })
 
+    // For MacOS the app would still "run in background"
+    // and create new window on event `activate`
     if (process.platform !== 'darwin') {
       app.quit()
     }
   })
 
+  // MacOS event
+  // https://www.electronjs.org/docs/latest/api/app#event-activate-macos
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
@@ -1081,6 +1083,8 @@ function runApp() {
     const sidenavSettings = baseHandlers.settings._findSidenavSettings()
     const hideTrendingVideos = (await sidenavSettings.hideTrendingVideos)?.value
     const hidePopularVideos = (await sidenavSettings.hidePopularVideos)?.value
+    const backendFallback = (await sidenavSettings.backendFallback)?.value
+    const backendPreference = (await sidenavSettings.backendPreference)?.value
     const hidePlaylists = (await sidenavSettings.hidePlaylists)?.value
 
     const template = [
@@ -1215,7 +1219,7 @@ function runApp() {
             },
             type: 'normal'
           },
-          !hidePopularVideos && {
+          (!hidePopularVideos && (backendFallback || backendPreference === 'invidious')) && {
             label: 'Most Popular',
             click: (_menuItem, browserWindow, _event) => {
               navigateTo('/popular', browserWindow)

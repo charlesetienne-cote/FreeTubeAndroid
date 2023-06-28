@@ -84,7 +84,7 @@ Subscriptions:
   'Getting Subscriptions. Please wait.': 'Feliratkozások megszerzése. Kis türelmet
     kérünk.'
   Refresh Subscriptions: 'Feliratkozások frissítése'
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Ez
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Ez
     a profil nagyszámú feliratkozást tartalmaz. RSS kényszerítése a sebességkorlátozás
     elkerülésére
   Load More Videos: További videók betöltése
@@ -282,6 +282,8 @@ Settings:
     Enter Fullscreen on Display Rotate: Teljes képernyős mód a kijelzőn forgatáshoz
     Skip by Scrolling Over Video Player: Kihagyás a Videolejátszó felett görgetve
     Allow DASH AV1 formats: DASH AV1 formátumok engedélyezése
+    Comment Auto Load:
+      Comment Auto Load: Megjegyzés automatikus betöltése
   Privacy Settings:
     Privacy Settings: 'Adatvédelmi beállítások'
     Remember History: 'Előzmények megjegyzése'
@@ -405,6 +407,15 @@ Settings:
     Hide Channels Placeholder: Csatorna neve vagy azonosítója
     Display Titles Without Excessive Capitalisation: Címek megjelenítése túlzott nagybetűk
       nélkül
+    Hide Featured Channels: Kiemelt csatornák elrejtése
+    Hide Channel Playlists: Csatorna lejátszási listák elrejtése
+    Hide Channel Community: Csatornaközösség elrejtése
+    Hide Channel Shorts: Csatorna rövidfilmek elrejtése
+    Sections:
+      Side Bar: Oldalsáv
+      Channel Page: Csatornalap
+      Watch Page: Nézőlap
+      General: Általános
   The app needs to restart for changes to take effect. Restart and apply change?: Az
     alkalmazásnak újra kell indulnia, hogy a változtatások életbe lépjenek. Indítsa
     újra és alkalmazza a módosítást?
@@ -608,6 +619,29 @@ Channel:
     About: 'Névjegy'
     Channel Description: 'Csatorna leírása'
     Featured Channels: 'Kiemelt csatornák'
+    Location: Hely
+    Details: Részletek
+    Joined: Csatlakozott
+    Tags:
+      Tags: Címkék
+      Search for: „{tag}” címke keresése
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Ez a
+    csatorna korhatáros, és jelenleg nem tekinthető meg a FreeTube alkalmazásban.
+  Channel Tabs: Csatornalapok
+  Live:
+    This channel does not currently have any live streams: Jelenleg nincs élő közvetítés
+      ezen a csatornán
+    Live: Élő
+  Community:
+    This channel currently does not have any posts: Ezen a csatornán jelenleg nincsenek
+      bejegyzések
+    Community: Közösség
+  Shorts:
+    Shorts: Rövidfilmek
+    This channel does not currently have any shorts: Ezen a csatornán jelenleg nincsenek
+      rövidfilmek
+  This channel does not exist: Nem létezik ez a csatorna
+  This channel does not allow searching: Keresés nem engedélyezett ezen a csatornán
 Video:
   Mark As Watched: 'Megjelölés megtekintettként'
   Remove From History: 'Eltávolítás az előzményekből'
@@ -630,8 +664,8 @@ Video:
   Watching: 'Megtekintő'
   Watched: 'Megtekintett'
   Autoplay: 'Önműködő lejátszás'
-  Starting soon, please refresh the page to check again: 'Hamarosan kezdődik. Kérjük,
-    frissítse az oldalt az ellenőrzéshez'
+  Starting soon, please refresh the page to check again: 'Hamarosan kezdődik, kérjük,
+    frissítse a lapot az ellenőrzéshez'
   # As in a Live Video
   Live: 'Élő'
   Live Now: 'Élő most'
@@ -641,9 +675,9 @@ Video:
     támogatott ebben az összeállításban.'
   'Chat is disabled or the Live Stream has ended.': 'Csevegés letiltva vagy az élő
     adatfolyam véget ért.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Élő csevegés
-    engedélyezve. A csevegőüzenetek itt jelennek meg, miután elküldték.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Az
+  Live chat is enabled. Chat messages will appear here once sent.: 'Élő csevegés engedélyezve.
+    A csevegőüzenetek itt jelennek meg, miután elküldték.'
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Az
     élő csevegést jelenleg nem támogatja az Invidious API. Közvetlen kapcsolat szükséges
     a YouTube-hoz.'
   Published:
@@ -741,6 +775,8 @@ Video:
   Show Super Chat Comment: Haladó csevegési megjegyzés megjelenítése
   Scroll to Bottom: Görgetés legalulra
   Upcoming: Közelgő
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Az
+    élő csevegés nem érhető el ehhez az adatfolyamhoz. Lehet, hogy a feltöltő letiltotta.
 Videos:
   #& Sort By
   Sort By:
@@ -836,10 +872,8 @@ Shuffle is now enabled: 'Véletlen sorrendű lejátszás bekapcsolva'
 The playlist has been reversed: 'Lejátszási lista megfordítva'
 Playing Next Video: 'Következő videó lejátszása'
 Playing Previous Video: 'Előző videó lejátszása'
-Playing next video in 5 seconds.  Click to cancel: 'A következő videó lejátszása 5
-  másodperc múlva. Kattintson a törléshez.'
 Canceled next video autoplay: 'Következő videó önműködő lejátszása megszakítva'
-'The playlist has ended.  Enable loop to continue playing': 'A lejátszási lista véget
+'The playlist has ended. Enable loop to continue playing': 'A lejátszási lista véget
   ért. Engedélyezze a folyamatos lejátszást a lejátszás folytatásához'
 
 Yes: 'Igen'
@@ -859,9 +893,9 @@ Tooltips:
     Fallback to Non-Preferred Backend on Failure: Ha az Ön által előnyben részesített
       API-val hibába merül fel, a SzabadCső önműködően megpróbálja a nem előnyben
       API-t tartalékként használni, ha engedélyezve van.
-    External Link Handling: "Válassza ki az alapértelmezett viselkedést, ha egy hivatkozásra\
-      \ kattintanak, amely nem nyitható meg a SzabadCsőben.\nA SzabadCső alapértelmezés\
-      \ szerint megnyitja a kattintott hivatkozást az alapértelmezett böngészőben.\n"
+    External Link Handling: "Válassza ki az alapértelmezett viselkedést, ha egy hivatkozásra
+      kattintanak, amely nem nyitható meg a SzabadCsőben.\nA SzabadCső alapértelmezés
+      szerint megnyitja a kattintott hivatkozást az alapértelmezett böngészőben.\n"
   Subscription Settings:
     Fetch Feeds from RSS: Ha engedélyezve van, a SzabadCső az alapértelmezett módszer
       helyett RSS-t fog használni a feliratkozás hírcsatornájának megragadásához.
@@ -897,7 +931,7 @@ Tooltips:
       használja helyette.
   Privacy Settings:
     Remove Video Meta Files: Ha engedélyezve van, a SzabadCső önműködően törli a videolejátszás
-      során létrehozott metafájlokat, amikor a videómegtekintő oldal bezárul.
+      során létrehozott metafájlokat, amikor a nézőlap bezár.
   External Player Settings:
     Custom External Player Executable: Alapértelmezés szerint a SzabadCső feltételezi,
       hogy a kiválasztott külső lejátszó megtalálható a PATH (ÚTVONAL) környezeti
@@ -969,3 +1003,7 @@ Clipboard:
 Screenshot Error: A képernyőkép nem sikerült. {error}
 Preferences: Beállítások
 Ok: Rendben
+Hashtag:
+  Hashtag: Kettőskereszt
+  This hashtag does not currently have any videos: Ez a kettőskereszt jelenleg nem
+    rendelkezik videókkal

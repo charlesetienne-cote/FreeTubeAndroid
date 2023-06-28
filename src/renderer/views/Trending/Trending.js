@@ -33,9 +33,6 @@ export default defineComponent({
     backendFallback: function () {
       return this.$store.getters.getBackendFallback
     },
-    currentInvidiousInstance: function () {
-      return this.$store.getters.getCurrentInvidiousInstance
-    },
     region: function () {
       return this.$store.getters.getRegion.toUpperCase()
     },
@@ -81,8 +78,13 @@ export default defineComponent({
       }
     },
 
-    getTrendingInfo: function () {
-      if (!(process.env.IS_ELECTRON || process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
+    getTrendingInfo: function (refresh = false) {
+      if (refresh) {
+        this.trendingInstance = null
+        this.$store.commit('clearTrendingCache')
+      }
+
+      if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
         this.getTrendingInfoInvidious()
       } else {
         this.getTrendingInfoLocal()
@@ -119,17 +121,7 @@ export default defineComponent({
     },
 
     getTrendingInfoCache: function () {
-      // the ft-element-list component has a bug where it doesn't change despite the data changing
-      // so we need to use this hack to make vue completely get rid of it and rerender it
-      // we should find a better way to do it to avoid the trending page flashing
-      this.isLoading = true
-      setTimeout(() => {
-        this.shownResults = this.trendingCache[this.currentTab]
-        this.isLoading = false
-        setTimeout(() => {
-          this.$refs[this.currentTab].focus()
-        })
-      })
+      this.shownResults = this.trendingCache[this.currentTab]
     },
     getTrendingInfoInvidious: function () {
       this.isLoading = true
@@ -184,7 +176,7 @@ export default defineComponent({
         case 'r':
         case 'R':
           if (!this.isLoading) {
-            this.getTrendingInfo()
+            this.getTrendingInfo(true)
           }
           break
       }

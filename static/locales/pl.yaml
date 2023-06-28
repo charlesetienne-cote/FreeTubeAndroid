@@ -76,7 +76,7 @@ Subscriptions:
   'Getting Subscriptions.  Please wait.': 'Pobieranie subskrypcji. Proszę czekać...'
   Refresh Subscriptions: Odśwież subskrypcje
   Getting Subscriptions. Please wait.: Pobieranie subskrypcji. Proszę poczekać.
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Ten
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Ten
     profil posiada dużą liczbę subskrypcji. Wymuszenie RSS w celu uniknięcia ograniczenia
     dostępu
   Load More Videos: Załaduj więcej filmów
@@ -218,7 +218,6 @@ Settings:
   Player Settings:
     Player Settings: 'Ustawienia odtwarzacza'
     Force Local Backend for Legacy Formats: 'Wymuś lokalny back-end dla starych formatów'
-    Remember History: ''
     Play Next Video: 'Odtwórz następny film'
     Turn on Subtitles by Default: 'Domyślnie odtwarzaj z napisami'
     Autoplay Videos: 'Autoodtwarzanie filmów'
@@ -275,6 +274,8 @@ Settings:
     Skip by Scrolling Over Video Player: Przewijaj film kółkiem myszy na obszarze
       odtwarzacza
     Allow DASH AV1 formats: Zezwól na format AV1 DASH
+    Comment Auto Load:
+      Comment Auto Load: Ładuj komentarze automatycznie
   Subscription Settings:
     Subscription Settings: 'Ustawienia subskrypcji'
     Hide Videos on Watch: 'Ukrywaj filmy po obejrzeniu'
@@ -405,6 +406,15 @@ Settings:
     Hide Channels Placeholder: Nazwa albo ID kanału
     Display Titles Without Excessive Capitalisation: Wyświetlaj tytuły bez nadmiernych
       wielkich liter
+    Hide Channel Community: Schowaj społeczność kanału
+    Hide Channel Shorts: Schowaj filmy Short kanału
+    Hide Featured Channels: Schowaj polecane kanały
+    Hide Channel Playlists: Schowaj playlisty kanału
+    Sections:
+      Side Bar: Pasek boczny
+      Channel Page: Strona kanału
+      General: Ogólne
+      Watch Page: Strona odtwarzacza
   The app needs to restart for changes to take effect. Restart and apply change?: Aplikacja
     musi zostać ponownie uruchomiona, aby zmiany zostały wprowadzone. Uruchomić ponownie
     i zastosować zmiany?
@@ -579,7 +589,7 @@ Channel:
     pozostałych kanałów
   Channel has been removed from your subscriptions: Kanał został usunięty z twoich
     subskrypcji
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Kanał
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Kanał
     ten ma ograniczenie wiekowe, dlatego nie zostanie wyświetlony we FreeTube.
   Channel Tabs: Karty kanału
   This channel does not exist: Nie ma takiego kanału
@@ -588,6 +598,14 @@ Channel:
     This channel currently does not have any posts: Ten kanał nie ma obecnie żadnych
       publikacji
     Community: Społeczność
+  Live:
+    Live: Transmisje
+    This channel does not currently have any live streams: Ten kanał nie ma obecnie
+      żadnych transmisji
+  Shorts:
+    Shorts: Filmy Short
+    This channel does not currently have any shorts: Ten kanał nie ma obecnie żadnych
+      filmów Short
 Video:
   Mark As Watched: 'Oznacz jako obejrzany'
   Remove From History: 'Usuń z historii'
@@ -613,9 +631,9 @@ Video:
     wspierany w tej kompilacji.'
   'Chat is disabled or the Live Stream has ended.': 'Czat jest wyłączony, lub transmisja
     na żywo zakończyła się.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Czat na żywo
-    jest włączony. Wiadomości z czatu pojawią się tutaj po wysłaniu.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Czat
+  Live chat is enabled. Chat messages will appear here once sent.: 'Czat na żywo jest
+    włączony. Wiadomości z czatu pojawią się tutaj po wysłaniu.'
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Czat
     na żywo nie wspiera obecnie API Invidious. Konieczne jest połączenie bezpośrednie
     z YouTube.'
   Published:
@@ -730,6 +748,9 @@ Video:
   Show Super Chat Comment: Pokazuj komentarze z „Superczatu”
   Scroll to Bottom: Przewiń do końca
   Upcoming: Nadchodzące
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Czat
+    na żywo jest nie dostępny dla tej transmisji. Być może został on wyłączony przez
+    osobę wstawiającą.
 Videos:
   #& Sort By
   Sort By:
@@ -819,15 +840,13 @@ Shuffle is now disabled: 'Losowanie jest teraz wyłączone'
 Shuffle is now enabled: 'Losowanie jest teraz włączone'
 Playing Next Video: 'Odtwórz następny film'
 Playing Previous Video: 'Odtwórz poprzedni film'
-Playing next video in 5 seconds.  Click to cancel: 'Odtworzenie następnego filmu za
-  5 sekund. Kliknij aby anulować.'
 Canceled next video autoplay: 'Anulowano odtworzenie następnego filmu'
-'The playlist has ended.  Enable loop to continue playing': 'Playlista się zakończyła.
+'The playlist has ended. Enable loop to continue playing': 'Playlista się zakończyła.
   Włącz zapętlanie by kontynuować odtwarzanie'
 
 Yes: 'Tak'
 No: 'Nie'
-Locale Name: Polski
+Locale Name: polski
 Profile:
   '{profile} is now the active profile': '{profile} jest teraz aktywnym profilem'
   Your default profile has been changed to your primary profile: Twój domyślny profil
@@ -902,9 +921,9 @@ Tooltips:
       API.
     Thumbnail Preference: Wszystkie miniaturki na FreeTube zostaną zastąpione klatką
       z filmu zamiast miniaturki domyślnej.
-    External Link Handling: "Wybierz domyślne zachowanie kiedy link, który nie może\
-      \ zostać otworzony w FreeTube, został kliknięty.\nDomyślnie FreeTube otworzy\
-      \ kliknięty link w domyślnej przeglądarce.\n"
+    External Link Handling: "Wybierz domyślne zachowanie kiedy link, który nie może
+      zostać otworzony w FreeTube, został kliknięty.\nDomyślnie FreeTube otworzy kliknięty
+      link w domyślnej przeglądarce.\n"
   Player Settings:
     Force Local Backend for Legacy Formats: Działa tylko, kiedy API Invidious jest
       ustawiony jako domyślny. Gdy opcja jest włączona, do odtwarzania starych formatów
@@ -928,7 +947,7 @@ Tooltips:
       DASH.
   Privacy Settings:
     Remove Video Meta Files: Po włączeniu FreeTube automatycznie usunie pliki metadanych
-      utworzone podczas odtwarzania filmu, gdy strona odtwarzania zostanie zamknięta.
+      utworzone podczas odtwarzania filmu, gdy strona odtwarzacza zostanie zamknięta.
   External Player Settings:
     Ignore Warnings: Nie pokazuj ostrzeżeń o nieobsługiwanych akcjach przez zewnętrzny
       odtwarzacz (n.p. odwracanie playlist, itp.).
@@ -1005,3 +1024,7 @@ Chapters:
     rozdział: {chapterName}'
 Preferences: Preferencje
 Ok: Ok
+Hashtag:
+  Hashtag: Hashtag
+  This hashtag does not currently have any videos: Nie ma na razie żadnych filmów
+    z takim hashtagiem

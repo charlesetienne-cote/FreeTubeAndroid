@@ -315,12 +315,14 @@ const actions = {
     let urlType = 'unknown'
 
     const channelPattern =
-      /^\/(?:(?:channel|user|c)\/)?(?<channelId>[^/]+)(?:\/(?<tab>join|featured|videos|playlists|about|community|channels))?\/?$/
+      /^\/(?:(?:channel|user|c)\/)?(?<channelId>[^/]+)(?:\/(?<tab>join|featured|videos|shorts|live|streams|playlists|about|community|channels))?\/?$/
+
+    const hashtagPattern = /^\/hashtag\/(?<tag>[^#&/?]+)$/
 
     const typePatterns = new Map([
       ['playlist', /^(\/playlist\/?|\/embed(\/?videoseries)?)$/],
       ['search', /^\/results\/?$/],
-      ['hashtag', /^\/hashtag\/([^#&/?]+)$/],
+      ['hashtag', hashtagPattern],
       ['channel', channelPattern]
     ])
 
@@ -381,8 +383,12 @@ const actions = {
       }
 
       case 'hashtag': {
+        const match = url.pathname.match(hashtagPattern)
+        const hashtag = match.groups.tag
+
         return {
-          urlType: 'hashtag'
+          urlType: 'hashtag',
+          hashtag
         }
       }
       /*
@@ -421,6 +427,13 @@ const actions = {
 
         let subPath = null
         switch (match.groups.tab) {
+          case 'shorts':
+            subPath = 'shorts'
+            break
+          case 'live':
+          case 'streams':
+            subPath = 'live'
+            break
           case 'playlists':
             subPath = 'playlists'
             break
@@ -608,7 +621,13 @@ const mutations = {
 
     if (sameSearch !== -1) {
       state.sessionSearchHistory[sameSearch].data = payload.data
-      state.sessionSearchHistory[sameSearch].nextPageRef = payload.nextPageRef
+      if (payload.nextPageRef) {
+        // Local API
+        state.sessionSearchHistory[sameSearch].nextPageRef = payload.nextPageRef
+      } else if (payload.searchPage) {
+        // Invidious API
+        state.sessionSearchHistory[sameSearch].searchPage = payload.searchPage
+      }
     } else {
       state.sessionSearchHistory.push(payload)
     }
@@ -620,6 +639,15 @@ const mutations = {
 
   setTrendingCache (state, { value, page }) {
     state.trendingCache[page] = value
+  },
+
+  clearTrendingCache(state) {
+    state.trendingCache = {
+      default: null,
+      music: null,
+      gaming: null,
+      movies: null
+    }
   },
 
   setCachedPlaylist(state, value) {
