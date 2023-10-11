@@ -103,6 +103,11 @@ yarn pack:web
 docker build -t freetubecordova . # Warning, might take a while on Apple Silicon
 docker run --name ftcordova -d -p 8080:80 freetubecordova
 
+# ⬇ Pulls the latest from the Github Container Registry (ghcr.io)
+docker pull ghcr.io/marmadilemanteater/freetubecordova:latest
+# 👟 Runs the image from ghcr.io
+docker run --name ftcordova -d -p 8080:80 ghcr.io/marmadilemanteater/freetubecordova:latest
+
 # 🏃 Runs the image from Docker Hub.
 docker run --name ftcordova -d -p 8080:80 owentruong/freetubecordova:latest
 
