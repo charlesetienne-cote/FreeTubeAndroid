@@ -5,12 +5,11 @@ WORKDIR /app
 COPY package.json ./package.json
 COPY yarn.lock ./yarn.lock
 # copy `dist` if it exists already
-COPY dis[t]/web ./dist/
-COPY node_module[s] ./node_modules
+COPY dis[t]/web ./dist/web
 # git is needed for jinter
 RUN apk add git
 # don't rebuild if you don't have to
-RUN if [ ! -d 'node_modules' ]; then yarn ci; fi
+RUN if [ ! -d 'dist/web' ]; then yarn ci; fi
 
 ## Build Stage ##
 FROM node:18-alpine AS build
