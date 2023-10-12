@@ -253,7 +253,7 @@ export default defineComponent({
               this.changeLogTitle = json[0].name
 
               const message = this.$t('Version $ is now available!  Click for more details')
-              this.updateBannerMessage = message.replace('$', versionNumber)
+              this.updateBannerMessage = message.replace('$', tagName)
               const versionParts = packageDetails.version.split('.')
               const appVersion = versionParts[versionParts.length - 1]
               if (parseInt(versionNumber) > parseInt(appVersion)) {
