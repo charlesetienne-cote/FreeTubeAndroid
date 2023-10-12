@@ -23,6 +23,7 @@
   <preference name="AndroidPersistentFileLocation" value="Compatibility"/>
   <preference name="AllowInlineMediaPlayback" value="true"/>
   <preference name="scheme" value="http" />
+  <preference name="AndroidLaunchMode" value="singleInstance" />
   <universal-links>
     <host name="youtu.be" scheme="https" event="youtube_shortended" />
     <host name="youtube.com" scheme="https" event="youtube" />
