@@ -69,14 +69,18 @@ jobs:
       run: yarn pack:web
 
     - name: 🐋 Build docker image
-      run: docker build -t ghcr.io/marmadilemanteater/freetubecordova:${{ steps.versionNumber.outputs.result }} .
+      run: |
+        docker build -t ghcr.io/marmadilemanteater/freetubecordova:${{ steps.versionNumber.outputs.result }} .
+        docker build -t ghcr.io/marmadilemanteater/freetubecordova:latest .
 
     - name: 🗝 Login to Github Container Registry
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u MarmadileManteater --password-stdin
 
     - name: 📡 Push docker image to Github Container Registry
-      run: docker push ghcr.io/marmadilemanteater/freetubecordova:${{ steps.versionNumber.outputs.result }}
+      run: |
+        docker push ghcr.io/marmadilemanteater/freetubecordova:${{ steps.versionNumber.outputs.result }}
+        docker push ghcr.io/marmadilemanteater/freetubecordova:latest
 
     - name: 📡 Upload PWA Artifact
       uses: actions/upload-artifact@v3
