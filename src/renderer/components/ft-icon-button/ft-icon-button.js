@@ -74,8 +74,10 @@ export default defineComponent({
       window.addEventListener('resize', this.handleResize)
     }
   },
-  destroyed: function () {
-    window.removeEventListener('resize', this.handleResize)
+  beforeDestroy: function () {
+    if (this.dropdownModalOnMobile) {
+      window.removeEventListener('resize', this.handleResize)
+    }
   },
   methods: {
     sanitizeForHtmlId,
@@ -92,8 +94,8 @@ export default defineComponent({
           // wait until the dropdown is visible
           // then focus it so we can hide it automatically when it loses focus
           setTimeout(() => {
-            this.$refs.dropdown.focus()
-          }, 0)
+            this.$refs.dropdown?.focus()
+          })
         }
       } else {
         this.$emit('click')

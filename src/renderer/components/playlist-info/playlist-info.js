@@ -17,10 +17,11 @@ export default defineComponent({
     return {
       id: '',
       firstVideoId: '',
+      playlistThumbnail: '',
       title: '',
       channelThumbnail: '',
       channelName: '',
-      channelId: '',
+      channelId: null,
       videoCount: 0,
       viewCount: 0,
       lastUpdated: '',
@@ -37,12 +38,20 @@ export default defineComponent({
       return this.$store.getters.getCurrentInvidiousInstance
     },
 
-    listType: function () {
-      return this.$store.getters.getListType
-    },
-
     thumbnailPreference: function () {
       return this.$store.getters.getThumbnailPreference
+    },
+
+    blurThumbnails: function () {
+      return this.$store.getters.getBlurThumbnails
+    },
+
+    blurThumbnailsStyle: function () {
+      return this.blurThumbnails ? 'blur(20px)' : null
+    },
+
+    backendPreference: function () {
+      return this.$store.getters.getBackendPreference
     },
 
     hideViews: function () {
@@ -50,15 +59,25 @@ export default defineComponent({
     },
 
     thumbnail: function () {
+      if (this.thumbnailPreference === 'hidden') {
+        return require('../../assets/img/thumbnail_placeholder.svg')
+      }
+      let baseUrl
+      if (this.backendPreference === 'invidious') {
+        baseUrl = this.currentInvidiousInstance
+      } else {
+        return this.data.playlistThumbnail
+      }
+
       switch (this.thumbnailPreference) {
         case 'start':
-          return `https://i.ytimg.com/vi/${this.firstVideoId}/mq1.jpg`
+          return `${baseUrl}/vi/${this.firstVideoId}/mq1.jpg`
         case 'middle':
-          return `https://i.ytimg.com/vi/${this.firstVideoId}/mq2.jpg`
+          return `${baseUrl}/vi/${this.firstVideoId}/mq2.jpg`
         case 'end':
-          return `https://i.ytimg.com/vi/${this.firstVideoId}/mq3.jpg`
+          return `${baseUrl}/vi/${this.firstVideoId}/mq3.jpg`
         default:
-          return `https://i.ytimg.com/vi/${this.firstVideoId}/mqdefault.jpg`
+          return `${baseUrl}/vi/${this.firstVideoId}/mqdefault.jpg`
       }
     }
   },

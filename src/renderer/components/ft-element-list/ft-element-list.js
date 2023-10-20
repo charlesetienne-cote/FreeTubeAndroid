@@ -21,21 +21,19 @@ export default defineComponent({
     showVideoWithLastViewedPlaylist: {
       type: Boolean,
       default: false
-    }
-  },
-  data: function () {
-    return {
-      displayValue: this.display
-    }
+    },
+    useChannelsHiddenPreference: {
+      type: Boolean,
+      default: true,
+    },
   },
   computed: {
     listType: function () {
       return this.$store.getters.getListType
-    }
-  },
-  mounted: function () {
-    if (this.display === '') {
-      this.displayValue = this.listType
+    },
+
+    displayValue: function () {
+      return this.display === '' ? this.listType : this.display
     }
   }
 })

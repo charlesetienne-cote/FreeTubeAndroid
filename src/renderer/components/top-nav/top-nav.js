@@ -6,7 +6,7 @@ import FtProfileSelector from '../ft-profile-selector/ft-profile-selector.vue'
 import debounce from 'lodash.debounce'
 
 import { IpcChannels } from '../../../constants'
-import { openInternalPath, showToast } from '../../helpers/utils'
+import { openInternalPath } from '../../helpers/utils'
 import { clearLocalSearchSuggestionsSession, getLocalSearchSuggestions } from '../../helpers/api/local'
 import { invidiousAPICall } from '../../helpers/api/invidious'
 
@@ -25,6 +25,8 @@ export default defineComponent({
       searchFilterValueChanged: false,
       historyIndex: 1,
       isForwardOrBack: false,
+      isArrowBackwardDisabled: true,
+      isArrowForwardDisabled: true,
       searchSuggestionsDataList: [],
       lastSuggestionQuery: ''
     }
@@ -40,10 +42,6 @@ export default defineComponent({
 
     enableSearchSuggestions: function () {
       return this.$store.getters.getEnableSearchSuggestions
-    },
-
-    searchInput: function () {
-      return this.$refs.searchInput.$refs.input
     },
 
     searchSettings: function () {
@@ -114,7 +112,7 @@ export default defineComponent({
         this.$refs.searchContainer.blur()
         this.showSearchContainer = false
       } else {
-        this.searchInput.blur()
+        this.$refs.searchInput.blur()
       }
 
       clearLocalSearchSuggestionsSession()
@@ -164,13 +162,12 @@ export default defineComponent({
           }
 
           case 'hashtag': {
-            // TODO: Implement a hashtag related view
-            let message = 'Hashtags have not yet been implemented, try again later'
-            if (this.$t(message) && this.$t(message) !== '') {
-              message = this.$t(message)
-            }
+            const { hashtag } = result
+            openInternalPath({
+              path: `/hashtag/${encodeURIComponent(hashtag)}`,
+              doCreateNewWindow
+            })
 
-            showToast(message)
             break
           }
 
@@ -210,7 +207,7 @@ export default defineComponent({
 
     focusSearch: function () {
       if (!this.hideSearchBar) {
-        this.searchInput.focus()
+        this.$refs.searchInput.focus()
       }
     },
 
@@ -285,8 +282,8 @@ export default defineComponent({
     navigateHistory: function () {
       if (!this.isForwardOrBack) {
         this.historyIndex = window.history.length
-        this.$refs.historyArrowBack.classList.remove('fa-arrow-left')
-        this.$refs.historyArrowForward.classList.add('fa-arrow-right')
+        this.isArrowBackwardDisabled = false
+        this.isArrowForwardDisabled = true
       } else {
         this.isForwardOrBack = false
       }
@@ -298,9 +295,9 @@ export default defineComponent({
 
       if (this.historyIndex > 1) {
         this.historyIndex--
-        this.$refs.historyArrowForward.classList.remove('fa-arrow-right')
+        this.isArrowForwardDisabled = false
         if (this.historyIndex === 1) {
-          this.$refs.historyArrowBack.classList.add('fa-arrow-left')
+          this.isArrowBackwardDisabled = true
         }
       }
     },
@@ -311,10 +308,10 @@ export default defineComponent({
 
       if (this.historyIndex < window.history.length) {
         this.historyIndex++
-        this.$refs.historyArrowBack.classList.remove('fa-arrow-left')
+        this.isArrowBackwardDisabled = false
 
         if (this.historyIndex === window.history.length) {
-          this.$refs.historyArrowForward.classList.add('fa-arrow-right')
+          this.isArrowForwardDisabled = true
         }
       }
     },

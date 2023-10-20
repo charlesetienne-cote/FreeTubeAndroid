@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import i18n from '../../i18n/index'
+import { set as vueSet } from 'vue'
 
 import { IpcChannels } from '../../../constants'
 import { pathExists } from '../../helpers/filesystem'
@@ -27,6 +28,7 @@ const state = {
     movies: null
   },
   cachedPlaylist: null,
+  deArrowCache: {},
   showProgressBar: false,
   progressBarPercentage: 0,
   regionNames: [],
@@ -55,6 +57,10 @@ const getters = {
 
   getSessionSearchHistory () {
     return state.sessionSearchHistory
+  },
+
+  getDeArrowCache: (state) => {
+    return state.deArrowCache
   },
 
   getPopularCache () {
@@ -119,9 +125,10 @@ const actions = {
 
     const fileName = `${replaceFilenameForbiddenChars(title)}.${extension}`
     const errorMessage = i18n.t('Downloading failed', { videoTitle: title })
+    const askFolderPath = rootState.settings.downloadAskPath
     let folderPath = rootState.settings.downloadFolderPath
 
-    if (folderPath === '') {
+    if (askFolderPath) {
       const options = {
         defaultPath: fileName,
         filters: [
@@ -245,15 +252,12 @@ const actions = {
     // Exclude __dirname from path if not in electron
     const fileLocation = `${process.env.IS_ELECTRON ? process.env.NODE_ENV === 'development' ? '.' : __dirname : ''}/static/geolocations/`
     if (process.env.IS_ELECTRON) {
-      localePathExists = await pathExists(`${fileLocation}${locale}`)
+      localePathExists = await pathExists(`${fileLocation}${locale}.json`)
     } else {
       localePathExists = process.env.GEOLOCATION_NAMES.includes(locale)
     }
-    const pathName = `${fileLocation}${localePathExists ? locale : 'en-US'}/countries.json`
-    const fileData = process.env.IS_ELECTRON ? JSON.parse(await fs.readFile(pathName)) : await (await fetch(createWebURL(pathName))).json()
-
-    const countries = fileData.map((entry) => { return { id: entry.id, name: entry.name, code: entry.alpha2 } })
-    countries.sort((a, b) => { return a.id - b.id })
+    const pathName = `${fileLocation}${localePathExists ? locale : 'en-US'}.json`
+    const countries = process.env.IS_ELECTRON ? JSON.parse(await fs.readFile(pathName)) : await (await fetch(createWebURL(pathName))).json()
 
     const regionNames = countries.map((entry) => { return entry.name })
     const regionValues = countries.map((entry) => { return entry.code })
@@ -315,12 +319,14 @@ const actions = {
     let urlType = 'unknown'
 
     const channelPattern =
-      /^\/(?:(?:channel|user|c)\/)?(?<channelId>[^/]+)(?:\/(?<tab>join|featured|videos|playlists|about|community|channels))?\/?$/
+      /^\/(?:(?:channel|user|c)\/)?(?<channelId>[^/]+)(?:\/(?<tab>join|featured|videos|shorts|live|streams|podcasts|releases|playlists|about|community|channels))?\/?$/
+
+    const hashtagPattern = /^\/hashtag\/(?<tag>[^#&/?]+)$/
 
     const typePatterns = new Map([
       ['playlist', /^(\/playlist\/?|\/embed(\/?videoseries)?)$/],
-      ['search', /^\/results\/?$/],
-      ['hashtag', /^\/hashtag\/([^#&/?]+)$/],
+      ['search', /^\/results|search\/?$/],
+      ['hashtag', hashtagPattern],
       ['channel', channelPattern]
     ])
 
@@ -354,12 +360,20 @@ const actions = {
       }
 
       case 'search': {
-        if (!url.searchParams.has('search_query')) {
+        let searchQuery = null
+        if (url.searchParams.has('search_query')) {
+          // https://www.youtube.com/results?search_query={QUERY}
+          searchQuery = url.searchParams.get('search_query')
+          url.searchParams.delete('search_query')
+        }
+        if (url.searchParams.has('q')) {
+          // https://redirect.invidious.io/search?q={QUERY}
+          searchQuery = url.searchParams.get('q')
+          url.searchParams.delete('q')
+        }
+        if (searchQuery == null) {
           throw new Error('Search: "search_query" field not found')
         }
-
-        const searchQuery = url.searchParams.get('search_query')
-        url.searchParams.delete('search_query')
 
         const searchSettings = state.searchSettings
         const query = {
@@ -381,8 +395,12 @@ const actions = {
       }
 
       case 'hashtag': {
+        const match = url.pathname.match(hashtagPattern)
+        const hashtag = match.groups.tag
+
         return {
-          urlType: 'hashtag'
+          urlType: 'hashtag',
+          hashtag
         }
       }
       /*
@@ -421,8 +439,21 @@ const actions = {
 
         let subPath = null
         switch (match.groups.tab) {
+          case 'shorts':
+            subPath = 'shorts'
+            break
+          case 'live':
+          case 'streams':
+            subPath = 'live'
+            break
           case 'playlists':
             subPath = 'playlists'
+            break
+          case 'podcasts':
+            subPath = 'podcasts'
+            break
+          case 'releases':
+            subPath = 'releases'
             break
           case 'channels':
           case 'about':
@@ -471,6 +502,10 @@ const actions = {
     const externalPlayerMap = JSON.parse(fileData).map((entry) => {
       return { name: entry.name, nameTranslationKey: entry.nameTranslationKey, value: entry.value, cmdArguments: entry.cmdArguments }
     })
+    // Sort external players alphabetically & case-insensitive, keep default entry at the top
+    const playerNone = externalPlayerMap.shift()
+    externalPlayerMap.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+    externalPlayerMap.unshift(playerNone)
 
     const externalPlayerNames = externalPlayerMap.map((entry) => { return entry.name })
     const externalPlayerNameTranslationKeys = externalPlayerMap.map((entry) => { return entry.nameTranslationKey })
@@ -508,7 +543,18 @@ const actions = {
 
     if (payload.watchProgress > 0 && payload.watchProgress < payload.videoLength - 10) {
       if (typeof cmdArgs.startOffset === 'string') {
-        args.push(`${cmdArgs.startOffset}${payload.watchProgress}`)
+        if (cmdArgs.defaultExecutable.startsWith('mpc')) {
+          // For mpc-hc and mpc-be, which require startOffset to be in milliseconds
+          args.push(cmdArgs.startOffset, (Math.trunc(payload.watchProgress) * 1000))
+        } else if (cmdArgs.startOffset.endsWith('=')) {
+          // For players using `=` in arguments
+          // e.g. vlc --start-time=xxxxx
+          args.push(`${cmdArgs.startOffset}${payload.watchProgress}`)
+        } else {
+          // For players using space in arguments
+          // e.g. smplayer -start xxxxx
+          args.push(cmdArgs.startOffset, Math.trunc(payload.watchProgress))
+        }
       } else if (!ignoreWarnings) {
         showExternalPlayerUnsupportedActionToast(externalPlayer, 'starting video at offset')
       }
@@ -555,8 +601,10 @@ const actions = {
           showExternalPlayerUnsupportedActionToast(externalPlayer, 'looping playlists')
         }
       }
-      if (cmdArgs.supportsYtdlProtocol) {
-        args.push(`${cmdArgs.playlistUrl}ytdl://${payload.playlistId}`)
+
+      // If the player supports opening playlists but not indexes, send only the video URL if an index is specified
+      if (cmdArgs.playlistIndex == null && payload.playlistIndex != null && payload.playlistIndex !== '') {
+        args.push(`${cmdArgs.videoUrl}https://youtube.com/watch?v=${payload.videoId}`)
       } else {
         args.push(`${cmdArgs.playlistUrl}https://youtube.com/playlist?list=${payload.playlistId}`)
       }
@@ -565,11 +613,7 @@ const actions = {
         showExternalPlayerUnsupportedActionToast(externalPlayer, 'opening playlists')
       }
       if (payload.videoId != null) {
-        if (cmdArgs.supportsYtdlProtocol) {
-          args.push(`${cmdArgs.videoUrl}ytdl://${payload.videoId}`)
-        } else {
-          args.push(`${cmdArgs.videoUrl}https://www.youtube.com/watch?v=${payload.videoId}`)
-        }
+        args.push(`${cmdArgs.videoUrl}https://www.youtube.com/watch?v=${payload.videoId}`)
       }
     }
 
@@ -601,6 +645,20 @@ const mutations = {
     state.sessionSearchHistory = history
   },
 
+  setDeArrowCache (state, cache) {
+    state.deArrowCache = cache
+  },
+
+  addVideoToDeArrowCache (state, payload) {
+    const sameVideo = state.deArrowCache[payload.videoId]
+
+    if (!sameVideo) {
+      // setting properties directly doesn't trigger watchers in Vue 2,
+      // so we need to use Vue's set function
+      vueSet(state.deArrowCache, payload.videoId, payload)
+    }
+  },
+
   addToSessionSearchHistory (state, payload) {
     const sameSearch = state.sessionSearchHistory.findIndex((search) => {
       return search.query === payload.query && searchFiltersMatch(payload.searchSettings, search.searchSettings)
@@ -608,7 +666,13 @@ const mutations = {
 
     if (sameSearch !== -1) {
       state.sessionSearchHistory[sameSearch].data = payload.data
-      state.sessionSearchHistory[sameSearch].nextPageRef = payload.nextPageRef
+      if (payload.nextPageRef) {
+        // Local API
+        state.sessionSearchHistory[sameSearch].nextPageRef = payload.nextPageRef
+      } else if (payload.searchPage) {
+        // Invidious API
+        state.sessionSearchHistory[sameSearch].searchPage = payload.searchPage
+      }
     } else {
       state.sessionSearchHistory.push(payload)
     }
@@ -620,6 +684,15 @@ const mutations = {
 
   setTrendingCache (state, { value, page }) {
     state.trendingCache[page] = value
+  },
+
+  clearTrendingCache(state) {
+    state.trendingCache = {
+      default: null,
+      music: null,
+      gaming: null,
+      movies: null
+    }
   },
 
   setCachedPlaylist(state, value) {

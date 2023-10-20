@@ -29,6 +29,20 @@ Close: 'Sulge'
 Back: 'Tagasi'
 Forward: 'Edasi'
 
+# Global
+# Anything shared among components / views should be put here
+Global:
+  Videos: 'Videod'
+  Shorts: Lühivideod
+  Live: Otseeeter
+  Community: Kogukond
+
+  Counts:
+    Video Count: 1 video | {count} videot
+    Channel Count: 1 kanal | {count} kanalit
+    Subscriber Count: 1 tellija | {count} tellijat
+    View Count: 1 vaatamine | {count} vaatamist
+    Watching Count: 1 vaatamas | {count} vaatamas
 Version {versionNumber} is now available!  Click for more details: 'Versioon {versionNumber}
   in nüüd saadaval! Lisateavet leiad siit'
 Download From Site: 'Laadi veebisaidist alla'
@@ -82,13 +96,18 @@ Subscriptions:
   'Getting Subscriptions. Please wait.': 'Laadin tellimusi, palun oota.'
   Refresh Subscriptions: 'Värskenda tellimusi'
   Load More Videos: Laadi veel videosid
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Sellel
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Sellel
     profiilil on väga palju tellimusi. Vältimaks serveripoolseid piiranguid teeme
     RSS-voo päringud harvemini
   Error Channels: Vigadega kanalid
   Disabled Automatic Fetching: Sa oled lülitanud välja automaatse tellimuste laadimise.
     Uuendatud teabe nägemiseks laadi vaade uuesti.
   Empty Channels: Sinu tellitud kanalites hetkel pole ühtegi videot.
+  Subscriptions Tabs: Tellimuste vahekaardid
+  All Subscription Tabs Hidden: Kõik tellimuse vahekaardid on peidetud. Siinse sisu
+    nägemiseks palun eemalda kaartide peitmine jaotises „{subsection}“ / „{settingsSection}“.
+  Load More Posts: Lisa järgmised postitused
+  Empty Posts: Sinu tellitud kanalites hetkel pole ühtegi postitust.
 Trending:
   Trending: 'Populaarsust koguvad videod'
   Trending Tabs: Populaarsust koguvad kaardid
@@ -141,6 +160,7 @@ Settings:
       Beginning: 'Alguses'
       Middle: 'Keskel'
       End: 'Lõpus'
+      Hidden: Peidetud
     'Invidious Instance (Default is https://invidious.snopyta.org)': 'Invidious''e
       veebirakendus (vaikimisi kasutatav sait on https://invidious.snopyta.org)'
     Region for Trending: 'Mis geograafia alusel tuvastame hetkel menukad ehk populaarsust
@@ -173,6 +193,8 @@ Settings:
       Dracula: 'Dracula'
       System Default: Süsteemi vaikeseadistus
       Catppuccin Mocha: Catppuccin Mocha
+      Pastel Pink: Pastelne roosa
+      Hot Pink: Säravroosa
     Main Color Theme:
       Main Color Theme: 'Põhiline värviteema'
       Red: 'Punane'
@@ -274,6 +296,8 @@ Settings:
     Skip by Scrolling Over Video Player: Jäta vahele, kerides üle videopleieri
     Allow DASH AV1 formats: Luba DASH AV1 vormingud
     Enter Fullscreen on Display Rotate: Ekraani pööramisel ava täisekraanivaade
+    Comment Auto Load:
+      Comment Auto Load: Kommentaaride automaatne laadimine
   Privacy Settings:
     Privacy Settings: 'Privaatsuse seadistused'
     Remember History: 'Jäta ajalugu meelde'
@@ -346,28 +370,7 @@ Settings:
     Subscription File: Tellimuse fail
     History File: Ajaloo fail
     Playlist File: Esitusloendi fail
-  Advanced Settings:
-    Advanced Settings: ''
-    Enable Debug Mode (Prints data to the console): ''
-    'Proxy Address (Example: SOCKS5://127.0.0.1:9050 )': ''
-    'Clicking "TEST PROXY" button will send a request to https://ipinfo.io/json': ''
-    Use Tor / Proxy for API calls: ''
-    TEST PROXY: ''
-    #& Invidious Instance (Default is https://invidious.snopyta.org)
-    See Public Instances: ''
-    Clear History:
-      Clear History: ''
-      # On Click
-      Are you sure you want to delete your history?: ''
-      #& Yes
-      #& No
-    Clear Subscriptions:
-      Clear Subscriptions: ''
-      # On Click
-      Are you sure you want to remove all subscriptions?: ''
-      #& Yes
-      #& No
-
+  Advanced Settings: {}
   Distraction Free Settings:
     Hide Active Subscriptions: Peida aktiivsed tellimused
     Hide Live Chat: Peida veebivestlused
@@ -390,6 +393,24 @@ Settings:
     Hide Channels Placeholder: Kanali nimi või tunnus
     Display Titles Without Excessive Capitalisation: Näita pealkirju ilma liigsete
       suurtähtedeta
+    Sections:
+      General: Üldist
+      Side Bar: Külgpaan
+      Channel Page: Kanali vaade
+      Watch Page: Videovaade
+      Subscriptions Page: Tellimuste vaade
+    Hide Featured Channels: Peaida soovitatud kanalid
+    Hide Channel Playlists: Peida kanali esitusloendid
+    Hide Channel Shorts: Peida kanali lühivideod
+    Hide Channel Community: Peida kanali kogukond
+    Hide Channel Podcasts: Peida kanali taskuhäälingud
+    Hide Channel Releases: Peida kanali väljalasked
+    Hide Subscriptions Videos: Peida tellimuste videod
+    Hide Subscriptions Shorts: Peida tellimuste lühivideod
+    Hide Subscriptions Live: Peida tellimuste otse-eetrid
+    Hide Profile Pictures in Comments: Peida kommentaaride profiilipildid
+    Blur Thumbnails: Hägusta pisipildid
+    Hide Subscriptions Community: Peida tellijate loend
   Proxy Settings:
     Error getting network information. Is your proxy configured properly?: Võrguteavet
       ei õnnestu leida. Kas sa oled puhverserveri ikka korralikult seadistanud?
@@ -410,10 +431,10 @@ Settings:
     rakendus vajab muudatuste jõustamiseks uuesti käivitamist. Kas teeme seda nüüd?
   SponsorBlock Settings:
     Notify when sponsor segment is skipped: Anna teada, kui toetajate vaade jääb vahele
-    'SponsorBlock API Url (Default is https://sponsor.ajay.app)': SponsorBlock'i API
-      URL (vaikimisi https://sponsor.ajay.app)
-    Enable SponsorBlock: Kasuta SponsorBlock'i
-    SponsorBlock Settings: SponsorBlock seadistused
+    'SponsorBlock API Url (Default is https://sponsor.ajay.app)': Sponsorite blokeerija
+      API URL (vaikimisi https://sponsor.ajay.app)
+    Enable SponsorBlock: Kasuta sponsorite blokeerijat
+    SponsorBlock Settings: Sponsorite blokeerija seadistused
     Skip Options:
       Auto Skip: Automaatne vahelejätmine
       Show In Seek Bar: Näita otsinguribal
@@ -421,6 +442,7 @@ Settings:
       Skip Option: Jäta valik vahele
       Do Nothing: Ära tee midagi
     Category Color: Kategooria värv
+    UseDeArrowTitles: Laadi video pealkirjad DeArrow teenusest
   External Player Settings:
     External Player: Väline meediamängija
     External Player Settings: Välise meediamängija seadistused
@@ -436,7 +458,7 @@ Settings:
     Choose Path: Vali asukoht
     Download Behavior: Tegevus allalaadimisel
     Open in web browser: Ava veebibrauseris
-    Download in app: Lae alla rakenduses
+    Download in app: Laadi alla rakenduses
   Parental Control Settings:
     Parental Control Settings: Vanemliku järelevalve seadistused
     Hide Unsubscribe Button: Peida tellimuse tühistamise nupp
@@ -445,7 +467,7 @@ Settings:
   Experimental Settings:
     Experimental Settings: Katselised seadistused
     Warning: Tegemist on katseliste seadistustega ja sisselülitamisel võivad põhjustada
-      rakenduse kokkujooksmist. Kindlasti ära unusta oma andmete vatundamist. Jätka
+      rakenduse kokkujooksmist. Kindlasti ära unusta oma andmete varundamist. Jätka
       omal vastutusel!
     Replace HTTP Cache: Asenda HTTP vahemälu
   Password Dialog:
@@ -462,24 +484,6 @@ About:
   #On About page
   About: 'Teave'
   #& About
-  'This software is FOSS and released under the GNU Affero General Public License v3.0.': ''
-
-  'Found a bug? Want to suggest a feature? Want to help out? Check out our GitHub page. Pull requests are welcome.': >
-
-  Thank you very much to the People and Projects that make FreeTube possible!: ''
-
-  'Want to chat? Join our Element / Matrix Server . Please check the rules before joining.': ''
-
-  'Looking for help? Check out our Wiki page.': ''
-
-  Check out our Firefox extension!: ''
-
-  'If you enjoy using FreeTube, consider donating via Liberapay or through our Bitcoin address.': ''
-
-  #~ 'BTC: 1Lih7Ho5gnxb1CwPD4o59ss78pwo2T91eS'
-
-  Latest FreeTube News: ''
-
   Email: E-post
   Donate: Toeta meid
   these people and projects: tänu nendele inimestele ja projektidele
@@ -505,6 +509,7 @@ About:
   Licensed under the AGPLv3: Avaldatud AGPLv3 litsentsi alusel
   Source code: Lähtekood
   Beta: beetaversioon
+  Discussions: Arutelud
 Profile:
   Profile Select: 'Vali profiil'
   All Channels: 'Kõik kanalid'
@@ -549,9 +554,8 @@ Profile:
 #On Channel Page
   Profile Filter: Sirvi profiile
   Profile Settings: Profiili seadistused
+  Toggle Profile List: Lülita profiilide loend sisse/välja
 Channel:
-  Subscriber: 'Tellija'
-  Subscribers: 'Tellijad'
   Subscribe: 'Telli'
   Unsubscribe: 'Lõpeta tellimus'
   Channel has been removed from your subscriptions: 'Kustutasin kanali sinu tellimustest'
@@ -581,6 +585,37 @@ Channel:
     About: 'Kanali teave'
     Channel Description: 'Kanali kirjeldus'
     Featured Channels: 'Soovitatud kanalid'
+    Details: Üksikasjad
+    Location: Asukoht
+    Tags:
+      Search for: Otsi silti „{tag}“
+      Tags: Sildid
+    Joined: Liitunud
+  This channel does not allow searching: See kanal ei luba otsingu kasutamist
+  Channel Tabs: Kanali kaardid
+  Shorts:
+    This channel does not currently have any shorts: Sellel kanalil pole lühivideosid
+  Live:
+    Live: Otseeeter
+    This channel does not currently have any live streams: Sellel kanalil pole hetkel
+      ühtegi otseeetrit
+  Community:
+    This channel currently does not have any posts: Sellel kanalil pole hetkel postitusi
+    Reveal Answers: Näita vastuseid
+    Hide Answers: Peida vastused
+    votes: '{votes} häält'
+  This channel does not exist: Sellist kanalit ei leidu
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Sellel
+    kanalil on vanusega seotud piirangud ja teda ei saa hetkel FreeTube'i vahendusel
+    vaadata.
+  Podcasts:
+    Podcasts: Taskuhäälingud
+    This channel does not currently have any podcasts: Sellel kanalil hetkel pole
+      taskuhäälinguid
+  Releases:
+    This channel does not currently have any releases: Sellel kanalil pole hetkel
+      ühtegi väljalaset
+    Releases: Väljalasked
 Video:
   Mark As Watched: 'Märgi vaadatuks'
   Remove From History: 'Kustuta ajaloost'
@@ -592,31 +627,28 @@ Video:
   Copy YouTube Embedded Player Link: 'Kopeeri YouTube''i lõimitud meediamängija link'
   Open in Invidious: 'Ava Invidious''e veebirakenduses'
   Copy Invidious Link: 'Kopeeri Invidious''e veebirakenduse link'
-  View: 'Vaatamine'
   Views: 'Vaatamist'
   Loop Playlist: 'Korda esitusloendit'
   Shuffle Playlist: 'Sega esitusloend'
   Reverse Playlist: 'Pööra esitusloend tagurpidi'
   Play Next Video: 'Esita järgmist videot'
   Play Previous Video: 'Esita eelmist videot'
-  # Context is "X People Watching"
-  Watching: 'Vaatan'
   Watched: 'Vaadatud'
   Autoplay: 'Automaatne esitus'
   Starting soon, please refresh the page to check again: 'Kuvamine algab varsti, vajadusel
     värskenda uuesti kontrollimiseks lehte'
   # As in a Live Video
   Live: 'Otse eetris'
-  Live Now: 'Otse eetris'
+  Live Now: 'Hetkel otseeetris'
   Live Chat: 'Vestlus reaalajas'
   Enable Live Chat: 'Luba reaalajas vestlust'
   Live Chat is currently not supported in this build.: 'Reaalajas vestlus ei ole selles
     versioonis toetatud.'
   'Chat is disabled or the Live Stream has ended.': 'Reaalajas vestlus kas ei ole
     toetatud või on otseetris edastus lõppenud.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Reaalajas vestlus
+  Live chat is enabled. Chat messages will appear here once sent.: 'Reaalajas vestlus
     on kasutusel. Sõnumid on nähtaval kohe pärast saatmist.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Kui
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Kui
     kasutad Invidious''e veebiteenuse-põhist API''t, siis reaalajas vestlus ei ole
     toetatud. Selleks on vajalik otseliidestus YouTube''ga.'
   Published:
@@ -721,6 +753,9 @@ Video:
   Show Super Chat Comment: Näita Super Chat'i kommentaare
   Scroll to Bottom: Keri alla
   Upcoming: Tulemas
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Otsevestlus
+    pole selle videovoo puhul saadaval. Võib-olla on üleslaadija vestluse keelanud.
+  Pause on Current Video: Peata hetkel esitatav video
 Videos:
   #& Sort By
   Sort By:
@@ -786,7 +821,7 @@ Comments:
   Sort by: Sortimise alus
   No more comments available: Rohkem kommentaare pole
   Newest first: Uuemad esimesena
-  Top comments: Parimad kommentaarid
+  Top comments: Parimad esimesena
   Show More Replies: Näita järgmisi vastuseid
   And others: ja teised
   Pinned by: Esiplaanile tõstja
@@ -794,6 +829,7 @@ Comments:
   Member: Liige
   Hearted: Südamlik
   View {replyCount} replies: Näita {replyCount} vastust
+  Subscribed: Tellitud
 Up Next: 'Järgmisena'
 
 # Toast Messages
@@ -812,11 +848,9 @@ Shuffle is now enabled: 'Juhuslik esitus on nüüd kasutusel'
 The playlist has been reversed: 'Esitusloendi järjekord on nüüd teistpidi'
 Playing Next Video: 'Esitan järgmist videot'
 Playing Previous Video: 'Esitan eelmist videot'
-Playing next video in 5 seconds.  Click to cancel: 'Esitan järgmist videot 5 sekundi
-  pärast. Tühistamiseks klõpsi.'
 Canceled next video autoplay: 'Tühistasin järgmise video automaatse esituse'
-'The playlist has ended.  Enable loop to continue playing': 'Esitusloend on läbi.
-  Esituse jätkamiseks luba lugude kordamine'
+'The playlist has ended. Enable loop to continue playing': 'Esitusloend on läbi. Esituse
+  jätkamiseks luba lugude kordamine'
 
 Yes: 'Jah'
 No: 'Ei'
@@ -835,9 +869,9 @@ Tooltips:
       järjekorra pööramine) ei toeta siis ära näita hoiatusi.
     Custom External Player Arguments: Semikoolonitega (;) eraldatud käsurea argumendid,
       mida sa soovid välisele meediamängijale saata.
-    External Player: "Seadistades välise meediamängija kuvame pisipildil ikooni video\
-      \ (või esitusloendi) esitamiseks välises meediamängijas. Hoiatus: Invidious'e\
-      \ seadistused ei mõjuta välise meediamängija kasutamist."
+    External Player: "Seadistades välise meediamängija kuvame pisipildil ikooni video
+      (või esitusloendi) esitamiseks välises meediamängijas. Hoiatus: Invidious'e
+      seadistused ei mõjuta välise meediamängija kasutamist."
     DefaultCustomArgumentsTemplate: "(Vaikimisi: '{defaultCustomArguments}')"
   Subscription Settings:
     Fetch Feeds from RSS: Selle valiku kasutamisel FreeTube pruugib tellimuste andmete
@@ -850,7 +884,7 @@ Tooltips:
       peale video esitamist kogu metateabe.
   General Settings:
     Region for Trending: Piirkond, mille alusel kuvame hetkel menukad ehk populaarsust
-      koguvad videod. Kõik siinloetletud riigid ei pruugi olla YouTube'is toetatud.
+      koguvad videod.
     Thumbnail Preference: Vaikimisi pisipildi asemel kuvab FreeTube kaadrit videost.
     Fallback to Non-Preferred Backend on Failure: Kui sinu eelistatud APi ei toimi,
       siis kui vähegi võimalik, FreeTube üritab kasutada alternatiivi.
@@ -859,8 +893,8 @@ Tooltips:
       kasutamist.
     Invidious Instance: Invidious'e teenuse server, mida FreeTube kasutab API kutse
       tegemisel.
-    External Link Handling: "Vali vaikekäitumine, kui vajutatakse linki, mida ei saa\
-      \ avada FreeTubes.\nVaikimisi avaneb link kasutaja vaikebrauseris.\n"
+    External Link Handling: "Vali vaikekäitumine, kui vajutatakse linki, mida ei saa
+      avada FreeTubes.\nVaikimisi avaneb link kasutaja vaikebrauseris.\n"
   Player Settings:
     Default Video Format: Vali kasutatavad videovormingud. DASH-vormingutel on üldjuhul
       parem kvaliteet. Pärandvormingute kvaliteedi ülempiir on 720p ja seetõttu kasutavad
@@ -885,12 +919,18 @@ Tooltips:
       hiire ratast.
   Distraction Free Settings:
     Hide Channels: Sisesta kanali nimi või kanali ID, et kõik videod, esitusloendid
-      ja kanal ise ei oleks nähtav otsingus ega populaarsust koguvate videote vaates.
-      Sisestatud kanali nimi peab vastama täielikult ja on tõstutundlik.
+      ja kanal ise ei oleks nähtav otsingus, soovitatavate videote, populaarsete videote
+      ja populaarsust koguvate videote vaates. Sisestatud kanali nimi peab otsingule
+      vastama täielikult ja on tõstutundlik.
+    Hide Subscriptions Live: Selle seadistuse tühistab rakenduseülene „{appWideSetting}“
+      seadistus „{subsection}“/„{settingsSection}“
   Experimental Settings:
     Replace HTTP Cache: Sellega lülitatakse välja Electron'i standardne kettal paiknev
       http-puhver ja võetakse kasutusele rakenduse mälupõhine puhver. Üheks tulemuseks
       saab olema suurem mälukasutus.
+  SponsorBlock Settings:
+    UseDeArrowTitles: Asenda video nimi kasutajate poolt DeArrow teenusesse lisatud
+      nimega (pealkirjaga).
 Playing Next Video Interval: Kohe esitan järgmist videot. Tühistamiseks klõpsi. |
   {nextVideoInterval} sekundi möödumisel esitan järgmist videot. Tühistamiseks klõpsi.
   | {nextVideoInterval} sekundi möödumisel esitan järgmist videot. Tühistamiseks klõpsi.
@@ -935,3 +975,11 @@ Chapters:
     praegune peatükk: {chapterName}'
 Ok: Sobib
 Preferences: Eelistused
+Hashtag:
+  Hashtag: Teemaviide
+  This hashtag does not currently have any videos: Selle teemaviite ehk haaksõna alusel
+    ei leidu hetkel ühtegi videot
+Playlist will pause when current video is finished: Hetkel mängiva video lõppemisel
+  esitusloendi esitamine peatub
+Playlist will not pause when current video is finished: Hetkel mängiva video lõppemisel
+  esitusloendi esitamine jätkub

@@ -10,6 +10,7 @@ import {
   toLocalePublicationString,
   toDistractionFreeTitle
 } from '../../helpers/utils'
+import { deArrowData } from '../../helpers/sponsorblock'
 
 export default defineComponent({
   name: 'FtListVideo',
@@ -58,8 +59,8 @@ export default defineComponent({
     return {
       id: '',
       title: '',
-      channelName: '',
-      channelId: '',
+      channelName: null,
+      channelId: null,
       viewCount: 0,
       parsedViewCount: '',
       uploadedTime: '',
@@ -69,15 +70,18 @@ export default defineComponent({
       watchProgress: 0,
       publishedText: '',
       isLive: false,
-      isFavorited: false,
       isUpcoming: false,
       isPremium: false,
       hideViews: false
     }
   },
   computed: {
-    historyCache: function () {
-      return this.$store.getters.getHistoryCache
+    historyEntry: function () {
+      return this.$store.getters.getHistoryCacheById[this.id]
+    },
+
+    historyEntryExists: function () {
+      return typeof this.historyEntry !== 'undefined'
     },
 
     listType: function () {
@@ -86,6 +90,14 @@ export default defineComponent({
 
     thumbnailPreference: function () {
       return this.$store.getters.getThumbnailPreference
+    },
+
+    blurThumbnails: function () {
+      return this.$store.getters.getBlurThumbnails
+    },
+
+    blurThumbnailsStyle: function () {
+      return this.blurThumbnails ? 'blur(20px)' : null
     },
 
     backendPreference: function () {
@@ -99,7 +111,7 @@ export default defineComponent({
     inHistory: function () {
       // When in the history page, showing relative dates isn't very useful.
       // We want to show the exact date instead
-      return this.$router.currentRoute.name === 'history'
+      return this.$route.name === 'history'
     },
 
     invidiousUrl: function () {
@@ -152,15 +164,14 @@ export default defineComponent({
     },
 
     dropdownOptions: function () {
-      const options = []
-      options.push(
+      const options = [
         {
           label: this.watched
             ? this.$t('Video.Remove From History')
             : this.$t('Video.Mark As Watched'),
           value: 'history'
         }
-      )
+      ]
       if (!this.hideSharingActions) {
         options.push(
           {
@@ -192,30 +203,34 @@ export default defineComponent({
           {
             label: this.$t('Video.Open in Invidious'),
             value: 'openInvidious'
-          },
-          {
-            type: 'divider'
-          },
-          {
-            label: this.$t('Video.Copy YouTube Channel Link'),
-            value: 'copyYoutubeChannel'
-          },
-          {
-            label: this.$t('Video.Copy Invidious Channel Link'),
-            value: 'copyInvidiousChannel'
-          },
-          {
-            type: 'divider'
-          },
-          {
-            label: this.$t('Video.Open Channel in YouTube'),
-            value: 'openYoutubeChannel'
-          },
-          {
-            label: this.$t('Video.Open Channel in Invidious'),
-            value: 'openInvidiousChannel'
           }
         )
+        if (this.channelId !== null) {
+          options.push(
+            {
+              type: 'divider'
+            },
+            {
+              label: this.$t('Video.Copy YouTube Channel Link'),
+              value: 'copyYoutubeChannel'
+            },
+            {
+              label: this.$t('Video.Copy Invidious Channel Link'),
+              value: 'copyInvidiousChannel'
+            },
+            {
+              type: 'divider'
+            },
+            {
+              label: this.$t('Video.Open Channel in YouTube'),
+              value: 'openYoutubeChannel'
+            },
+            {
+              label: this.$t('Video.Open Channel in Invidious'),
+              value: 'openInvidiousChannel'
+            }
+          )
+        }
       }
 
       return options
@@ -236,17 +251,11 @@ export default defineComponent({
           return `${baseUrl}/vi/${this.id}/mq2.jpg`
         case 'end':
           return `${baseUrl}/vi/${this.id}/mq3.jpg`
+        case 'hidden':
+          return require('../../assets/img/thumbnail_placeholder.svg')
         default:
           return `${baseUrl}/vi/${this.id}/mqdefault.jpg`
       }
-    },
-
-    hideLiveStreams: function() {
-      return this.$store.getters.getHideLiveStreams
-    },
-
-    hideUpcomingPremieres: function () {
-      return this.$store.getters.getHideUpcomingPremieres
     },
 
     hideVideoViews: function () {
@@ -294,17 +303,18 @@ export default defineComponent({
     },
 
     displayTitle: function () {
-      if (this.showDistractionFreeTitles) {
-        return toDistractionFreeTitle(this.data.title)
+      let title
+      if (this.useDeArrowTitles && this.deArrowCache?.title) {
+        title = this.deArrowCache.title
       } else {
-        return this.data.title
+        title = this.title
       }
-    },
 
-    historyIndex: function() {
-      return this.historyCache.findIndex((video) => {
-        return video.videoId === this.id
-      })
+      if (this.showDistractionFreeTitles) {
+        return toDistractionFreeTitle(title)
+      } else {
+        return title
+      }
     },
 
     playlistIdFinal: function () {
@@ -315,23 +325,48 @@ export default defineComponent({
       // Get playlist ID from history ONLY if option enabled
       if (!this.showVideoWithLastViewedPlaylist) { return }
       if (!this.saveVideoHistoryWithLastViewedPlaylist) { return }
-      const historyIndex = this.historyIndex
-      if (historyIndex === -1) {
-        return undefined
-      }
 
-      return this.historyCache[historyIndex].lastViewedPlaylistId
+      return this.historyEntry?.lastViewedPlaylistId
     },
 
     currentLocale: function () {
       return this.$i18n.locale.replace('_', '-')
     },
+
+    useDeArrowTitles: function () {
+      return this.$store.getters.getUseDeArrowTitles
+    },
+
+    deArrowCache: function () {
+      return this.$store.getters.getDeArrowCache[this.id]
+    }
   },
-  mounted: function () {
+  watch: {
+    historyEntry() {
+      this.checkIfWatched()
+    },
+  },
+  created: function () {
     this.parseVideoData()
     this.checkIfWatched()
+
+    if (this.useDeArrowTitles && !this.deArrowCache) {
+      this.fetchDeArrowData()
+    }
   },
   methods: {
+    fetchDeArrowData: async function() {
+      const videoId = this.id
+      const data = await deArrowData(this.id)
+      const cacheData = { videoId, title: null }
+      if (Array.isArray(data?.titles) && data.titles.length > 0 && (data.titles[0].locked || data.titles[0].votes > 0)) {
+        cacheData.title = data.titles[0].title
+      }
+
+      // Save data to cache whether data available or not to prevent duplicate requests
+      this.$store.commit('addVideoToDeArrowCache', cacheData)
+    },
+
     handleExternalPlayer: function () {
       this.$emit('pause-player')
 
@@ -407,9 +442,15 @@ export default defineComponent({
       this.title = this.data.title
       // this.thumbnail = this.data.videoThumbnails[4].url
 
-      this.channelName = this.data.author
-      this.channelId = this.data.authorId
-      this.duration = formatDurationAsTimestamp(this.data.lengthSeconds)
+      this.channelName = this.data.author ?? null
+      this.channelId = this.data.authorId ?? null
+
+      if (this.data.isRSS && this.historyEntryExists) {
+        this.duration = formatDurationAsTimestamp(this.historyEntry.lengthSeconds)
+      } else {
+        this.duration = formatDurationAsTimestamp(this.data.lengthSeconds)
+      }
+
       this.description = this.data.description
       this.isLive = this.data.liveNow || this.data.lengthSeconds === 'undefined'
       this.isUpcoming = this.data.isUpcoming || this.data.premiere
@@ -491,19 +532,26 @@ export default defineComponent({
     },
 
     checkIfWatched: function () {
-      const historyIndex = this.historyIndex
-
-      if (historyIndex !== -1) {
+      if (this.historyEntryExists) {
         this.watched = true
-        this.watchProgress = this.historyCache[historyIndex].watchProgress
 
-        if (this.historyCache[historyIndex].published !== '') {
-          const videoPublished = this.historyCache[historyIndex].published
+        const historyEntry = this.historyEntry
+
+        if (this.saveWatchedProgress) {
+          // For UX consistency, no progress reading if writing disabled
+          this.watchProgress = historyEntry.watchProgress
+        }
+
+        if (historyEntry.published !== '') {
+          const videoPublished = historyEntry.published
           const videoPublishedDate = new Date(videoPublished)
           this.publishedText = videoPublishedDate.toLocaleDateString()
         } else {
           this.publishedText = ''
         }
+      } else {
+        this.watched = false
+        this.watchProgress = 0
       }
     },
 
@@ -520,7 +568,6 @@ export default defineComponent({
         watchProgress: 0,
         timeWatched: new Date().getTime(),
         isLive: false,
-        paid: false,
         type: 'video'
       }
       this.updateHistory(videoData)
@@ -550,8 +597,7 @@ export default defineComponent({
         lengthSeconds: this.data.lengthSeconds,
         timeAdded: new Date().getTime(),
         isLive: false,
-        paid: false,
-        type: 'video'
+        type: 'video',
       }
 
       const payload = {

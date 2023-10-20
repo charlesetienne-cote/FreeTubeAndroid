@@ -27,7 +27,15 @@ export default defineComponent({
     channelThumbnail: {
       type: String,
       required: true
-    }
+    },
+    videoPlayerReady: {
+      type: Boolean,
+      required: true
+    },
+    forceState: {
+      type: String,
+      default: null,
+    },
   },
   data: function () {
     return {
@@ -35,7 +43,7 @@ export default defineComponent({
       showComments: false,
       nextPageToken: null,
       commentData: [],
-      sortNewest: false
+      sortNewest: false,
     }
   },
   computed: {
@@ -47,11 +55,16 @@ export default defineComponent({
       return this.$store.getters.getBackendFallback
     },
 
-    currentInvidiousInstance: function () {
-      return this.$store.getters.getCurrentInvidiousInstance
-    },
     hideCommentLikes: function () {
       return this.$store.getters.getHideCommentLikes
+    },
+
+    hideCommentPhotos: function () {
+      return this.$store.getters.getHideCommentPhotos
+    },
+
+    commentAutoLoadEnabled: function () {
+      return this.$store.getters.getCommentAutoLoadEnabled
     },
 
     sortNames: function () {
@@ -70,9 +83,59 @@ export default defineComponent({
 
     currentSortValue: function () {
       return (this.sortNewest) ? 'newest' : 'top'
+    },
+
+    observeVisibilityOptions: function () {
+      if (!this.commentAutoLoadEnabled) { return false }
+      if (!this.videoPlayerReady) { return false }
+
+      return {
+        callback: (isVisible, _entry) => {
+          // This is also fired when **hidden**
+          // No point doing anything if not visible
+          if (!isVisible) { return }
+          // It's possible the comments are being loaded/already loaded
+          if (this.canPerformInitialCommentLoading) {
+            this.getCommentData()
+          } else if (this.canPerformMoreCommentLoading) {
+            this.getMoreComments()
+          }
+        },
+        intersection: {
+          // Only when it intersects with N% above bottom
+          rootMargin: '0% 0% 0% 0%',
+        },
+        // Callback responsible for loading multiple comment pages
+        once: false,
+      }
+    },
+
+    canPerformInitialCommentLoading: function () {
+      return this.commentData.length === 0 && !this.isLoading && !this.showComments
+    },
+
+    canPerformMoreCommentLoading: function () {
+      return this.commentData.length > 0 && !this.isLoading && this.showComments && this.nextPageToken
+    },
+
+    subscriptions: function() {
+      return this.$store.getters.getActiveProfile.subscriptions
     }
   },
-
+  mounted: function () {
+    // region No comment detection
+    // For videos without any comment (comment disabled?)
+    // e.g. https://youtu.be/8NBSwDEf8a8
+    //
+    // `comments_entry_point_header` is null probably when comment disabled
+    if (this.forceState === 'noComment') {
+      this.commentData = []
+      this.nextPageToken = null
+      this.isLoading = false
+      this.showComments = true
+    }
+    // endregion No comment detection
+  },
   methods: {
     onTimestamp: function (timestamp) {
       this.$emit('timestamp-event', timestamp)
@@ -81,6 +144,8 @@ export default defineComponent({
     handleSortChange: function () {
       this.sortNewest = !this.sortNewest
       this.commentData = []
+      // nextPageToken is reset to ensure first page is get
+      this.nextPageToken = null
       this.getCommentData()
     },
 
@@ -130,7 +195,7 @@ export default defineComponent({
 
     getCommentDataLocal: async function (more) {
       try {
-        /** @type {import('youtubei.js/dist/src/parser/youtube/Comments').default} */
+        /** @type {import('youtubei.js').YT.Comments} */
         let comments
         if (more) {
           comments = await this.nextPageToken.getContinuation()
@@ -170,7 +235,7 @@ export default defineComponent({
 
       try {
         const comment = this.commentData[index]
-        /** @type {import('youtubei.js/dist/src/parser/classes/comments/CommentThread').default} */
+        /** @type {import('youtubei.js').YTNodes.CommentThread} */
         const commentThread = comment.replyToken
 
         if (comment.replies.length > 0) {
@@ -208,11 +273,24 @@ export default defineComponent({
         this.nextPageToken = response.continuation
         this.isLoading = false
         this.showComments = true
-      }).catch((xhr) => {
-        console.error(xhr)
+      }).catch((err) => {
+        // region No comment detection
+        // No comment related info when video info requested earlier in parent component
+        if (err.message.includes('Comments not found')) {
+          // For videos without any comment (comment disabled?)
+          // e.g. https://youtu.be/8NBSwDEf8a8
+          this.commentData = []
+          this.nextPageToken = null
+          this.isLoading = false
+          this.showComments = true
+          return
+        }
+        // endregion No comment detection
+
+        console.error(err)
         const errorMessage = this.$t('Invidious API Error (Click to copy)')
-        showToast(`${errorMessage}: ${xhr.responseText}`, 10000, () => {
-          copyToClipboard(xhr.responseText)
+        showToast(`${errorMessage}: ${err}`, 10000, () => {
+          copyToClipboard(err)
         })
         if (process.env.IS_ELECTRON && this.backendFallback && this.backendPreference === 'invidious') {
           showToast(this.$t('Falling back to local API'))
@@ -228,7 +306,7 @@ export default defineComponent({
       const replyToken = this.commentData[index].replyToken
       invidiousGetCommentReplies({ id: this.id, replyToken: replyToken })
         .then(({ commentData, continuation }) => {
-          this.commentData[index].replies = commentData
+          this.commentData[index].replies = this.commentData[index].replies.concat(commentData)
           this.commentData[index].showReplies = true
           this.commentData[index].replyToken = continuation
           this.isLoading = false
@@ -240,6 +318,6 @@ export default defineComponent({
           })
           this.isLoading = false
         })
-    }
+    },
   }
 })

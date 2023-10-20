@@ -1,4 +1,5 @@
-import { defineComponent, nextTick } from 'vue'
+import { defineComponent } from 'vue'
+import debounce from 'lodash.debounce'
 import FtLoader from '../../components/ft-loader/ft-loader.vue'
 import FtCard from '../../components/ft-card/ft-card.vue'
 import FtFlexBox from '../../components/ft-flex-box/ft-flex-box.vue'
@@ -22,31 +23,27 @@ export default defineComponent({
       dataLimit: 100,
       searchDataLimit: 100,
       showLoadMoreButton: false,
-      hasQuery: false,
       query: '',
-      activeData: []
+      activeData: [],
     }
   },
   computed: {
-    historyCache: function () {
-      return this.$store.getters.getHistoryCache
+    historyCacheSorted: function () {
+      return this.$store.getters.getHistoryCacheSorted
     },
 
     fullData: function () {
-      if (this.historyCache.length < this.dataLimit) {
-        return this.historyCache
+      if (this.historyCacheSorted.length < this.dataLimit) {
+        return this.historyCacheSorted
       } else {
-        return this.historyCache.slice(0, this.dataLimit)
+        return this.historyCacheSorted.slice(0, this.dataLimit)
       }
     }
   },
   watch: {
     query() {
       this.searchDataLimit = 100
-      this.filterHistory()
-    },
-    activeData() {
-      this.refreshPage()
+      this.filterHistoryAsync()
     },
     fullData() {
       this.activeData = this.fullData
@@ -62,11 +59,13 @@ export default defineComponent({
 
     this.activeData = this.fullData
 
-    if (this.activeData.length < this.historyCache.length) {
+    if (this.activeData.length < this.historyCacheSorted.length) {
       this.showLoadMoreButton = true
     } else {
       this.showLoadMoreButton = false
     }
+
+    this.filterHistoryDebounce = debounce(this.filterHistory, 500)
   },
   methods: {
     increaseLimit: function () {
@@ -78,20 +77,26 @@ export default defineComponent({
         sessionStorage.setItem('historyLimit', this.dataLimit)
       }
     },
-    filterHistory: function(query) {
+    filterHistoryAsync: function() {
+      // Updating list on every char input could be wasting resources on rendering
+      // So run it with delay (to be cancelled when more input received within time)
+      this.filterHistoryDebounce()
+    },
+    filterHistory: function() {
       if (this.query === '') {
         this.activeData = this.fullData
-        if (this.activeData.length < this.historyCache.length) {
+        if (this.activeData.length < this.historyCacheSorted.length) {
           this.showLoadMoreButton = true
         } else {
           this.showLoadMoreButton = false
         }
       } else {
-        const filteredQuery = this.historyCache.filter((video) => {
+        const lowerCaseQuery = this.query.toLowerCase()
+        const filteredQuery = this.historyCacheSorted.filter((video) => {
           if (typeof (video.title) !== 'string' || typeof (video.author) !== 'string') {
             return false
           } else {
-            return video.title.toLowerCase().includes(this.query.toLowerCase()) || video.author.toLowerCase().includes(this.query.toLowerCase())
+            return video.title.toLowerCase().includes(lowerCaseQuery) || video.author.toLowerCase().includes(lowerCaseQuery)
           }
         }).sort((a, b) => {
           return b.timeWatched - a.timeWatched
@@ -104,15 +109,5 @@ export default defineComponent({
         this.activeData = filteredQuery.length < this.searchDataLimit ? filteredQuery : filteredQuery.slice(0, this.searchDataLimit)
       }
     },
-    refreshPage: function() {
-      const scrollPos = window.scrollY || window.scrollTop || document.getElementsByTagName('html')[0].scrollTop
-      this.isLoading = true
-      nextTick(() => {
-        this.isLoading = false
-        nextTick(() => {
-          window.scrollTo(0, scrollPos)
-        })
-      })
-    }
   }
 })

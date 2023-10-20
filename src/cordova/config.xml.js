@@ -1,5 +1,5 @@
-
 const pkg = require('../../package.json')
+const invidiousInstancesList = require('../../static/invidious-instances.json')
 const fs = require('fs')
 const util = require('util')
 const xml2js = require('xml2js')
@@ -31,6 +31,10 @@ module.exports = (async () => {
   configXML.widget.author[0].$.href = pkg.author.url
   configXML.widget.name[0] = pkg.productName
   configXML.widget.description[0] = pkg.description
+  for (let i = 0; i < invidiousInstancesList.length; i++) {
+    const { url } = invidiousInstancesList[i]
+    configXML.widget['universal-links'][0].host.push({ $: { name: url.replace('https://', ''), scheme: 'https', event: 'youtube' } })// treat invidious instance links the same as links on youtube domains: youtube.com & m.youtube.com
+  }
   const configXMLString = createXMLStringFromObject(configXML)
   return { string: configXMLString, object: configXML }
 })()

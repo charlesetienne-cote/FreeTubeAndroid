@@ -1,5 +1,5 @@
 # Put the name of your locale in the same language
-Locale Name: 'Galego'
+Locale Name: 'galego'
 FreeTube: 'FreeTube'
 # Currently on Subscriptions, Playlists, and History
 'This part of the app is not ready yet. Come back later when progress has been made.': >-
@@ -29,6 +29,12 @@ Minimize: 'Minimizar'
 Close: 'Pechar'
 Back: 'Atrás'
 Forward: 'Adiante'
+
+# Global
+# Anything shared among components / views should be put here
+Global:
+  Videos: 'Vídeos'
+  Community: Comunidade
 
 Version {versionNumber} is now available!  Click for more details: 'A versión {versionNumber}
   está dispoñible!  Fai clic para veres máis detalles'
@@ -78,7 +84,7 @@ Subscriptions:
     # On Subscriptions Page
   Subscriptions: 'Subscricións'
   Latest Subscriptions: 'Últimas subscricións'
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: 'Este
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: 'Este
     perfil ten un gran número de subscricións.  Forzar ás RSS para evitar a limitación
     da taxa'
   'Your Subscription list is currently empty. Start adding subscriptions to see them here.': 'A
@@ -378,7 +384,6 @@ Settings:
       correctamente
     Export Playlists: Exportalas listas de reprodución
   Advanced Settings:
-    Advanced Settings: ''
     Enable Debug Mode (Prints data to the console): 'Activar modo de depuración (escribe
       datos na consola)'
     'Proxy Address (Example: SOCKS5://127.0.0.1:9050 )': 'Enderezo proxy (Exemplo:
@@ -457,9 +462,9 @@ Settings:
     Download Behavior: Comportamento da descarga
   Experimental Settings:
     Experimental Settings: Configuracións experimentais
-    Warning: Estas opcións da configuración son experimentais e provocan fallos mentres
-      están activadas. É moi recomendable facer copias de seguridade. Useas baixo
-      o seu propio risco!
+    Warning: Estas opcións de configuración son experimentais, poden causar fallos
+      mentres están activadas. É moi recomendable facer copias de seguridade. Use
+      baixo o seu propio risco!
     Replace HTTP Cache: Substitúe a caché HTTP
   Password Settings:
     Password Settings: Configuración do contrasinal
@@ -573,8 +578,6 @@ Profile:
   Profile Filter: Filtro por perfís
   Profile Settings: Configuración do perfil
 Channel:
-  Subscriber: 'Subscritor'
-  Subscribers: 'Subscritores'
   Subscribe: 'Subscribirse'
   Unsubscribe: 'Desubscribirse'
   Channel has been removed from your subscriptions: 'Esta canle foi eliminada das
@@ -607,17 +610,16 @@ Channel:
     Featured Channels: 'Canles destacadas'
     Tags:
       Tags: Etiquetas
-      Search for: Busca "{tag}"
+      Search for: Busca «{tag}»
     Details: Detalles
     Joined: Uniuse
     Location: Localización
   This channel does not exist: Esta canle non existe
   This channel does not allow searching: Esta canle non permite buscas
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Esta
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Esta
     canle ten unha limitación de idade e actualmente non se pode ver en FreeTube.
   Channel Tabs: Pestanas das canles
   Community:
-    Community: Comunidade
     This channel currently does not have any posts: Esta canle actualmente non ten
       publicacións
 Video:
@@ -635,15 +637,12 @@ Video:
   Copy YouTube Channel Link: 'Copiar ligazón de YouTube da canle'
   Open Channel in Invidious: 'Abrir canle no Invidious'
   Copy Invidious Channel Link: 'Copiar ligazón de Invidious da canle'
-  View: 'Ver'
   Views: 'Visualizacións'
   Loop Playlist: 'Reprodución en bucle'
   Shuffle Playlist: 'Reprodución aleatoria'
   Reverse Playlist: 'Inverter listaxe de reprodución'
   Play Next Video: 'Reproducir próximo vídeo'
   Play Previous Video: 'Reproducir vídeo anterior'
-  # Context is "X People Watching"
-  Watching: 'A ver'
   Watched: 'Visto'
   Autoplay: 'Reprodución automática'
   Starting soon, please refresh the page to check again: 'Comezará en breve. Por favor,
@@ -657,9 +656,9 @@ Video:
     nesta versión.'
   'Chat is disabled or the Live Stream has ended.': 'O chat foi desactivado ou a transmisión
     en vivo rematou.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Chat en vivo
+  Live chat is enabled. Chat messages will appear here once sent.: 'Chat en vivo
     activado.  As mensaxes aparecerán aquí ao seren enviadas.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Chat
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Chat
     en vivo actualmente non soportado coa API de Invidious.  Precísase dunha conexión
     directa con YouTube.'
   Download Video: 'Descargar vídeo'
@@ -844,8 +843,7 @@ Tooltips:
     Invidious Instance: 'A instancia de Invidious á que se conectará FreeTube para
       as chamadas da aplicacion.'
     Region for Trending: 'A rexión das tendencias permíteche escoller os vídeos máis
-      populares nun Estado. Non tódolos Estados que se amosan están soportados por
-      YouTube.'
+      populares nun Estado.'
     External Link Handling: "Escolla o comportamento predeterminado cando se fai clic\
       \ nunha ligazón, que non se pode abrir en FreeTube.\nDe forma predeterminada,\
       \ FreeTube abrirá a ligazón na que premeches no teu navegador predeterminado.\n"
@@ -921,10 +919,8 @@ Shuffle is now enabled: 'Reprodución aleatoria activada'
 The playlist has been reversed: 'A listaxe de reprodución foi invertida'
 Playing Next Video: 'A reproducir próximo vídeo'
 Playing Previous Video: 'A reproducir vídeo anterior'
-Playing next video in 5 seconds.  Click to cancel: 'O próximo vídeo reproducirase
-  en 5 segundos. Preme para cancelar.'
 Canceled next video autoplay: 'Cancelouse a reprodución automática do seguinte vídeo'
-'The playlist has ended.  Enable loop to continue playing': 'A listaxe de reprodución
+'The playlist has ended. Enable loop to continue playing': 'A listaxe de reprodución
   rematou.  Activa a reprodución en bucle para continuar reproducindo'
 
 Yes: 'Si'

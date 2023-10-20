@@ -28,7 +28,21 @@ Close: 'Zamknij'
 Back: 'Wstecz'
 Forward: 'Naprzód'
 
+# Global
+# Anything shared among components / views should be put here
+Global:
+  Videos: 'Filmy'
+  Shorts: Filmy Short
+  Live: Transmisje
+  Community: Społeczność
+
 # Search Bar
+  Counts:
+    Video Count: 1 film | {count} film(y/ów)
+    Channel Count: 1 kanał | {count} kanał(y/ów)
+    Subscriber Count: 1 subskrybujący | {count} subskrybentów
+    View Count: 1 wyświetlenie | {count} wyświetle(nia/ń)
+    Watching Count: 1 oglądający | {count} oglądających
 Search / Go to URL: 'Szukaj / Przejdź do adresu URL'
   # In Filter Button
 Search Filters:
@@ -76,7 +90,7 @@ Subscriptions:
   'Getting Subscriptions.  Please wait.': 'Pobieranie subskrypcji. Proszę czekać...'
   Refresh Subscriptions: Odśwież subskrypcje
   Getting Subscriptions. Please wait.: Pobieranie subskrypcji. Proszę poczekać.
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Ten
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Ten
     profil posiada dużą liczbę subskrypcji. Wymuszenie RSS w celu uniknięcia ograniczenia
     dostępu
   Load More Videos: Załaduj więcej filmów
@@ -84,6 +98,11 @@ Subscriptions:
   Disabled Automatic Fetching: Wyłączyłeś automatyczne pobieranie subskrypcji. Odśwież
     subskrypcje, by je zobaczyć.
   Empty Channels: Twoje subskrypcje nie mają obecnie żadnych filmów.
+  All Subscription Tabs Hidden: Wszystkie karty subskrypcji są pochowane. Aby je zobaczyć,
+    proszę odznaczyć ich ukrycie w podgrupie „{subsection}” grupy „{settingsSection}”.
+  Subscriptions Tabs: Karty subskrypcji
+  Load More Posts: Załaduj więcej wpisów
+  Empty Posts: Zasubskrybowane przez Ciebie kanały nie mają żadnych wpisów.
 Trending:
   Trending: 'Na czasie'
   Trending Tabs: Karty „Na czasie”
@@ -136,6 +155,7 @@ Settings:
       Beginning: 'Początek'
       Middle: 'Środek'
       End: 'Koniec'
+      Hidden: Nie pokazuj
     'Invidious Instance (Default is https://invidious.snopyta.org)': 'Serwer Invidious
       (Domyślnie jest https://invidious.snopyta.org)'
     Region for Trending: '„Na czasie” z obszaru'
@@ -169,6 +189,8 @@ Settings:
       Dracula: 'Drakula'
       System Default: Domyślny systemu
       Catppuccin Mocha: Catppuccin Mocha
+      Hot Pink: Gorący róż
+      Pastel Pink: Pastelowy róż
     Main Color Theme:
       Main Color Theme: 'Główny kolor motywu'
       Red: 'Czerwony'
@@ -218,7 +240,6 @@ Settings:
   Player Settings:
     Player Settings: 'Ustawienia odtwarzacza'
     Force Local Backend for Legacy Formats: 'Wymuś lokalny back-end dla starych formatów'
-    Remember History: ''
     Play Next Video: 'Odtwórz następny film'
     Turn on Subtitles by Default: 'Domyślnie odtwarzaj z napisami'
     Autoplay Videos: 'Autoodtwarzanie filmów'
@@ -275,6 +296,8 @@ Settings:
     Skip by Scrolling Over Video Player: Przewijaj film kółkiem myszy na obszarze
       odtwarzacza
     Allow DASH AV1 formats: Zezwól na format AV1 DASH
+    Comment Auto Load:
+      Comment Auto Load: Ładuj komentarze automatycznie
   Subscription Settings:
     Subscription Settings: 'Ustawienia subskrypcji'
     Hide Videos on Watch: 'Ukrywaj filmy po obejrzeniu'
@@ -405,6 +428,24 @@ Settings:
     Hide Channels Placeholder: Nazwa albo ID kanału
     Display Titles Without Excessive Capitalisation: Wyświetlaj tytuły bez nadmiernych
       wielkich liter
+    Hide Channel Community: Schowaj społeczność kanału
+    Hide Channel Shorts: Schowaj filmy Short kanału
+    Hide Featured Channels: Schowaj polecane kanały
+    Hide Channel Playlists: Schowaj playlisty kanału
+    Sections:
+      Side Bar: Pasek boczny
+      Channel Page: Strona kanału
+      General: Ogólne
+      Watch Page: Strona odtwarzacza
+      Subscriptions Page: Strona subskrypcji
+    Hide Channel Releases: Schowaj wydawnictwa kanału
+    Hide Channel Podcasts: Schowaj podkasty kanału
+    Hide Subscriptions Videos: Schowaj filmy z subskrypcji
+    Hide Subscriptions Shorts: Schowaj filmy Short z subskrypcji
+    Hide Subscriptions Live: Schowaj transmisje live z subskrypcji
+    Hide Profile Pictures in Comments: Nie pokazuj zdjęć profilowych w komentarzach
+    Blur Thumbnails: Rozmazuj miniaturki
+    Hide Subscriptions Community: Schowaj „Społeczność” kanałów
   The app needs to restart for changes to take effect. Restart and apply change?: Aplikacja
     musi zostać ponownie uruchomiona, aby zmiany zostały wprowadzone. Uruchomić ponownie
     i zastosować zmiany?
@@ -438,6 +479,7 @@ Settings:
       Prompt To Skip: Zapytaj, czy pominąć
       Do Nothing: Nic nie rób
     Category Color: Kolor segmentu
+    UseDeArrowTitles: Użyj tytułów filmów z DeArrow
   External Player Settings:
     Custom External Player Arguments: Niestandardowe argumenty zewnętrznego odtwarzacza
     Custom External Player Executable: Niestandardowy plik wykonywalny zewnętrznego
@@ -540,6 +582,7 @@ About:
   Licensed under the AGPLv3: Na licencji AGPLv3
   Source code: Kod źródłowy
   FreeTube is made possible by: FreeTube powstał dzięki
+  Discussions: Dyskusje
 Channel:
   Subscriber: 'Subskrybent/ka'
   Subscribers: 'subskrybentów'
@@ -579,15 +622,31 @@ Channel:
     pozostałych kanałów
   Channel has been removed from your subscriptions: Kanał został usunięty z twoich
     subskrypcji
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Kanał
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Kanał
     ten ma ograniczenie wiekowe, dlatego nie zostanie wyświetlony we FreeTube.
   Channel Tabs: Karty kanału
   This channel does not exist: Nie ma takiego kanału
   This channel does not allow searching: Ten kanał nie zezwala na przeszukiwanie
   Community:
     This channel currently does not have any posts: Ten kanał nie ma obecnie żadnych
-      publikacji
-    Community: Społeczność
+      wpisów
+    votes: '{votes} głosów'
+    Reveal Answers: Pokaż odpowiedzi
+    Hide Answers: Schowaj odpowiedzi
+  Live:
+    Live: Transmisje
+    This channel does not currently have any live streams: Ten kanał nie ma obecnie
+      żadnych transmisji
+  Shorts:
+    This channel does not currently have any shorts: Ten kanał nie ma obecnie żadnych
+      filmów Short
+  Releases:
+    Releases: Wydania
+    This channel does not currently have any releases: Ten kanał nie ma obecnie żadnych
+      wydawnictw
+  Podcasts:
+    Podcasts: Podkasty
+    This channel does not currently have any podcasts: Ten kanał nie ma żadnych podkastów
 Video:
   Mark As Watched: 'Oznacz jako obejrzany'
   Remove From History: 'Usuń z historii'
@@ -599,10 +658,7 @@ Video:
   Copy YouTube Embedded Player Link: 'Skopiuj link do odtwarzacza YouTube'
   Open in Invidious: 'Otwórz na stronie Invidious'
   Copy Invidious Link: 'Skopiuj link do strony Invidious'
-  View: 'wyświetlenie'
   Views: 'wyświetleń'
-  # Context is "X People Watching"
-  Watching: 'ogląda'
   Watched: 'Obejrzany'
   # As in a Live Video
   Live: 'Transmisja'
@@ -613,9 +669,9 @@ Video:
     wspierany w tej kompilacji.'
   'Chat is disabled or the Live Stream has ended.': 'Czat jest wyłączony, lub transmisja
     na żywo zakończyła się.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Czat na żywo
-    jest włączony. Wiadomości z czatu pojawią się tutaj po wysłaniu.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Czat
+  Live chat is enabled. Chat messages will appear here once sent.: 'Czat na żywo jest
+    włączony. Wiadomości z czatu pojawią się tutaj po wysłaniu.'
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Czat
     na żywo nie wspiera obecnie API Invidious. Konieczne jest połączenie bezpośrednie
     z YouTube.'
   Published:
@@ -658,7 +714,7 @@ Video:
   Reverse Playlist: Odwróć playlistę
   Shuffle Playlist: Losuj z playlisty
   Loop Playlist: Zapętl playlistę
-  Starting soon, please refresh the page to check again: Wkrótce się zacznie, proszę
+  Starting soon, please refresh the page to check again: Wkrótce się zacznie. Proszę
     odświeżyć stronę, aby ponownie sprawdzić
   Audio:
     Best: Najlepsza
@@ -730,6 +786,10 @@ Video:
   Show Super Chat Comment: Pokazuj komentarze z „Superczatu”
   Scroll to Bottom: Przewiń do końca
   Upcoming: Nadchodzące
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Czat
+    na żywo jest nie dostępny dla tej transmisji. Być może został on wyłączony przez
+    osobę wstawiającą.
+  Pause on Current Video: Zatrzymaj po tym filmie
 Videos:
   #& Sort By
   Sort By:
@@ -749,7 +809,7 @@ Playlist:
 #* Published
 #& Views
   Playlist: Playlista
-Toggle Theatre Mode: 'Aktywuj tryb kinowy'
+Toggle Theatre Mode: 'Włącz/wyłącz tryb kinowy'
 Change Format:
   Change Media Formats: 'Zmień formaty wideo'
   Use Dash Formats: 'Użyj formatów DASH'
@@ -805,6 +865,7 @@ Comments:
   Member: Wspierający
   Hearted: z serduszkiem
   View {replyCount} replies: Zobacz {replyCount} odpowiedzi
+  Subscribed: Zasubskrybowano
 Up Next: 'Następne'
 
 # Toast Messages
@@ -819,15 +880,13 @@ Shuffle is now disabled: 'Losowanie jest teraz wyłączone'
 Shuffle is now enabled: 'Losowanie jest teraz włączone'
 Playing Next Video: 'Odtwórz następny film'
 Playing Previous Video: 'Odtwórz poprzedni film'
-Playing next video in 5 seconds.  Click to cancel: 'Odtworzenie następnego filmu za
-  5 sekund. Kliknij aby anulować.'
 Canceled next video autoplay: 'Anulowano odtworzenie następnego filmu'
-'The playlist has ended.  Enable loop to continue playing': 'Playlista się zakończyła.
+'The playlist has ended. Enable loop to continue playing': 'Playlista się zakończyła.
   Włącz zapętlanie by kontynuować odtwarzanie'
 
 Yes: 'Tak'
 No: 'Nie'
-Locale Name: Polski
+Locale Name: polski
 Profile:
   '{profile} is now the active profile': '{profile} jest teraz aktywnym profilem'
   Your default profile has been changed to your primary profile: Twój domyślny profil
@@ -871,6 +930,7 @@ Profile:
   Subscription List: Lista subskrypcji
   Profile Filter: Filtr profilu
   Profile Settings: Ustawienia profilu
+  Toggle Profile List: Włącz/wyłącz listę profili
 The playlist has been reversed: Playlista została odwrócona
 A new blog is now available, {blogTitle}. Click to view more: 'Nowy wpis na blogu
   jest dostępny, {blogTitle}. Kliknij, aby zobaczyć więcej'
@@ -896,15 +956,14 @@ Tooltips:
       danych. Lokalne API jest wbudowanym ekstraktorem. API Invidious wymaga połączenia
       z serwerem Invidious.
     Region for Trending: Obszar filmów „Na czasie” pozwala wybrać kraj, z którego
-      chciałbyś zobaczyć filmy zdobywające popularność. Nie wszystkie wymienione kraje
-      są obsługiwane przez YouTube.
+      chciałbyś zobaczyć filmy zdobywające popularność.
     Invidious Instance: Serwer Invidious, którym FreeTube będzie się łączył do wywołań
       API.
     Thumbnail Preference: Wszystkie miniaturki na FreeTube zostaną zastąpione klatką
       z filmu zamiast miniaturki domyślnej.
-    External Link Handling: "Wybierz domyślne zachowanie kiedy link, który nie może\
-      \ zostać otworzony w FreeTube, został kliknięty.\nDomyślnie FreeTube otworzy\
-      \ kliknięty link w domyślnej przeglądarce.\n"
+    External Link Handling: "Wybierz domyślne zachowanie kiedy link, który nie może
+      zostać otworzony w FreeTube, został kliknięty.\nDomyślnie FreeTube otworzy kliknięty
+      link w domyślnej przeglądarce.\n"
   Player Settings:
     Force Local Backend for Legacy Formats: Działa tylko, kiedy API Invidious jest
       ustawiony jako domyślny. Gdy opcja jest włączona, do odtwarzania starych formatów
@@ -928,7 +987,7 @@ Tooltips:
       DASH.
   Privacy Settings:
     Remove Video Meta Files: Po włączeniu FreeTube automatycznie usunie pliki metadanych
-      utworzone podczas odtwarzania filmu, gdy strona odtwarzania zostanie zamknięta.
+      utworzone podczas odtwarzania filmu, gdy strona odtwarzacza zostanie zamknięta.
   External Player Settings:
     Ignore Warnings: Nie pokazuj ostrzeżeń o nieobsługiwanych akcjach przez zewnętrzny
       odtwarzacz (n.p. odwracanie playlist, itp.).
@@ -947,8 +1006,14 @@ Tooltips:
       to większe użycie pamięci RAM.
   Distraction Free Settings:
     Hide Channels: Wprowadź nazwę albo ID kanału, aby schować wszystkie filmy i playlisty
-      tego kanału, oraz sam kanał z wyszukiwań, oraz z zakładki „Na czasie”. Nazwa
-      kanału musi być dokładnym dopasowaniem, z uwzględnieniem wielkości liter.
+      tego kanału, oraz sam kanał z wyszukiwań, z zakładek „Na czasie” i „Popularne”
+      oraz z polecanych. Nazwa kanału musi być dokładnym dopasowaniem, z uwzględnieniem
+      wielkości liter.
+    Hide Subscriptions Live: Ta opcja została nadpisana opcją ogólną „{appWideSetting}”
+      z podgrupy „{subsection}” grupy „{settingsSection}”
+  SponsorBlock Settings:
+    UseDeArrowTitles: Zastąp tytuły filmów tytułami zasugerowanymi przez użytkowników
+      DeArrow.
 Playing Next Video Interval: Odtwarzanie kolejnego filmu już za chwilę. Wciśnij aby
   przerwać. | Odtwarzanie kolejnego filmu za {nextVideoInterval} sekundę. Wciśnij
   aby przerwać. | Odtwarzanie kolejnego filmu za {nextVideoInterval} sekund. Wciśnij
@@ -1005,3 +1070,11 @@ Chapters:
     rozdział: {chapterName}'
 Preferences: Preferencje
 Ok: Ok
+Hashtag:
+  Hashtag: Hashtag
+  This hashtag does not currently have any videos: Nie ma na razie żadnych filmów
+    z takim hashtagiem
+Playlist will pause when current video is finished: Playlista zatrzyma się, gdy obecny
+  film się zakończy
+Playlist will not pause when current video is finished: Playlista nie zatrzyma się,
+  gdy obecny film się zakończy

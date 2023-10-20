@@ -22,14 +22,36 @@ import {
   showToast
 } from '../../helpers/utils'
 import {
-  filterFormats,
+  filterLocalFormats,
   getLocalVideoInfo,
   mapLocalFormat,
   parseLocalSubscriberCount,
   parseLocalTextRuns,
   parseLocalWatchNextVideo
 } from '../../helpers/api/local'
-import { invidiousGetVideoInformation, youtubeImageUrlToInvidious } from '../../helpers/api/invidious'
+import {
+  convertInvidiousToLocalFormat,
+  filterInvidiousFormats,
+  generateInvidiousDashManifestLocally,
+  invidiousGetVideoInformation,
+  youtubeImageUrlToInvidious
+} from '../../helpers/api/invidious'
+
+/**
+ * @typedef {object} AudioSource
+ * @property {string} url
+ * @property {string} type
+ * @property {string} label
+ * @property {string} qualityLabel
+ *
+ * @typedef {object} AudioTrack
+ * @property {string} id
+ * @property {('main'|'translation'|'descriptions'|'alternative')} kind - https://videojs.com/guides/audio-tracks/#kind
+ * @property {string} label
+ * @property {string} language
+ * @property {boolean} isDefault
+ * @property {AudioSource[]} sourceList
+ */
 import MusicControls from 'music-controls'
 export default defineComponent({
   name: 'Watch',
@@ -55,15 +77,16 @@ export default defineComponent({
       isLoading: true,
       firstLoad: true,
       useTheatreMode: false,
+      videoPlayerReady: false,
       showDashPlayer: true,
       showLegacyPlayer: false,
-      showYouTubeNoCookieEmbed: false,
       hidePlayer: false,
       isFamilyFriendly: false,
       isLive: false,
       liveChat: null,
       isLiveContent: false,
       isUpcoming: false,
+      isPostLiveDvr: false,
       upcomingTimestamp: null,
       upcomingTimeLeft: null,
       activeFormat: 'legacy',
@@ -84,11 +107,14 @@ export default defineComponent({
       channelSubscriptionCountText: '',
       videoPublished: 0,
       videoStoryboardSrc: '',
-      audioUrl: '',
       dashSrc: [],
       activeSourceList: [],
       videoSourceList: [],
       audioSourceList: [],
+      /**
+       * @type {AudioTrack[]}
+       */
+      audioTracks: [],
       adaptiveFormats: [],
       captionHybridList: [], // [] -> Promise[] -> string[] (URIs)
       recommendedVideos: [],
@@ -98,12 +124,16 @@ export default defineComponent({
       timestamp: null,
       playNextTimeout: null,
       playNextCountDownIntervalId: null,
-      infoAreaSticky: true
+      infoAreaSticky: true,
+      commentsEnabled: true,
     }
   },
   computed: {
-    historyCache: function () {
-      return this.$store.getters.getHistoryCache
+    historyEntry: function () {
+      return this.$store.getters.getHistoryCacheById[this.videoId]
+    },
+    historyEntryExists: function () {
+      return typeof this.historyEntry !== 'undefined'
     },
     rememberHistory: function () {
       return this.$store.getters.getRememberHistory
@@ -162,7 +192,7 @@ export default defineComponent({
     hideVideoDescription: function () {
       return this.$store.getters.getHideVideoDescription
     },
-    showFamilyFriendlyOnly: function() {
+    showFamilyFriendlyOnly: function () {
       return this.$store.getters.getShowFamilyFriendlyOnly
     },
     hideChannelSubscriptions: function () {
@@ -253,10 +283,13 @@ export default defineComponent({
       this.videoId = this.$route.params.id
 
       this.firstLoad = true
+      this.videoPlayerReady = false
       this.activeFormat = this.defaultVideoFormat
       this.videoStoryboardSrc = ''
       this.captionHybridList = []
       this.downloadLinks = []
+      this.videoCurrentChapterIndex = 0
+      this.audioTracks = []
 
       this.checkIfPlaylist()
       this.checkIfTimestamp()
@@ -278,7 +311,7 @@ export default defineComponent({
   mounted: function () {
     this.videoId = this.$route.params.id
     this.activeFormat = this.defaultVideoFormat
-    this.useTheatreMode = this.defaultTheatreMode
+    this.useTheatreMode = this.defaultTheatreMode && this.theatrePossible
 
     this.checkIfPlaylist()
     this.checkIfTimestamp()
@@ -295,9 +328,6 @@ export default defineComponent({
     changeTimestamp: function (timestamp) {
       this.$refs.videoPlayer.player.currentTime(timestamp)
     },
-    toggleTheatreMode: function () {
-      this.useTheatreMode = !this.useTheatreMode
-    },
 
     getVideoInformationLocal: async function () {
       if (this.firstLoad) {
@@ -306,17 +336,7 @@ export default defineComponent({
 
       try {
         let result = await getLocalVideoInfo(this.videoId)
-        // if we need to proxy videos through invidious
-        if (!process.env.IS_ELECTRON || this.proxyVideos) {
-          result.streaming_data.formats = result.streaming_data.formats.map(format => {
-            return {
-              ...format,
-              // hacky af, but this technically gets past a very recent issue with invidious servers
-              // not honouring the `&local=true` flag
-              url: `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
-            }
-          })
-        }
+
         this.isFamilyFriendly = result.basic_info.is_family_safe
 
         this.recommendedVideos = result.watch_next_feed
@@ -339,8 +359,7 @@ export default defineComponent({
 
         if (playabilityStatus.status === 'UNPLAYABLE') {
           /**
-           * @typedef {import('youtubei.js/dist/src/parser/classes/PlayerErrorMessage').default} PlayerErrorMessage
-           * @type {PlayerErrorMessage}
+           * @type {import ('youtubei.js').YTNodes.PlayerErrorMessage}
            */
           const errorScreen = playabilityStatus.error_screen
           throw new Error(`[${playabilityStatus.status}] ${errorScreen.reason.text}: ${errorScreen.subreason.text}`)
@@ -365,7 +384,8 @@ export default defineComponent({
           channelId: this.channelId
         })
 
-        this.videoPublished = new Date(result.page[0].microformat.publish_date.replace('-', '/')).getTime()
+        // `result.page[0].microformat.publish_date` example value: `2023-08-12T08:59:59-07:00`
+        this.videoPublished = new Date(result.page[0].microformat.publish_date).getTime()
 
         if (result.secondary_info?.description.runs) {
           try {
@@ -406,19 +426,12 @@ export default defineComponent({
         this.isLive = !!result.basic_info.is_live
         this.isUpcoming = !!result.basic_info.is_upcoming
         this.isLiveContent = !!result.basic_info.is_live_content
+        this.isPostLiveDvr = !!result.basic_info.is_post_live_dvr
 
-        if (!this.hideChannelSubscriptions) {
-          const subCount = parseLocalSubscriberCount(result.secondary_info.owner.subscriber_count.text)
+        const subCount = !result.secondary_info.owner.subscriber_count.isEmpty() ? parseLocalSubscriberCount(result.secondary_info.owner.subscriber_count.text) : NaN
 
-          if (!isNaN(subCount)) {
-            if (subCount >= 10000) {
-              this.channelSubscriptionCountText = formatNumber(subCount, { notation: 'compact' })
-            } else {
-              this.channelSubscriptionCountText = formatNumber(subCount)
-            }
-          } else {
-            this.channelSubscriptionCountText = ''
-          }
+        if (!isNaN(subCount)) {
+          this.channelSubscriptionCountText = formatNumber(subCount, subCount >= 10000 ? { notation: 'compact' } : undefined)
         } else {
           this.channelSubscriptionCountText = ''
         }
@@ -439,7 +452,7 @@ export default defineComponent({
               })
             }
           } else {
-            chapters = this.extractChaptersFromDescription(this.videoDescription)
+            chapters = this.extractChaptersFromDescription(result.basic_info.short_description)
           }
 
           if (chapters.length > 0) {
@@ -455,11 +468,22 @@ export default defineComponent({
 
         this.videoChapters = chapters
 
-        if (!this.hideLiveChat && this.isLive && this.isLiveContent && result.livechat) {
+        if (!this.hideLiveChat && this.isLive && result.livechat) {
           this.liveChat = result.getLiveChat()
         } else {
           this.liveChat = null
         }
+
+        // region No comment detection
+        // For videos without any comment (comment disabled?)
+        // e.g. https://youtu.be/8NBSwDEf8a8
+        //
+        // `comments_entry_point_header` is null probably when comment disabled
+        // e.g. https://youtu.be/8NBSwDEf8a8
+        // However videos with comments enabled but have no comment
+        // are different (which is not detected here)
+        this.commentsEnabled = result.comments_entry_point_header != null
+        // endregion No comment detection
 
         // the bypassed result is missing some of the info that we extract in the code above
         // so we only overwrite the result here
@@ -468,7 +492,7 @@ export default defineComponent({
           result = bypassedResult
         }
 
-        if ((this.isLive && this.isLiveContent) && !this.isUpcoming) {
+        if ((this.isLive || this.isPostLiveDvr) && !this.isUpcoming) {
           try {
             const formats = await getFormatsFromHLSManifest(result.streaming_data.hls_manifest_url)
 
@@ -479,6 +503,7 @@ export default defineComponent({
               .map((format) => {
                 return {
                   url: format.url,
+                  fps: format.fps,
                   type: 'application/x-mpegURL',
                   label: 'Dash',
                   qualityLabel: `${format.height}p`
@@ -500,6 +525,9 @@ export default defineComponent({
           this.showLegacyPlayer = true
           this.showDashPlayer = false
           this.activeFormat = 'legacy'
+          this.activeSourceList = this.videoSourceList
+          this.audioSourceList = null
+          this.dashSrc = null
         } else if (this.isUpcoming) {
           const upcomingTimestamp = result.basic_info.start_timestamp
 
@@ -557,11 +585,11 @@ export default defineComponent({
             if (result.streaming_data.formats.length > 0) {
               this.videoSourceList = result.streaming_data.formats.map(mapLocalFormat).reverse()
             } else {
-              this.videoSourceList = filterFormats(result.streaming_data.adaptive_formats, this.allowDashAv1Formats).map(mapLocalFormat).reverse()
+              this.videoSourceList = filterLocalFormats(result.streaming_data.adaptive_formats, this.allowDashAv1Formats).map(mapLocalFormat).reverse()
             }
-
             this.adaptiveFormats = this.videoSourceList
 
+            /** @type {import('../../helpers/api/local').LocalFormat[]} */
             const formats = [...result.streaming_data.formats, ...result.streaming_data.adaptive_formats]
             this.downloadLinks = formats.map((format) => {
               const qualityLabel = format.quality_label ?? format.bitrate
@@ -578,7 +606,7 @@ export default defineComponent({
               }
 
               return {
-                url: format.url,
+                url: format.freeTubeUrl,
                 label: label
               }
             })
@@ -628,40 +656,36 @@ export default defineComponent({
           }
 
           if (result.streaming_data?.adaptive_formats.length > 0) {
-            this.audioSourceList = result.streaming_data.adaptive_formats.filter((format) => {
+            const audioFormats = result.streaming_data.adaptive_formats.filter((format) => {
               return format.has_audio
-            }).sort((a, b) => {
-              return a.bitrate - b.bitrate
-            }).map((format, index) => {
-              const label = (x) => {
-                switch (x) {
-                  case 0:
-                    return this.$t('Video.Audio.Low')
-                  case 1:
-                    return this.$t('Video.Audio.Medium')
-                  case 2:
-                    return this.$t('Video.Audio.High')
-                  case 3:
-                    return this.$t('Video.Audio.Best')
-                  default:
-                    return format.bitrate
-                }
-              }
-              return {
-                url: format.url,
-                type: format.mime_type,
-                label: 'Audio',
-                qualityLabel: label(index)
-              }
-            }).reverse()
+            })
+
+            const hasMultipleAudioTracks = audioFormats.some(format => format.audio_track)
+
+            if (hasMultipleAudioTracks) {
+              const audioTracks = this.createAudioTracksFromLocalFormats(audioFormats)
+
+              this.audioTracks = audioTracks
+
+              this.audioSourceList = audioTracks.find(track => track.isDefault).sourceList
+            } else {
+              this.audioTracks = []
+
+              this.audioSourceList = this.createLocalAudioSourceList(audioFormats)
+            }
 
             // we need to alter the result object so the toDash function uses the filtered formats too
-            result.streaming_data.adaptive_formats = filterFormats(result.streaming_data.adaptive_formats, this.allowDashAv1Formats)
+            result.streaming_data.adaptive_formats = filterLocalFormats(result.streaming_data.adaptive_formats, this.allowDashAv1Formats)
 
-            this.adaptiveFormats = result.streaming_data.adaptive_formats.map(mapLocalFormat)
+            // When `this.proxyVideos` is true
+            // It's possible that the Invidious instance used, only supports a subset of the formats from Local API
+            // i.e. the value passed into `adaptiveFormats`
+            // e.g. Supports 720p60, but not 720p - https://[DOMAIN_NAME]/api/manifest/dash/id/v3wm83zoSSY?local=true
             if (this.proxyVideos) {
+              this.adaptiveFormats = await this.getAdaptiveFormatsInvidious()
               this.dashSrc = await this.createInvidiousDashManifest()
             } else {
+              this.adaptiveFormats = result.streaming_data.adaptive_formats.map(mapLocalFormat)
               this.dashSrc = await this.createLocalDashManifest(result)
             }
 
@@ -677,7 +701,7 @@ export default defineComponent({
             this.enableLegacyFormat()
           }
 
-          if (result.storyboards?.type === 'PlayerStoryboardSpec') {
+          if (result.storyboards?.type === 'PlayerStoryboardSpec' && process.env.IS_ELECTRON) {
             await this.createLocalStoryboardUrls(result.storyboards.boards.at(-1))
           }
         }
@@ -692,6 +716,8 @@ export default defineComponent({
         console.error(err)
         if (this.backendPreference === 'local' && this.backendFallback && !err.toString().includes('private')) {
           showToast(this.$t('Falling back to Invidious API'))
+          // Invidious doesn't support multiple audio tracks, so we need to clear this to prevent the player getting confused
+          this.audioTracks = []
           this.getVideoInformationInvidious()
         } else {
           this.isLoading = false
@@ -704,17 +730,17 @@ export default defineComponent({
         this.isLoading = true
       }
 
-      this.dashSrc = this.createInvidiousDashManifest()
       this.videoStoryboardSrc = `${this.currentInvidiousInstance}/api/v1/storyboards/${this.videoId}?height=90`
 
       invidiousGetVideoInformation(this.videoId)
-        .then(result => {
+        .then(async result => {
           if (result.error) {
             throw new Error(result.error)
           }
 
           this.videoTitle = result.title
           this.videoViewCount = result.viewCount
+          this.channelSubscriptionCountText = isNaN(result.subCountText) ? '' : result.subCountText
           if (this.hideVideoLikesAndDislikes) {
             this.videoLikeCount = null
             this.videoDislikeCount = null
@@ -722,11 +748,7 @@ export default defineComponent({
             this.videoLikeCount = result.likeCount
             this.videoDislikeCount = result.dislikeCount
           }
-          if (this.hideChannelSubscriptions) {
-            this.channelSubscriptionCountText = ''
-          } else {
-            this.channelSubscriptionCountText = result.subCountText || 'FT-0'
-          }
+
           this.channelId = result.authorId
           this.channelName = result.author
           const channelThumb = result.authorThumbnails[1]
@@ -740,13 +762,7 @@ export default defineComponent({
           this.videoPublished = result.published * 1000
           this.videoDescriptionHtml = result.descriptionHtml
           this.recommendedVideos = result.recommendedVideos
-          this.adaptiveFormats = result.adaptiveFormats.map((format) => {
-            format.bitrate = parseInt(format.bitrate)
-            if (typeof format.resolution !== 'undefined') {
-              format.height = parseInt(format.resolution.replace('p', ''))
-            }
-            return format
-          })
+          this.adaptiveFormats = await this.getAdaptiveFormatsInvidious(result)
           this.isLive = result.liveNow
           this.isFamilyFriendly = result.isFamilyFriendly
           this.captionHybridList = result.captions.map(caption => {
@@ -822,17 +838,6 @@ export default defineComponent({
           } else {
             this.videoLengthSeconds = result.lengthSeconds
             this.videoSourceList = result.formatStreams.reverse()
-            // if we need to proxy videos through invidious
-            if (!process.env.IS_ELECTRON || this.proxyVideos) {
-              this.videoSourceList = this.videoSourceList.map(format => {
-                return {
-                  ...format,
-                  // hacky af, but this technically gets past a very recent issue with invidious servers
-                  // not honouring the `&local=true` flag
-                  url: `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
-                }
-              })
-            }
 
             this.downloadLinks = result.adaptiveFormats.concat(this.videoSourceList).map((format) => {
               const qualityLabel = format.qualityLabel || format.bitrate
@@ -864,18 +869,28 @@ export default defineComponent({
               return object
             }))
 
-            this.audioSourceList = result.adaptiveFormats.filter((format) => {
-              return format.type.includes('audio')
-            }).map((format) => {
-              return {
-                url: format.url,
-                type: format.type,
-                label: 'Audio',
-                qualityLabel: parseInt(format.bitrate)
-              }
-            }).sort((a, b) => {
-              return a.qualityLabel - b.qualityLabel
-            })
+            this.audioTracks = []
+            this.dashSrc = await this.createInvidiousDashManifest()
+
+            if (process.env.IS_ELECTRON && this.audioTracks.length > 0) {
+              // when we are in Electron and the video has multiple audio tracks,
+              // we populate the list inside createInvidiousDashManifest
+              // as we need to work out the different audio tracks for the DASH manifest anyway
+              this.audioSourceList = this.audioTracks.find(track => track.isDefault).sourceList
+            } else {
+              this.audioSourceList = result.adaptiveFormats.filter((format) => {
+                return format.type.includes('audio')
+              }).map((format) => {
+                return {
+                  url: format.url,
+                  type: format.type,
+                  label: 'Audio',
+                  qualityLabel: parseInt(format.bitrate)
+                }
+              }).sort((a, b) => {
+                return a.qualityLabel - b.qualityLabel
+              })
+            }
 
             if (this.activeFormat === 'audio') {
               this.activeSourceList = this.audioSourceList
@@ -964,6 +979,104 @@ export default defineComponent({
       }
     },
 
+    /**
+     * @param {import('../../helpers/api/local').LocalFormat[]} audioFormats
+     * @returns {AudioTrack[]}
+     */
+    createAudioTracksFromLocalFormats: function (audioFormats) {
+      /** @type {string[]} */
+      const ids = []
+
+      /** @type {AudioTrack[]} */
+      const audioTracks = []
+
+      /** @type {import('youtubei.js').Misc.Format[][]} */
+      const sourceLists = []
+
+      for (const format of audioFormats) {
+        // Some videos with multiple audio tracks, have a broken one, that doesn't have any audio track information
+        // It seems to be the same as default audio track but broken
+        // At the time of writing, this video has a broken audio track: https://youtu.be/UJeSWbR6W04
+        if (!format.audio_track) {
+          continue
+        }
+
+        const index = ids.indexOf(format.audio_track.id)
+        if (index === -1) {
+          ids.push(format.audio_track.id)
+
+          let kind
+
+          if (format.audio_track.audio_is_default) {
+            kind = 'main'
+          } else if (format.is_dubbed) {
+            kind = 'translation'
+          } else if (format.is_descriptive) {
+            kind = 'descriptions'
+          } else {
+            kind = 'alternative'
+          }
+
+          audioTracks.push({
+            id: format.audio_track.id,
+            kind,
+            label: format.audio_track.display_name,
+            language: format.language,
+            isDefault: format.audio_track.audio_is_default,
+            sourceList: []
+          })
+
+          sourceLists.push([
+            format
+          ])
+        } else {
+          sourceLists[index].push(format)
+        }
+      }
+
+      for (let i = 0; i < audioTracks.length; i++) {
+        audioTracks[i].sourceList = this.createLocalAudioSourceList(sourceLists[i])
+      }
+
+      return audioTracks
+    },
+
+    /**
+     * @param {import('../../helpers/api/local').LocalFormat[]} audioFormats
+     * @returns {AudioSource[]}
+     */
+    createLocalAudioSourceList: function (audioFormats) {
+      return audioFormats.sort((a, b) => {
+        return a.bitrate - b.bitrate
+      }).map((format, index) => {
+        let label
+
+        switch (index) {
+          case 0:
+            label = this.$t('Video.Audio.Low')
+            break
+          case 1:
+            label = this.$t('Video.Audio.Medium')
+            break
+          case 2:
+            label = this.$t('Video.Audio.High')
+            break
+          case 3:
+            label = this.$t('Video.Audio.Best')
+            break
+          default:
+            label = format.bitrate.toString()
+        }
+
+        return {
+          url: format.freeTubeUrl,
+          type: format.mime_type,
+          label: 'Audio',
+          qualityLabel: label
+        }
+      }).reverse()
+    },
+
     addToHistory: function (watchProgress) {
       const videoData = {
         videoId: this.videoId,
@@ -977,8 +1090,7 @@ export default defineComponent({
         watchProgress: watchProgress,
         timeWatched: new Date().getTime(),
         isLive: false,
-        paid: false,
-        type: 'video'
+        type: 'video',
       }
 
       this.updateHistory(videoData)
@@ -1012,11 +1124,12 @@ export default defineComponent({
       this.updateLastViewedPlaylist(payload)
     },
 
-    checkIfWatched: function () {
-      const historyIndex = this.historyCache.findIndex((video) => {
-        return video.videoId === this.videoId
-      })
+    handleVideoReady: function () {
+      this.videoPlayerReady = true
+      this.checkIfWatched()
+    },
 
+    checkIfWatched: function () {
       if (!this.isLive) {
         if (this.timestamp) {
           if (this.timestamp < 0) {
@@ -1026,8 +1139,9 @@ export default defineComponent({
           } else {
             this.$refs.videoPlayer.player.currentTime(this.timestamp)
           }
-        } else if (historyIndex !== -1) {
-          const watchProgress = this.historyCache[historyIndex].watchProgress
+        } else if (this.saveWatchedProgress && this.historyEntryExists) {
+          // For UX consistency, no progress reading if writing disabled
+          const watchProgress = this.historyEntry.watchProgress
 
           if (watchProgress < (this.videoLengthSeconds - 10)) {
             this.$refs.videoPlayer.player.currentTime(watchProgress)
@@ -1038,8 +1152,8 @@ export default defineComponent({
       if (this.rememberHistory) {
         if (this.timestamp) {
           this.addToHistory(this.timestamp)
-        } else if (historyIndex !== -1) {
-          this.addToHistory(this.historyCache[historyIndex].watchProgress)
+        } else if (this.historyEntryExists) {
+          this.addToHistory(this.historyEntry.watchProgress)
         } else {
           this.addToHistory(0)
         }
@@ -1051,6 +1165,10 @@ export default defineComponent({
     },
 
     checkIfPlaylist: function () {
+      // On the off chance that user selected pause on current video
+      // Then clicks on another video in the playlist
+      this.disablePlaylistPauseOnCurrent()
+
       if (typeof (this.$route.query) !== 'undefined') {
         this.playlistId = this.$route.query.playlistId
 
@@ -1092,12 +1210,26 @@ export default defineComponent({
         })
     },
 
+    handleFormatChange: function (format) {
+      switch (format) {
+        case 'dash':
+          this.enableDashFormat()
+          break
+        case 'legacy':
+          this.enableLegacyFormat()
+          break
+        case 'audio':
+          this.enableAudioFormat()
+          break
+      }
+    },
+
     enableDashFormat: function () {
-      if (this.activeFormat === 'dash' || this.isLive) {
+      if (this.activeFormat === 'dash') {
         return
       }
 
-      if (this.dashSrc === null) {
+      if (this.dashSrc === null || this.isLive || this.isPostLiveDvr) {
         showToast(this.$t('Change Format.Dash formats are not available for this video'))
         return
       }
@@ -1123,20 +1255,6 @@ export default defineComponent({
 
       const watchedProgress = this.getWatchedProgress()
       this.activeFormat = 'legacy'
-      // if we need to proxy videos through invidious
-      if (!process.env.IS_ELECTRON || this.proxyVideos) {
-        this.videoSourceList = this.videoSourceList.map(format => {
-          if (format.url.indexOf('.googlevideo.com/') === -1) {
-            return format
-          }
-          return {
-            ...format,
-            // hacky af, but this technically gets past a very recent issue with invidious servers
-            // not honouring the `&local=true` flag
-            url: `${this.currentInvidiousInstance}/${format.url.split('.googlevideo.com/')[1]}`
-          }
-        })
-      }
       this.activeSourceList = this.videoSourceList
       this.hidePlayer = true
 
@@ -1182,6 +1300,16 @@ export default defineComponent({
         return
       }
 
+      if (this.watchingPlaylist && this.getPlaylistPauseOnCurrent()) {
+        this.disablePlaylistPauseOnCurrent()
+        return
+      }
+
+      if (this.watchingPlaylist && this.$refs.watchVideoPlaylist.shouldStopDueToPlaylistEnd) {
+        // Let `watchVideoPlaylist` handle end of playlist, no countdown needed
+        this.$refs.watchVideoPlaylist.playNextVideo()
+        return
+      }
       const nextVideoInterval = this.defaultInterval
       this.playNextTimeout = setTimeout(() => {
         const player = this.$refs.videoPlayer.player
@@ -1304,40 +1432,36 @@ export default defineComponent({
     },
 
     /**
-     * @typedef {import('youtubei.js/dist/src/parser/youtube/VideoInfo').default} VideoInfo
-     */
-    /**
-     * @param {VideoInfo} videoInfo
+     * @param {import('youtubei.js').YT.VideoInfo} videoInfo
      */
     createLocalDashManifest: async function (videoInfo) {
-      const xmlData = videoInfo.toDash()
+      const xmlData = await videoInfo.toDash()
       const userData = await getUserDataPath()
       let fileLocation
       let uriSchema
-      if (process.env.IS_ELECTRON) {
-        if (process.env.NODE_ENV === 'development') {
-          fileLocation = `static/dashFiles/${this.videoId}.xml`
-          uriSchema = `dashFiles/${this.videoId}.xml`
-          // if the location does not exist, writeFileSync will not create the directory, so we have to do that manually
-          if (!(await pathExists('static/dashFiles/'))) {
-            await fs.mkdir('static/dashFiles/')
-          }
-
-          if (await pathExists(fileLocation)) {
-            await fs.rm(fileLocation)
-          }
-          await fs.writeFile(fileLocation, xmlData)
-        } else {
-          fileLocation = `${userData}/dashFiles/${this.videoId}.xml`
-          uriSchema = `file://${fileLocation}`
-
-          if (!(await pathExists(`${userData}/dashFiles/`))) {
-            await fs.mkdir(`${userData}/dashFiles/`)
-          }
-
-          await fs.writeFile(fileLocation, xmlData)
+      if (process.env.NODE_ENV === 'development') {
+        fileLocation = `static/dashFiles/${this.videoId}.xml`
+        uriSchema = `dashFiles/${this.videoId}.xml`
+        // if the location does not exist, writeFileSync will not create the directory, so we have to do that manually
+        if (!(await pathExists('static/dashFiles/'))) {
+          await fs.mkdir('static/dashFiles/')
         }
+
+        if (await pathExists(fileLocation)) {
+          await fs.rm(fileLocation)
+        }
+        await fs.writeFile(fileLocation, xmlData)
+      } else {
+        fileLocation = `${userData}/dashFiles/${this.videoId}.xml`
+        uriSchema = `file://${fileLocation}`
+
+        if (!(await pathExists(`${userData}/dashFiles/`))) {
+          await fs.mkdir(`${userData}/dashFiles/`)
+        }
+
+        await fs.writeFile(fileLocation, xmlData)
       }
+
       return [
         {
           url: uriSchema,
@@ -1348,10 +1472,72 @@ export default defineComponent({
       ]
     },
 
-    createInvidiousDashManifest: function () {
+    createInvidiousDashManifest: async function () {
       let url = `${this.currentInvidiousInstance}/api/manifest/dash/id/${this.videoId}`
 
-      if (!process.env.IS_ELECTRON || this.proxyVideos) {
+      // If we are in Electron,
+      // we can use YouTube.js' DASH manifest generator to generate the manifest.
+      // Using YouTube.js' gives us support for multiple audio tracks (currently not supported by Invidious)
+      if (process.env.IS_ELECTRON) {
+        // Invidious' API response doesn't include the height and width (and fps and qualityLabel for AV1) of video streams
+        // so we need to extract them from Invidious' manifest
+        const response = await fetch(url)
+        const originalText = await response.text()
+
+        const parsedManifest = new DOMParser().parseFromString(originalText, 'application/xml')
+
+        /** @type {import('youtubei.js').Misc.Format[]} */
+        const formats = []
+
+        /** @type {import('youtubei.js').Misc.Format[]} */
+        const audioFormats = []
+
+        let hasMultipleAudioTracks = false
+
+        for (const format of this.adaptiveFormats) {
+          if (format.type.startsWith('video/')) {
+            const representation = parsedManifest.querySelector(`Representation[id="${format.itag}"][bandwidth="${format.bitrate}"]`)
+
+            format.height = parseInt(representation.getAttribute('height'))
+            format.width = parseInt(representation.getAttribute('width'))
+            format.fps = parseInt(representation.getAttribute('frameRate'))
+
+            // the quality label is missing for AV1 formats
+            if (!format.qualityLabel) {
+              format.qualityLabel = format.width > format.height ? `${format.height}p` : `${format.width}p`
+            }
+          }
+
+          const localFormat = convertInvidiousToLocalFormat(format)
+
+          if (localFormat.has_audio) {
+            audioFormats.push(localFormat)
+
+            if (localFormat.is_dubbed || localFormat.is_descriptive) {
+              hasMultipleAudioTracks = true
+            }
+          }
+
+          formats.push(localFormat)
+        }
+
+        if (hasMultipleAudioTracks) {
+          // match YouTube's local API response with English
+          const languageNames = new Intl.DisplayNames('en-US', { type: 'language' })
+          for (const format of audioFormats) {
+            this.generateAudioTrackFieldInvidious(format, languageNames)
+          }
+
+          this.audioTracks = this.createAudioTracksFromLocalFormats(audioFormats)
+        }
+
+        const manifest = await generateInvidiousDashManifestLocally(
+          formats,
+          this.proxyVideos ? this.currentInvidiousInstance : undefined
+        )
+
+        url = `data:application/dash+xml;charset=UTF-8,${encodeURIComponent(manifest)}`
+      } else if (this.proxyVideos) {
         url += '?local=true'
       }
 
@@ -1365,36 +1551,86 @@ export default defineComponent({
       ]
     },
 
+    /**
+     * @param {import('youtubei.js').Misc.Format} format
+     * @param {Intl.DisplayNames} languageNames
+     */
+    generateAudioTrackFieldInvidious: function (format, languageNames) {
+      let type = ''
+
+      // use the same id numbers as YouTube (except -1, when we aren't sure what it is)
+      let idNumber = ''
+
+      if (format.is_descriptive) {
+        type = ' descriptive'
+        idNumber = 2
+      } else if (format.is_dubbed) {
+        type = ''
+        idNumber = 3
+      } else if (format.is_original) {
+        type = ' original'
+        idNumber = 4
+      } else {
+        type = ' alternative'
+        idNumber = -1
+      }
+
+      const languageName = languageNames.of(format.language)
+
+      format.audio_track = {
+        audio_is_default: !!format.is_original,
+        id: `${format.language}.${idNumber}`,
+        display_name: `${languageName}${type}`
+      }
+    },
+
+    getAdaptiveFormatsInvidious: async function (existingInfoResult = null) {
+      let result
+      if (existingInfoResult) {
+        result = existingInfoResult
+      } else {
+        result = await invidiousGetVideoInformation(this.videoId)
+      }
+
+      return filterInvidiousFormats(result.adaptiveFormats, this.allowDashAv1Formats)
+        .map((format) => {
+          format.bitrate = parseInt(format.bitrate)
+          if (typeof format.resolution === 'string') {
+            format.height = parseInt(format.resolution.replace('p', ''))
+          }
+          return format
+        })
+    },
+
     createLocalStoryboardUrls: async function (storyboardInfo) {
       const results = buildVTTFileLocally(storyboardInfo, this.videoLengthSeconds)
       const userData = await getUserDataPath()
       let fileLocation
       let uriSchema
-      if (process.env.IS_ELECTRON) {
-        // Dev mode doesn't have access to the file:// schema, so we access
-        // storyboards differently when run in dev
-        if (process.env.NODE_ENV === 'development') {
-          fileLocation = `static/storyboards/${this.videoId}.vtt`
-          uriSchema = `storyboards/${this.videoId}.vtt`
-          // if the location does not exist, writeFile will not create the directory, so we have to do that manually
-          if (!(await pathExists('static/storyboards/'))) {
-            fs.mkdir('static/storyboards/')
-          } else if (await pathExists(fileLocation)) {
-            await fs.rm(fileLocation)
-          }
 
-          await fs.writeFile(fileLocation, results)
-        } else {
-          if (!(await pathExists(`${userData}/storyboards/`))) {
-            await fs.mkdir(`${userData}/storyboards/`)
-          }
-          fileLocation = `${userData}/storyboards/${this.videoId}.vtt`
-          uriSchema = `file://${fileLocation}`
-
-          await fs.writeFile(fileLocation, results)
+      // Dev mode doesn't have access to the file:// schema, so we access
+      // storyboards differently when run in dev
+      if (process.env.NODE_ENV === 'development') {
+        fileLocation = `static/storyboards/${this.videoId}.vtt`
+        uriSchema = `storyboards/${this.videoId}.vtt`
+        // if the location does not exist, writeFile will not create the directory, so we have to do that manually
+        if (!(await pathExists('static/storyboards/'))) {
+          fs.mkdir('static/storyboards/')
+        } else if (await pathExists(fileLocation)) {
+          await fs.rm(fileLocation)
         }
+
+        await fs.writeFile(fileLocation, results)
+      } else {
+        if (!(await pathExists(`${userData}/storyboards/`))) {
+          await fs.mkdir(`${userData}/storyboards/`)
+        }
+        fileLocation = `${userData}/storyboards/${this.videoId}.vtt`
+        uriSchema = `file://${fileLocation}`
+
+        await fs.writeFile(fileLocation, results)
       }
-      // TODO 📝 properly figure out how to do this in cordova
+
       this.videoStoryboardSrc = uriSchema
     },
 
@@ -1515,6 +1751,16 @@ export default defineComponent({
 
     getPlaylistLoop: function () {
       return this.$refs.watchVideoPlaylist ? this.$refs.watchVideoPlaylist.loopEnabled : false
+    },
+
+    getPlaylistPauseOnCurrent: function () {
+      return this.$refs.watchVideoPlaylist ? this.$refs.watchVideoPlaylist.pauseOnCurrentVideo : false
+    },
+
+    disablePlaylistPauseOnCurrent: function () {
+      if (this.$refs.watchVideoPlaylist) {
+        this.$refs.watchVideoPlaylist.pauseOnCurrentVideo = false
+      }
     },
 
     updateTitle: function () {

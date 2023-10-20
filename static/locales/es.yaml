@@ -1,5 +1,5 @@
 # Put the name of your locale in the same language
-Locale Name: 'Español (España)'
+Locale Name: 'español (España)'
 FreeTube: 'FreeTube'
 # Currently on Subscriptions, Playlists, and History
 'This part of the app is not ready yet. Come back later when progress has been made.': >-
@@ -30,7 +30,21 @@ Close: 'Cerrar'
 Back: 'Atrás'
 Forward: 'Adelante'
 
+# Global
+# Anything shared among components / views should be put here
+Global:
+  Videos: 'Vídeos'
+  Shorts: Cortos
+  Live: En directo
+  Community: Comunidad
+
 # Search Bar
+  Counts:
+    Video Count: 1 vídeo | {count} vídeos
+    Channel Count: 1 canal | {count} canales
+    Subscriber Count: 1 suscriptor | {count} suscriptores
+    View Count: 1 vista | {count} vistas
+    Watching Count: 1 espectador | {count} espectadores
 Search / Go to URL: 'Buscar / Ir a la dirección'
   # In Filter Button
 Search Filters:
@@ -76,7 +90,7 @@ Subscriptions:
     lista de suscripciones está vacía. Suscríbete a canales para verlos aquí.'
   'Getting Subscriptions. Please wait.': 'Obteniendo suscripciones. Por favor, espere.'
   Refresh Subscriptions: 'Recargar suscripciones'
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Este
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Este
     perfil tiene muchas suscripciones. Forzar RSS para evitar la limitación de velocidad
   Load More Videos: Cargar más vídeos
   Error Channels: Canales con errores
@@ -84,6 +98,12 @@ Subscriptions:
     Actualice las suscripciones para verlas aquí.
   Empty Channels: Los canales a los que está suscrito no tienen actualmente ningún
     vídeo.
+  Subscriptions Tabs: Pestañas de suscripciones
+  All Subscription Tabs Hidden: Todas las pestañas de las suscripciones están ocultas.
+    Para ver el contenido, por favor, desoculta algunas pestañas en la sección «{subsection}»
+    en «{settingsSection}».
+  Load More Posts: Cargar más mensajes
+  Empty Posts: Tus canales suscritos no tienen actualmente ninguna entrada.
 Trending:
   Trending: 'Tendencias'
   Default: Predeterminado
@@ -114,7 +134,7 @@ Settings:
   # On Settings Page
   Settings: 'Ajustes'
   General Settings:
-    General Settings: 'General'
+    General Settings: 'Ajustes generales'
     Fallback to Non-Preferred Backend on Failure: 'Usar motor API secundario en caso
       de fallo'
     Enable Search Suggestions: 'Activar sugerencias de búsqueda'
@@ -134,6 +154,7 @@ Settings:
       Beginning: 'Comienzo'
       Middle: 'Mitad'
       End: 'Final'
+      Hidden: Oculto
     'Invidious Instance (Default is https://invidious.snopyta.org)': 'Instancia de
       Invidious (por defecto es https://invidious.snopyta.org)'
     Region for Trending: 'Región de las tendencias'
@@ -168,6 +189,8 @@ Settings:
       Dracula: 'Drácula'
       System Default: Valor predeterminado del sistema
       Catppuccin Mocha: Catppuccin Moca
+      Pastel Pink: Rosa pastel
+      Hot Pink: Fucsia
     Main Color Theme:
       Main Color Theme: 'Color principal'
       Red: 'Rojo'
@@ -267,12 +290,14 @@ Settings:
       File Name Tooltip: Puede utilizar las siguientes variables. %Y Año 4 dígitos.
         %M Mes 2 dígitos. %D Día 2 dígitos. %H Hora 2 dígitos. %N Minuto 2 dígitos.
         %S Segundo 2 dígitos. %T Milisegundo 3 dígitos. %s Video Segundo. %t Video
-        Milisegundo 3 dígitos. %i Video ID. También puede utilizar "\" o "/" para
-        crear subcarpetas.
+        Milisegundo 3 dígitos. %i Video ID. También puede utilizar \ o / para crear
+        subcarpetas.
     Enter Fullscreen on Display Rotate: Cambiar a pantalla completa al girar la pantalla
     Skip by Scrolling Over Video Player: Omitir al desplazarse sobre el reproductor
       de vídeo
     Allow DASH AV1 formats: Permitir formatos DASH AV1
+    Comment Auto Load:
+      Comment Auto Load: Cargar los comentarios automáticamente
   Privacy Settings:
     Privacy Settings: 'Privacidad'
     Remember History: 'Recordar historial'
@@ -397,6 +422,24 @@ Settings:
     Hide Channels Placeholder: Nombre o ID del canal
     Display Titles Without Excessive Capitalisation: Mostrar títulos sin demasiadas
       mayúsculas
+    Hide Featured Channels: Ocultar los canales recomendados
+    Hide Channel Playlists: Ocultar las listas de reproducción de los canales
+    Hide Channel Community: Ocultar los canal de la comunidad
+    Hide Channel Shorts: Ocultar los canales de vídeos cortos
+    Sections:
+      Side Bar: Barra lateral
+      Channel Page: Página del canal
+      Watch Page: Ver la página
+      General: General
+      Subscriptions Page: Página de suscripciones
+    Hide Channel Releases: Ocultar las nuevas publicaciones de los canales
+    Hide Channel Podcasts: Ocultar los canales de podcasts
+    Hide Subscriptions Shorts: Ocultar las suscripciones para los vídeos cortos
+    Hide Subscriptions Videos: Ocultar las suscripciones de los Vídeos
+    Hide Subscriptions Live: Ocultar las suscripciones de los directos
+    Hide Profile Pictures in Comments: Ocultar las fotos del perfil en los comentarios
+    Blur Thumbnails: Difuminar las miniaturas
+    Hide Subscriptions Community: Ocultar las suscripciones a la comunidad
   The app needs to restart for changes to take effect. Restart and apply change?: ¿Quieres
     reiniciar FreeTube ahora para aplicar los cambios?
   Proxy Settings:
@@ -429,6 +472,7 @@ Settings:
       Skip Option: Omitir opción
       Auto Skip: Salto automático
       Prompt To Skip: Solicitar que se omita
+    UseDeArrowTitles: Utilizar los títulos para el vídeo de DeArrow
   External Player Settings:
     Custom External Player Arguments: Argumentos adicionales del reproductor
     Custom External Player Executable: Ruta alternativa del ejecutable del reproductor
@@ -523,6 +567,7 @@ About:
   Licensed under the AGPLv3: Licencia AGPLv3
   Source code: Código fuente
   Beta: Beta
+  Discussions: Debates
 Profile:
   All Channels: 'Todos los canales'
   Profile Manager: 'Administrador de perfiles'
@@ -567,9 +612,8 @@ Profile:
   Profile Select: Seleccionar perfil
   Profile Filter: Filtro de perfil
   Profile Settings: Ajustes del perfil
+  Toggle Profile List: Alternar la lista de los perfiles
 Channel:
-  Subscriber: 'Suscriptor'
-  Subscribers: 'Suscriptores'
   Subscribe: 'Suscribirse'
   Unsubscribe: 'Anular suscripción'
   Search Channel: 'Buscar en canal'
@@ -597,7 +641,7 @@ Channel:
     Featured Channels: 'Canales destacados'
     Tags:
       Tags: Etiquetas
-      Search for: Buscar por "{tag}"
+      Search for: Buscar por «{tag}»
     Details: Detalles
     Joined: Ingresó en
     Location: Ubicación
@@ -608,13 +652,30 @@ Channel:
     tus suscripciones
   This channel does not exist: Este canal no existe
   This channel does not allow searching: Este canal no permite realizar búsquedas
-  This channel is age resticted and currently cannot be viewed in FreeTube.: Este
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Este
     canal tiene restricciones de edad y actualmente no puede verse en FreeTube.
   Channel Tabs: Ficha del Canal
   Community:
     This channel currently does not have any posts: Este canal no tiene actualmente
       ningún mensaje
-    Community: Comunidad
+    Reveal Answers: Revelar las respuestas
+    Hide Answers: Ocultar las respuestas
+    votes: '{votes} votos'
+  Live:
+    Live: En directo
+    This channel does not currently have any live streams: Este canal no tiene actualmente
+      ninguna retransmisión en directo
+  Shorts:
+    This channel does not currently have any shorts: Este canal no tiene actualmente
+      ningún vídeo corto
+  Podcasts:
+    Podcasts: Podcasts
+    This channel does not currently have any podcasts: Este canal actualmente no tiene
+      podcasts
+  Releases:
+    Releases: Publicaciones
+    This channel does not currently have any releases: Este canal no tiene actualmente
+      ninguna publicación
 Video:
   Mark As Watched: 'Marcar como visto'
   Remove From History: 'Borrar del historial'
@@ -627,10 +688,7 @@ Video:
     YouTube'
   Open in Invidious: 'Abrir en Invidious'
   Copy Invidious Link: 'Copiar el enlace de Invidious'
-  View: 'Ver'
   Views: 'Vistas'
-  # Context is "X People Watching"
-  Watching: 'Viendo'
   Watched: 'Visto'
   Autoplay: 'Reproducción automática'
   # As in a Live Video
@@ -642,9 +700,9 @@ Video:
     soportado de momento en esta versión.'
   'Chat is disabled or the Live Stream has ended.': 'El chat está desactivado o la
     emisión ha acabado.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'El chat en directo
+  Live chat is enabled. Chat messages will appear here once sent.: 'El chat en directo
     está activado. Los mensajes aparecerán aquí en cuanto se envíen.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Actualmente
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Actualmente
     el chat no funciona con la API de Invidious. Se requiere una conexión directa
     con YouTube.'
   Published:
@@ -758,6 +816,10 @@ Video:
   Show Super Chat Comment: Mostrar los comentarios del Super Chat
   Scroll to Bottom: Desplazarse hacia abajo
   Upcoming: Próximamente
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': El
+    chat en vivo no está disponible para esta transmisión. Tal vez estaba deshabilitado
+    antes de la retransmisión.
+  Pause on Current Video: Pausa en el vídeo actual
 Videos:
   #& Sort By
   Sort By:
@@ -833,6 +895,7 @@ Comments:
   Member: Miembro
   Hearted: Corazón
   View {replyCount} replies: Ver {replyCount} respuestas
+  Subscribed: Suscrito
 Up Next: 'A continuación'
 
 # Toast Messages
@@ -848,10 +911,8 @@ Shuffle is now disabled: 'Reproducción aleatoria desactivada'
 Shuffle is now enabled: 'Reproducción aleatoria activada'
 Playing Next Video: 'Reproduciendo el vídeo siguiente'
 Playing Previous Video: 'Reproduciendo el vídeo anterior'
-Playing next video in 5 seconds.  Click to cancel: 'El video siguiente comenzará en
-  5 segundos. Click para cancelar.'
 Canceled next video autoplay: 'La reproducción del vídeo siguiente se ha cancelado'
-'The playlist has ended.  Enable loop to continue playing': 'Esta lista de reproducción
+'The playlist has ended. Enable loop to continue playing': 'Esta lista de reproducción
   ha finalizado. Activa la reproducción en bucle para continuar con ella'
 
 Yes: 'Sí'
@@ -899,7 +960,7 @@ Tooltips:
       los formatos DASH H.264 en su lugar.
   General Settings:
     Region for Trending: La región de las tendencias permite ver los vídeos más populares
-      en un país determinado. YouTube no admite todos los países mostrados.
+      en un país determinado.
     Invidious Instance: La instancia de Invidious por defecto a la que FreeTube se
       conectará para las llamadas a la API.
     Thumbnail Preference: Todas las miniaturas en FreeTube se reemplazarán con un
@@ -909,9 +970,9 @@ Tooltips:
     Preferred API Backend: Elija el motor que debe utilizar FreeTube para obtener
       datos. La API local es un extractor incorporado. La API de Invidious requiere
       de un servidor Invidious al cual conectarse.
-    External Link Handling: "Elija el comportamiento por defecto cuando se hace clic\
-      \ en un enlace que no se pueda abrirse en FreeTube. \nPor defecto, FreeTube\
-      \ abrirá el enlace en el que se hizo clic en su navegador predeterminado.\n"
+    External Link Handling: "Elija el comportamiento por defecto cuando se hace clic
+      en un enlace que no se pueda abrirse en FreeTube. \nPor defecto, FreeTube abrirá
+      el enlace en el que se hizo clic en su navegador predeterminado.\n"
   Privacy Settings:
     Remove Video Meta Files: Cuando se active, FreeTube eliminará automáticamente
       meta-archivos creados durante la reproducción del vídeo una vez se cierre la
@@ -934,10 +995,15 @@ Tooltips:
       una caché para la imagen en la memoria personalizada. Esto aumentará el uso
       de la memoria RAM.
   Distraction Free Settings:
-    Hide Channels: Introduzca un nombre o ID de canal para ocultar todos los vídeos,
-      listas de reproducción y el propio canal y evitar que aparezcan en las búsquedas
-      o en las tendencias. El nombre del canal introducido debe coincidir completamente
-      y distingue entre mayúsculas y minúsculas.
+    Hide Channels: Ingresa un nombre del canal o un ID del canal para ocultar todos
+      los videos, listas de reproducción y el propio canal para que no aparezcan en
+      la búsqueda, tendencias, más populares y recomendados. El nombre del canal ingresado
+      debe ser una coincidencia completa y distinguir entre mayúsculas y minúsculas.
+    Hide Subscriptions Live: Esta configuración se reemplaza por la configuración
+      «{appWideSetting}» de toda la aplicación, en la sección «{subsection}» de «{settingsSection}»
+  SponsorBlock Settings:
+    UseDeArrowTitles: Sustituye los títulos de los vídeos por títulos enviados por
+      los usuarios desde DeArrow.
 More: Más
 Unknown YouTube url type, cannot be opened in app: Tipo de URL desconocido. No se
   puede abrir en la aplicación
@@ -972,7 +1038,7 @@ Channels:
   Empty: Tu lista de canales está actualmente vacía.
   Unsubscribe: Cancelar la suscripción
   Unsubscribed: '{channelName} ha sido eliminado de tus suscripciones'
-  Unsubscribe Prompt: ¿Está seguro de querer desuscribirse de "{channelName}"?
+  Unsubscribe Prompt: ¿Está seguro/segura de querer desuscribirse de «{channelName}»?
 Age Restricted:
   Type:
     Channel: Canal
@@ -991,3 +1057,11 @@ Chapters:
   Chapters: Capítulos
 Preferences: Preferencias
 Ok: De acuerdo
+Hashtag:
+  Hashtag: Hashtag
+  This hashtag does not currently have any videos: Este hashtag no tiene actualmente
+    ningún vídeo
+Playlist will pause when current video is finished: La lista de reproducción se detendrá
+  cuando termine el vídeo actual
+Playlist will not pause when current video is finished: La lista de reproducción no
+  se detendrá cuando termine el vídeo actual

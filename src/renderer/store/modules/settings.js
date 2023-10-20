@@ -1,4 +1,5 @@
-import i18n from '../../i18n/index'
+import i18n, { loadLocale } from '../../i18n/index'
+import allLocales from '../../../../static/locales/activeLocales.json'
 import { MAIN_PROFILE_ID, IpcChannels, SyncEvents } from '../../../constants'
 import { DBSettingHandlers } from '../../../datastores/handlers/index'
 import { getSystemLocale, showToast } from '../../helpers/utils'
@@ -192,9 +193,16 @@ const state = {
   expandSideBar: false,
   forceLocalBackendForLegacy: false,
   hideActiveSubscriptions: false,
+  hideChannelCommunity: false,
+  hideChannelPlaylists: false,
+  hideChannelReleases: false,
+  hideChannelPodcasts: false,
+  hideChannelShorts: false,
   hideChannelSubscriptions: false,
   hideCommentLikes: false,
+  hideCommentPhotos: false,
   hideComments: false,
+  hideFeaturedChannels: false,
   channelsHidden: '[]',
   hideVideoDescription: false,
   hideLiveChat: false,
@@ -205,6 +213,10 @@ const state = {
   hideRecommendedVideos: false,
   hideSearchBar: false,
   hideSharingActions: false,
+  hideSubscriptionsVideos: false,
+  hideSubscriptionsShorts: false,
+  hideSubscriptionsLive: false,
+  hideSubscriptionsCommunity: false,
   hideTrendingVideos: false,
   hideUnsubscribeButton: false,
   hideUpcomingPremieres: false,
@@ -263,6 +275,7 @@ const state = {
     skip: 'doNothing'
   },
   thumbnailPreference: '',
+  blurThumbnails: false,
   useProxy: false,
   useRssFeeds: false,
   useSponsorBlock: false,
@@ -270,6 +283,7 @@ const state = {
   videoPlaybackRateMouseScroll: false,
   videoSkipMouseScroll: false,
   videoPlaybackRateInterval: 0.25,
+  downloadAskPath: true,
   downloadFolderPath: '',
   downloadBehavior: 'download',
   enableScreenshot: false,
@@ -281,6 +295,8 @@ const state = {
   fetchSubscriptionsAutomatically: true,
   settingsPassword: '',
   allowDashAv1Formats: false,
+  commentAutoLoadEnabled: false,
+  useDeArrowTitles: false,
   showThumbnailInMediaControls: true
 }
 
@@ -294,7 +310,7 @@ const stateWithSideEffects = {
       if (value === 'system') {
         const systemLocaleName = (await getSystemLocale()).replace('-', '_') // ex: en_US
         const systemLocaleLang = systemLocaleName.split('_')[0] // ex: en
-        const targetLocaleOptions = i18n.allLocales.filter((locale) => { // filter out other languages
+        const targetLocaleOptions = allLocales.filter((locale) => { // filter out other languages
           const localeLang = locale.replace('-', '_').split('_')[0]
           return localeLang.includes(systemLocaleLang)
         }).sort((a, b) => {
@@ -328,7 +344,7 @@ const stateWithSideEffects = {
         }
       }
 
-      await i18n.loadLocale(targetLocale)
+      await loadLocale(targetLocale)
 
       i18n.locale = targetLocale
       await dispatch('getRegionData', {
@@ -350,6 +366,8 @@ const stateWithSideEffects = {
     defaultValue: 1,
     sideEffectsHandler: (_, value) => {
       sessionStorage.setItem('volume', value)
+      value === 0 ? sessionStorage.setItem('muted', 'true') : sessionStorage.setItem('muted', 'false')
+      sessionStorage.setItem('defaultVolume', value)
     }
   },
 
@@ -471,7 +489,8 @@ const customActions = {
           break
 
         case SyncEvents.GENERAL.DELETE_ALL:
-          commit('setHistoryCache', [])
+          commit('setHistoryCacheSorted', [])
+          commit('setHistoryCacheById', {})
           break
 
         default:

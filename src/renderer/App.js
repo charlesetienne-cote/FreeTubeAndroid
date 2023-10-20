@@ -10,11 +10,12 @@ import FtButton from './components/ft-button/ft-button.vue'
 import FtToast from './components/ft-toast/ft-toast.vue'
 import FtProgressBar from './components/ft-progress-bar/ft-progress-bar.vue'
 import { marked } from 'marked'
-import { IpcChannels } from '../constants'
+import { Injectables, IpcChannels } from '../constants'
 import packageDetails from '../../package.json'
 import { openExternalLink, openInternalPath, showToast } from './helpers/utils'
 import cordova from 'cordova'
 import 'core-js/stable'
+import universalLinks from 'universal-links'
 
 let ipcRenderer = null
 
@@ -31,6 +32,11 @@ export default defineComponent({
     FtButton,
     FtToast,
     FtProgressBar
+  },
+  provide: function () {
+    return {
+      [Injectables.SHOW_OUTLINES]: this.showOutlines
+    }
   },
   data: function () {
     return {
@@ -53,14 +59,12 @@ export default defineComponent({
     }
   },
   computed: {
-    isOpen: function () {
-      return this.$store.getters.getIsSideNavOpen
-    },
     showProgressBar: function () {
       return this.$store.getters.getShowProgressBar
     },
-    isRightAligned: function () {
-      return this.$i18n.locale === 'ar'
+    isLocaleRightToLeft: function () {
+      return this.locale === 'ar' || this.locale === 'fa' || this.locale === 'he' ||
+        this.locale === 'ur' || this.locale === 'yi' || this.locale === 'ku'
     },
     checkForUpdates: function () {
       return this.$store.getters.getCheckForUpdates
@@ -68,14 +72,9 @@ export default defineComponent({
     checkForBlogPosts: function () {
       return this.$store.getters.getCheckForBlogPosts
     },
-    searchSettings: function () {
-      return this.$store.getters.getSearchSettings
-    },
-    profileList: function () {
-      return this.$store.getters.getProfileList
-    },
     windowTitle: function () {
-      if (this.$route.meta.title !== 'Channel' && this.$route.meta.title !== 'Watch') {
+      const routeTitle = this.$route.meta.title
+      if (routeTitle !== 'Channel' && routeTitle !== 'Watch' && routeTitle !== 'Hashtag') {
         let title =
         this.$route.meta.path === '/home'
           ? packageDetails.productName
@@ -87,9 +86,6 @@ export default defineComponent({
       } else {
         return null
       }
-    },
-    defaultProfile: function () {
-      return this.$store.getters.getDefaultProfile
     },
     externalPlayer: function () {
       return this.$store.getters.getExternalPlayer
@@ -108,6 +104,10 @@ export default defineComponent({
 
     secColor: function () {
       return this.$store.getters.getSecColor
+    },
+
+    locale: function() {
+      return this.$i18n.locale.replace('_', '-')
     },
 
     systemTheme: function () {
@@ -134,6 +134,8 @@ export default defineComponent({
 
     secColor: 'checkThemeSettings',
 
+    locale: 'setLocale',
+
     $route () {
       // react to route changes...
       // Hide top nav filter panel on page change
@@ -143,9 +145,20 @@ export default defineComponent({
   created () {
     this.checkThemeSettings()
     this.setWindowTitle()
+    this.setLocale()
   },
   mounted: function () {
     if (process.env.IS_CORDOVA) {
+      universalLinks.subscribe('youtube_shortended', (event) => {
+        this.$router.push({ path: `/watch${event.path}` })
+      })
+      universalLinks.subscribe('youtube', (event) => {
+        const { url } = event
+        const uri = new URL(url)
+        // handle youtube link expects the host to be youtube
+        uri.host = 'youtube.com'
+        this.handleYoutubeLink(uri.toString())
+      })
       if ('plugins' in cordova && 'backgroundMode' in cordova.plugins) {
         const { backgroundMode } = cordova.plugins
         backgroundMode.setDefaults({
@@ -174,7 +187,6 @@ export default defineComponent({
         this.grabHistory()
         this.grabAllPlaylists()
 
-        this.watchSystemTheme()
         document.addEventListener('visibilitychange', () => {
           if (!document.hidden) { // if the window was unfocused, the system theme might have changed
             this.watchSystemTheme()
@@ -190,6 +202,7 @@ export default defineComponent({
           this.enableOpenUrl()
           await this.checkExternalPlayer()
         }
+        this.watchSystemTheme()
 
         this.dataReady = true
         setTimeout(() => {
@@ -240,7 +253,7 @@ export default defineComponent({
               this.changeLogTitle = json[0].name
 
               const message = this.$t('Version $ is now available!  Click for more details')
-              this.updateBannerMessage = message.replace('$', versionNumber)
+              this.updateBannerMessage = message.replace('$', tagName)
               const versionParts = packageDetails.version.split('.')
               const appVersion = versionParts[versionParts.length - 1]
               if (parseInt(versionNumber) > parseInt(appVersion)) {
@@ -446,13 +459,11 @@ export default defineComponent({
           }
 
           case 'hashtag': {
-            // TODO: Implement a hashtag related view
-            let message = 'Hashtags have not yet been implemented, try again later'
-            if (this.$te(message) && this.$t(message) !== '') {
-              message = this.$t(message)
-            }
-
-            showToast(message)
+            const { hashtag } = result
+            openInternalPath({
+              path: `/hashtag/${encodeURIComponent(hashtag)}`,
+              doCreateNewWindow
+            })
             break
           }
 
@@ -569,6 +580,24 @@ export default defineComponent({
       if (this.windowTitle !== null) {
         document.title = this.windowTitle
       }
+    },
+
+    setLocale: function() {
+      document.documentElement.setAttribute('lang', this.locale)
+      if (this.isLocaleRightToLeft) {
+        document.body.dir = 'rtl'
+      } else {
+        document.body.dir = 'ltr'
+      }
+    },
+
+    /**
+     * provided to all child components, see `provide` near the top of this file
+     * after injecting it, they can show outlines during keyboard navigation
+     * e.g. cycling through tabs with the arrow keys
+     */
+    showOutlines: function () {
+      this.hideOutlines = false
     },
 
     ...mapMutations([

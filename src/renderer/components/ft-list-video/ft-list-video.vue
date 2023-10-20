@@ -14,6 +14,7 @@
       <router-link
         class="thumbnailLink"
         tabindex="-1"
+        aria-hidden="true"
         :to="{
           path: `/watch/${id}`,
           query: playlistIdFinal ? {playlistId: playlistIdFinal} : {}
@@ -22,6 +23,8 @@
         <img
           :src="thumbnail"
           class="thumbnailImage"
+          alt=""
+          :style="{filter: blurThumbnailsStyle}"
         >
       </router-link>
       <div
@@ -45,10 +48,11 @@
         @click="handleExternalPlayer"
       />
       <ft-icon-button
-        v-if="!isLive"
+        v-if="!isUpcoming"
         :title="$t('Video.Save Video')"
         :icon="['fas', 'star']"
         class="favoritesIcon"
+        :class="{ favorited: favoriteIconTheme === 'base favorite'}"
         :theme="favoriteIconTheme"
         :padding="appearance === `watchPlaylistItem` ? 5 : 6"
         :size="appearance === `watchPlaylistItem` ? 14 : 18"
@@ -63,7 +67,7 @@
       <div
         v-if="watched"
         class="watchedProgressBar"
-        :style="{width: progressPercentage + '%'}"
+        :style="{inlineSize: progressPercentage + '%'}"
       />
     </div>
     <div class="info">
@@ -74,19 +78,23 @@
           query: playlistIdFinal ? {playlistId: playlistIdFinal} : {}
         }"
       >
-        {{ displayTitle }}
+        <h3 class="h3Title">
+          {{ displayTitle }}
+        </h3>
       </router-link>
       <div class="infoLine">
         <router-link
+          v-if="channelId !== null"
           class="channelName"
           :to="`/channel/${channelId}`"
         >
           <span>{{ channelName }}</span>
         </router-link>
         <template v-if="!isLive && !isUpcoming && !isPremium && !hideViews">
-          <span class="viewCount"> • {{ parsedViewCount }} </span>
-          <span v-if="viewCount === 1">{{ $t("Video.View").toLowerCase() }}</span>
-          <span v-else>{{ $t("Video.Views").toLowerCase() }}</span>
+          <span class="viewCount">
+            <template v-if="channelId !== null"> • </template>
+            {{ $tc('Global.Counts.View Count', viewCount, {count: parsedViewCount}) }}
+          </span>
         </template>
         <span
           v-if="uploadedTime !== '' && !isLive && !inHistory"
@@ -99,7 +107,7 @@
         <span
           v-if="isLive && !hideViews"
           class="viewCount"
-        > • {{ parsedViewCount }} {{ $t("Video.Watching").toLowerCase() }}</span>
+        > • {{ $tc('Global.Counts.Watching Count', viewCount, {count: parsedViewCount}) }}</span>
       </div>
       <ft-icon-button
         class="optionsButton"
@@ -115,9 +123,8 @@
       <p
         v-if="listType !== 'grid' && appearance === 'result'"
         class="description"
-      >
-        {{ description }}
-      </p>
+        v-html="description"
+      />
     </div>
   </div>
 </template>

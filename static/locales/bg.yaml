@@ -30,6 +30,20 @@ Close: 'Затваряне'
 Back: 'Назад'
 Forward: 'Напред'
 
+# Global
+# Anything shared among components / views should be put here
+Global:
+  Videos: 'видеа'
+  Shorts: Кратки видеа
+  Live: На живо
+  Community: Общност
+
+  Counts:
+    Video Count: 1 видео | {count} видеа
+    Channel Count: 1 канал | {count} канала
+    Subscriber Count: 1 абонат | {count} абоната
+    View Count: 1 преглед | {count} прегледа
+    Watching Count: 1 гледане | {count} гледания
 Version {versionNumber} is now available!  Click for more details: 'Версия {versionNumber}
   е вече налична! Щракнете за повече детайли'
 Download From Site: 'Сваляне от сайта'
@@ -82,7 +96,7 @@ Subscriptions:
     с абонаменти е празен. Започнете да добавяте, за да ги видите тук.'
   'Getting Subscriptions. Please wait.': 'Получаване на абонаменти. Моля, изчакайте.'
   Refresh Subscriptions: 'Опресняване на абонаментите'
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: Този
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: Този
     профил има голям брой абонаменти. Принудително използване на RSS за заобикаляне
     на ограниченията
   Load More Videos: Зареждане на още видеа
@@ -90,6 +104,12 @@ Subscriptions:
   Disabled Automatic Fetching: Автоматичното извличане на абонаменти е деактивирано.
     Обновете абонаментите, за да ги видите тук.
   Empty Channels: Каналите, за които сте абонирани, в момента нямат никакви видеа.
+  Subscriptions Tabs: Раздели с абонаменти
+  All Subscription Tabs Hidden: Всички раздели на абонамента са скрити. За да виждате
+    съдържанието тук, моля, премахнете скриването на някои раздели в секция "{subsection}"
+    на "{settingsSection}".
+  Load More Posts: Зареждане на още публикации
+  Empty Posts: В момента в абонираните от вас канали няма публикации.
 Trending:
   Trending: 'Набиращи популярност'
   Trending Tabs: Раздели за набиращи популярност
@@ -102,11 +122,11 @@ Playlists: 'Плейлисти'
 User Playlists:
   Your Playlists: 'Вашите плейлисти'
   Your saved videos are empty. Click on the save button on the corner of a video to have it listed here: Няма
-    запазени видеоклипове. За запазване щракнете в ъгъла на видеоклипа
+    запазени видеа. За запазване щракнете в ъгъла на видеото
   Playlist Message: Тази страница не отразява напълно работещи плейлисти. В него са
-    изброени само видеоклипове, които сте запазили или избрали за любими. Когато работата
-    приключи, всички видеоклипове, които в момента са тук, ще бъдат мигрирани в плейлист
-    „Любими“.
+    изброени само видеа, които сте запазили или избрали за предпочитани. Когато работата
+    приключи, всички видеа, които в момента са тук, ще бъдат преместени в плейлист
+    „Предпочитани“.
   Search bar placeholder: Търсене в плейлиста
   Empty Search Message: В този плейлист няма видеа, които да отговарят на търсенето
     ви
@@ -143,6 +163,7 @@ Settings:
       Beginning: 'Начало на видео'
       Middle: 'Среда на видео'
       End: 'Край на видео'
+      Hidden: Скрити
     'Invidious Instance (Default is https://invidious.snopyta.org)': 'Излед на Invidious
       (по подразбиране е https://invidious.snopyta.org)'
     Region for Trending: 'Регион за набиращи популярност'
@@ -175,6 +196,8 @@ Settings:
       Dracula: Dracula
       System Default: Стандартна за системата
       Catppuccin Mocha: Catppuccin Mocha
+      Pastel Pink: Пастелно розово
+      Hot Pink: Горещо розово
     Main Color Theme:
       Main Color Theme: 'Основна цветова тема'
       Red: 'Червено'
@@ -279,6 +302,8 @@ Settings:
     Enter Fullscreen on Display Rotate: Режим на цял екран при завъртане на дисплея
     Skip by Scrolling Over Video Player: Превъртане над видео плейъра
     Allow DASH AV1 formats: Разрешаване на форматите DASH AV1
+    Comment Auto Load:
+      Comment Auto Load: Атоматично зареждане на коментари
   Privacy Settings:
     Privacy Settings: 'Настройки за поверителност'
     Remember History: 'Запазване на историята'
@@ -401,6 +426,24 @@ Settings:
     Hide Channels Placeholder: Име или идентификатор на канала
     Display Titles Without Excessive Capitalisation: Показване на заглавията без излишни
       главни букви
+    Hide Featured Channels: Скриване на препоръчаните канали
+    Hide Channel Playlists: Скриване на плейлистите на каналите
+    Hide Channel Community: Скриване на общността на каналите
+    Hide Channel Shorts: Скриване кратките видеа на канала
+    Sections:
+      Channel Page: Страница на канала
+      Side Bar: Странична лента
+      Watch Page: Страница за гледане
+      General: Общи
+      Subscriptions Page: Страница с абонаменти
+    Hide Channel Releases: Скриване на изданията на канала
+    Hide Subscriptions Videos: Скриване на видеата в абонаментите
+    Hide Subscriptions Shorts: Скриване на кратките видеа в абонаментите
+    Hide Subscriptions Live: Скриване на абонаментите на живо
+    Hide Channel Podcasts: Скриване на подкастите на канала
+    Blur Thumbnails: Размазване на миниатюрите
+    Hide Profile Pictures in Comments: Скриване на профилните снимки в коментарите
+    Hide Subscriptions Community: Скриване на абонаментите Общност
   The app needs to restart for changes to take effect. Restart and apply change?: Приложението
     трябва да се рестартира за да се приложат промените. Рестартиране?
   Proxy Settings:
@@ -434,6 +477,7 @@ Settings:
       Prompt To Skip: Подкана за пропускане
       Do Nothing: Не правете нищо
     Category Color: Категория Цвят
+    UseDeArrowTitles: Използване на DeArrow за заглавия на видео
   External Player Settings:
     Custom External Player Arguments: Персонализирани аргументи за външен плейър
     Custom External Player Executable: Персонализирано изпълнение на външен плейър
@@ -459,8 +503,9 @@ Settings:
   Experimental Settings:
     Experimental Settings: Експериментални настройки
     Replace HTTP Cache: Замяна на HTTP кеша
-    Warning: Тези настройки са експериментални и причиняват сривове, докато са разрешени.
-      Силно се препоръчва създаването на резервни копия. Използвайте на свой риск!
+    Warning: Тези настройки са експериментални и може да причинят сривове, докато
+      са разрешени. Силно се препоръчва създаването на резервни копия. Използвайте
+      на свой риск!
   Password Settings:
     Password Settings: Настройки на парола
     Set Password To Prevent Access: Задаване на парола, за предотвратяване на достъпа
@@ -527,6 +572,7 @@ About:
   Source code: Програмен код
   Beta: Бета
   Credits: Заслуги
+  Discussions: Дискусии
 Profile:
   Profile Select: 'Избор на профил'
   All Channels: 'Всички канали'
@@ -571,16 +617,15 @@ Profile:
 #On Channel Page
   Profile Filter: Профилен филтър
   Profile Settings: Настройки на профил
+  Toggle Profile List: Превключване на списъка с профили
 Channel:
-  Subscriber: 'Абонат'
-  Subscribers: 'Абонати'
   Subscribe: 'Абониране'
   Unsubscribe: 'Отписване'
   Channel has been removed from your subscriptions: 'Каналът беше премахнат от вашите
     абонаменти'
   Removed subscription from {count} other channel(s): 'Премахнат абонамент от {count}
     друг(и) канал(и)'
-  Added channel to your subscriptions: 'Добавен канал към вашите абонаменти'
+  Added channel to your subscriptions: 'Каналът е добавен към вашите абонаменти'
   Search Channel: 'Търсене в канала'
   Your search results have returned 0 results: 'Търсенето върна 0 резултата'
   Sort By: 'Сортиране по'
@@ -604,6 +649,38 @@ Channel:
     About: 'Относно'
     Channel Description: 'Описание на канала'
     Featured Channels: 'Препоръчани канали'
+    Tags:
+      Tags: Етикети
+      Search for: Търсене за „{tag}“
+    Details: Детайли
+    Joined: Присъединен на
+    Location: Местоположение
+  Community:
+    This channel currently does not have any posts: В момента този канал няма никакви
+      публикации
+    votes: '{votes} гласа'
+    Reveal Answers: Разкриване на отговорите
+    Hide Answers: Скриване на отговорите
+  This channel does not exist: Каналът не съществува
+  This channel does not allow searching: Каналът не позволява търсене
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: Каналът
+    е възрастово ограничен и в момента не може да бъде гледан във FreeTube.
+  Channel Tabs: Раздели на каналите
+  Live:
+    Live: На живо
+    This channel does not currently have any live streams: В момента този канал няма
+      никакви потоци на живо
+  Shorts:
+    This channel does not currently have any shorts: В момента този канал няма никакви
+      кратки видеа
+  Podcasts:
+    Podcasts: Подкасти
+    This channel does not currently have any podcasts: В момента този канал няма никакви
+      подкасти
+  Releases:
+    Releases: Издания
+    This channel does not currently have any releases: В момента този канал няма никакви
+      издания
 Video:
   Mark As Watched: 'Отбелязване като гледано'
   Remove From History: 'Премахване от историята'
@@ -615,15 +692,12 @@ Video:
   Copy YouTube Embedded Player Link: 'Копиране на връзка за вградения YouTube плейър'
   Open in Invidious: 'Отваряне в Invidious'
   Copy Invidious Link: 'Копиране на връзка за Invidious'
-  View: 'показване'
-  Views: 'показвания'
+  Views: 'Показвания'
   Loop Playlist: 'Повтаряне на плейлиста'
   Shuffle Playlist: 'Разбъркване на плейлиста'
   Reverse Playlist: 'Обръщане на плейлиста'
   Play Next Video: 'Следващо видео'
   Play Previous Video: 'Предишно видео'
-  # Context is "X People Watching"
-  Watching: 'Гледащи'
   Watched: 'Гледано'
   Autoplay: 'Автоматично пускане'
   Starting soon, please refresh the page to check again: 'Започва скоро, моля опреснете
@@ -637,9 +711,9 @@ Video:
     в тази версия.'
   'Chat is disabled or the Live Stream has ended.': 'Чатът е деактивиран или предаването
     на живо е приключило.'
-  Live chat is enabled.  Chat messages will appear here once sent.: 'Чатът на живо
+  Live chat is enabled. Chat messages will appear here once sent.: 'Чатът на живо
     е активиран. Съобщенията ще се появят тук когато бъдат изпратени.'
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': 'Чатът
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': 'Чатът
     на живо не се поддържа от интерфейса на Invidious. Изисква се директна връзка
     с YouTube.'
   Published:
@@ -690,8 +764,8 @@ Video:
   Open Channel in YouTube: Отваряне на канала в YouTube
   Started streaming on: Начало на предаването
   Streamed on: На живо на
-  Video has been removed from your saved list: Видеоклипът е премахнат от вашия запазен
-    списък
+  Video has been removed from your saved list: Видеото е премахнато от вашия списък
+    със запазени
   Video has been saved: Видеото е запазено
   Save Video: Запазване на видео
   translated from English: преведено от английски
@@ -730,7 +804,7 @@ Video:
     buffered: Буферирани
     out of: от
     Resolution: Резолюция
-    Video ID: Идентификатор на видеоклипа
+    Video ID: Идентификатор на видеото
     Player Dimensions: Размери на плейъра
     Bitrate: Побитова скорост
     Bandwidth: Пропускателна способност
@@ -739,13 +813,16 @@ Video:
     Mimetype: MIME тип
     Buffered: Буферирани
     Video statistics are not available for legacy videos: Статистиката не е налична
-      за наследени видеоклипове
+      за наследени видеа
   Premieres on: Премиера на
   Premieres in: Премиери в
   Premieres: Премиерa
   Show Super Chat Comment: Показване на Super Chat коментар
   Scroll to Bottom: Превъртане в долната част
-  Upcoming: Предстоящи
+  Upcoming: Предстои
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': Чатът
+    на живо не е наличен за този поток. Възможно е да е бил деактивиран от качващия.
+  Pause on Current Video: Пауза на текущото видео
 Videos:
   #& Sort By
   Sort By:
@@ -818,6 +895,7 @@ Comments:
   Member: Член
   View {replyCount} replies: Преглед на {replyCount} отговора
   Hearted: Сърдечно
+  Subscribed: Абониран
 Up Next: 'Следващ'
 
 # Toast Messages
@@ -836,10 +914,8 @@ Shuffle is now enabled: 'Разбъркването е включено'
 The playlist has been reversed: 'Плейлистата е в обърнат ред'
 Playing Next Video: 'Пускане на следващото видео'
 Playing Previous Video: 'Пускане на предишното видео'
-Playing next video in 5 seconds.  Click to cancel: 'Следващо видео започва след 5
-  секунди. Щракнете за отказ.'
 Canceled next video autoplay: 'Следващото видео е отказано'
-'The playlist has ended.  Enable loop to continue playing': 'Плейлиста приключи. Включете
+'The playlist has ended. Enable loop to continue playing': 'Плейлиста приключи. Включете
   повторението за да продължи'
 
 Yes: 'Да'
@@ -863,7 +939,7 @@ Tooltips:
       избран Invidious интерфейс. Когато е активиран, локалният интерфейс ще използва
       старите формати вместо тези на Invidious. Това помага когато видеата, получавани
       от Invidious не вървят поради регионални ограничения.
-    Scroll Playback Rate Over Video Player: Докато курсорът е върху видеоклипа, натиснете
+    Scroll Playback Rate Over Video Player: Докато курсорът е върху видеото, натиснете
       и задръжте клавиша Control (Command Key за Mac) и превъртете колелцето на мишката
       напред или назад, за да контролирате скоростта на възпроизвеждане. Натиснете
       и задръжте клавиша Control (Command Key за Mac) и щракнете с левия бутон на
@@ -877,8 +953,7 @@ Tooltips:
       вместо тях.
   General Settings:
     Region for Trending: Регионът на набиращите популярност дава възможност да се
-      избере страната, за която това се отнася. Не всички страни показани тук се поддържат
-      от YouTube.
+      избере страната, за която това се отнася.
     Invidious Instance: Сървър на Invidious, към който FreeTube ще се свързва.
     Thumbnail Preference: Всички миниатюри във FreeTube ще бъдат подменени с кадър
       от клипа вместо тези по подразбиране.
@@ -888,9 +963,9 @@ Tooltips:
     Preferred API Backend: Избиране на начина, по който FreeTube получава данните.
       Локалният интерфейс има вградено извличане. Invidious интерфейсът изисква Invidious
       сървър, към който да се свърже.
-    External Link Handling: "Избор на поведението по подразбиране, когато щракнете\
-      \ върху връзка, която не може да бъде отворена във FreeTube.\nПо подразбиране\
-      \ FreeTube ще отвори връзката в браузъра по подразбиране.\n"
+    External Link Handling: "Избор на поведението по подразбиране, когато щракнете
+      върху връзка, която не може да бъде отворена във FreeTube.\nПо подразбиране
+      FreeTube ще отвори връзката в браузъра по подразбиране.\n"
   Privacy Settings:
     Remove Video Meta Files: Когато страницата за гледане бъде затворена, FreeTube
       автоматично ще изтрива метафайловете, създадени по време на възпроизвеждане
@@ -914,9 +989,14 @@ Tooltips:
       на RAM паметта.
   Distraction Free Settings:
     Hide Channels: Въведете име или идентификатор на канал, за да скриете всички видеа,
-      плейлисти и самия канал от показване в търсенето или набиращите популярност.
-      Въведеното име трябва да съвпада напълно и е чувствително към главни и малки
-      букви.
+      плейлисти и самия канал от показване в търсенето, тенденциите, най-популярните
+      и препоръчаните. Въведеното име трябва да съвпада напълно и е чувствително към
+      главни и малки букви.
+    Hide Subscriptions Live: Тази настройка се отменя от настройката за цялото приложение
+      "{appWideSetting}" в секция "{subsection}" на "{settingsSection}"
+  SponsorBlock Settings:
+    UseDeArrowTitles: Заменя заглавията на видеата с подадени от потребителите заглавия
+      от DeArrow.
 More: Още
 Playing Next Video Interval: Пускане на следващото видео веднага. Щракнете за отказ.
   | Пускане на следващото видео след {nextVideoInterval} секунда. Щракнете за отказ.
@@ -969,3 +1049,10 @@ Chapters:
     текуща глава: {chapterName}'
 Preferences: Предпочитания
 Ok: Добре
+Hashtag:
+  Hashtag: Хаштаг
+  This hashtag does not currently have any videos: В момента този хаштаг няма видеа
+Playlist will pause when current video is finished: Плейлистът ще бъде спрян на пауза,
+  когато текущото видео приключи
+Playlist will not pause when current video is finished: Плейлистът няма да спре, когато
+  текущото видео е завършено

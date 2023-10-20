@@ -11,6 +11,8 @@ import baseHandlers from '../datastores/handlers/base'
 import { extractExpiryTimestamp, ImageCache } from './ImageCache'
 import { existsSync } from 'fs'
 
+import packageDetails from '../../package.json'
+
 if (process.argv.includes('--version')) {
   app.exit()
 } else {
@@ -169,7 +171,7 @@ function runApp() {
   app.commandLine.appendSwitch('ignore-gpu-blacklist')
 
   // command line switches need to be added before the app ready event first
-  // that means we can't use the normal settings system as that is asynchonous,
+  // that means we can't use the normal settings system as that is asynchronous,
   // doing it synchronously ensures that we add it before the event fires
   const replaceHttpCache = existsSync(`${app.getPath('userData')}/experiment-replace-http-cache`)
   if (replaceHttpCache) {
@@ -263,6 +265,12 @@ function runApp() {
       })
     }
 
+    const fixedUserAgent = session.defaultSession.getUserAgent()
+      .split(' ')
+      .filter(part => !part.includes('Electron') && !part.includes(packageDetails.productName))
+      .join(' ')
+    session.defaultSession.setUserAgent(fixedUserAgent)
+
     // Set CONSENT cookie on reasonable domains
     const consentCookieDomains = [
       'https://www.youtube.com',
@@ -277,14 +285,73 @@ function runApp() {
       })
     })
 
+    session.defaultSession.cookies.set({
+      url: 'https://www.youtube.com',
+      name: 'SOCS',
+      value: 'CAI',
+      sameSite: 'no_restriction',
+    })
+
     // make InnerTube requests work with the fetch function
     // InnerTube rejects requests if the referer isn't YouTube or empty
-    const innertubeRequestFilter = { urls: ['https://www.youtube.com/youtubei/*'] }
+    const innertubeAndMediaRequestFilter = { urls: ['https://www.youtube.com/youtubei/*', 'https://*.googlevideo.com/videoplayback?*'] }
 
-    session.defaultSession.webRequest.onBeforeSendHeaders(innertubeRequestFilter, ({ requestHeaders }, callback) => {
-      requestHeaders.referer = 'https://www.youtube.com'
+    session.defaultSession.webRequest.onBeforeSendHeaders(innertubeAndMediaRequestFilter, ({ requestHeaders, url, resourceType }, callback) => {
+      requestHeaders.Referer = 'https://www.youtube.com/'
+      requestHeaders.Origin = 'https://www.youtube.com'
+
+      if (url.startsWith('https://www.youtube.com/youtubei/')) {
+        requestHeaders['Sec-Fetch-Site'] = 'same-origin'
+      } else {
+        // YouTube doesn't send the Content-Type header for the media requests, so we shouldn't either
+        delete requestHeaders['Content-Type']
+      }
+
+      // YouTube throttles the adaptive formats if you request a chunk larger than 10MiB.
+      // For the DASH formats we are fine as video.js doesn't seem to ever request chunks that big.
+      // The legacy formats don't have any chunk size limits.
+      // For the audio formats we need to handle it ourselves, as the browser requests the entire audio file,
+      // which means that for most videos that are longer than 10 mins, we get throttled, as the audio track file sizes surpass that 10MiB limit.
+
+      // This code checks if the file is larger than the limit, by checking the `clen` query param,
+      // which YouTube helpfully populates with the content length for us.
+      // If it does surpass that limit, it then checks if the requested range is larger than the limit
+      // (seeking right at the end of the video, would result in a small enough range to be under the chunk limit)
+      // if that surpasses the limit too, it then limits the requested range to 10MiB, by setting the range to `start-${start + 10MiB}`.
+      if (resourceType === 'media' && url.includes('&mime=audio') && requestHeaders.Range) {
+        const TEN_MIB = 10 * 1024 * 1024
+
+        const contentLength = parseInt(new URL(url).searchParams.get('clen'))
+
+        if (contentLength > TEN_MIB) {
+          const [startStr, endStr] = requestHeaders.Range.split('=')[1].split('-')
+
+          const start = parseInt(startStr)
+
+          // handle open ended ranges like `0-` and `1234-`
+          const end = endStr.length === 0 ? contentLength : parseInt(endStr)
+
+          if (end - start > TEN_MIB) {
+            const newEnd = start + TEN_MIB
+
+            requestHeaders.Range = `bytes=${start}-${newEnd}`
+          }
+        }
+      }
+
       // eslint-disable-next-line n/no-callback-literal
       callback({ requestHeaders })
+    })
+
+    // when we create a real session on the watch page, youtube returns tracking cookies, which we definitely don't want
+    const trackingCookieRequestFilter = { urls: ['https://www.youtube.com/sw.js_data', 'https://www.youtube.com/iframe_api'] }
+
+    session.defaultSession.webRequest.onHeadersReceived(trackingCookieRequestFilter, ({ responseHeaders }, callback) => {
+      if (responseHeaders) {
+        delete responseHeaders['set-cookie']
+      }
+      // eslint-disable-next-line n/no-callback-literal
+      callback({ responseHeaders })
     })
 
     if (replaceHttpCache) {
@@ -298,11 +365,7 @@ function runApp() {
         if (imageCache.has(url)) {
           const cached = imageCache.get(url)
 
-          // eslint-disable-next-line n/no-callback-literal
-          callback({
-            mimeType: cached.mimeType,
-            data: cached.data
-          })
+          callback(cached)
           return
         }
 
@@ -427,8 +490,12 @@ function runApp() {
       searchQueryText = null
     } = { }) {
     // Syncing new window background to theme choice.
-    const windowBackground = await baseHandlers.settings._findTheme().then(({ value }) => {
-      switch (value) {
+    const windowBackground = await baseHandlers.settings._findTheme().then((setting) => {
+      if (!setting) {
+        return nativeTheme.shouldUseDarkColors ? '#212121' : '#f1f1f1'
+      }
+
+      switch (setting.value) {
         case 'dark':
           return '#212121'
         case 'light':
@@ -439,6 +506,10 @@ function runApp() {
           return '#282a36'
         case 'catppuccin-mocha':
           return '#1e1e2e'
+        case 'pastel-pink':
+          return '#ffd1dc'
+        case 'hot-pink':
+          return '#de1c85'
         case 'system':
         default:
           return nativeTheme.shouldUseDarkColors ? '#212121' : '#f1f1f1'
@@ -653,10 +724,12 @@ function runApp() {
     session.defaultSession.setProxy({
       proxyRules: url
     })
+    session.defaultSession.closeAllConnections()
   })
 
   ipcMain.on(IpcChannels.DISABLE_PROXY, () => {
     session.defaultSession.setProxy({})
+    session.defaultSession.closeAllConnections()
   })
 
   ipcMain.on(IpcChannels.OPEN_EXTERNAL_LINK, (_, url) => {
@@ -745,6 +818,8 @@ function runApp() {
             // Update app menu on related setting update
             case 'hideTrendingVideos':
             case 'hidePopularVideos':
+            case 'backendFallback':
+            case 'backendPreference':
             case 'hidePlaylists':
               await setMenu()
               break
@@ -977,27 +1052,64 @@ function runApp() {
 
   // ************************************************* //
 
-  app.once('window-all-closed', () => {
-    // Clear cache and storage if it's the last window
-    session.defaultSession.clearCache()
-    session.defaultSession.clearStorageData({
-      storages: [
-        'appcache',
-        'cookies',
-        'filesystem',
-        'indexdb',
-        'shadercache',
-        'websql',
-        'serviceworkers',
-        'cachestorage'
-      ]
-    })
+  let resourcesCleanUpDone = false
 
-    if (process.platform !== 'darwin') {
-      app.quit()
-    }
+  app.on('window-all-closed', () => {
+    // Clean up resources (datastores' compaction + Electron cache and storage data clearing)
+    cleanUpResources().finally(() => {
+      if (process.platform !== 'darwin') {
+        app.quit()
+      }
+    })
   })
 
+  if (process.platform === 'darwin') {
+    // `window-all-closed` doesn't fire for Cmd+Q
+    // https://www.electronjs.org/docs/latest/api/app#event-window-all-closed
+    // This is also fired when `app.quit` called
+    // Not using `before-quit` since that one is fired before windows are closed
+    app.on('will-quit', e => {
+      // Let app quit when the cleanup is finished
+
+      if (resourcesCleanUpDone) { return }
+
+      e.preventDefault()
+      cleanUpResources().finally(() => {
+        // Quit AFTER the resources cleanup is finished
+        // Which calls the listener again, which is why we have the variable
+
+        app.quit()
+      })
+    })
+  }
+
+  async function cleanUpResources() {
+    if (resourcesCleanUpDone) {
+      return
+    }
+
+    await Promise.allSettled([
+      baseHandlers.compactAllDatastores(),
+      session.defaultSession.clearCache(),
+      session.defaultSession.clearStorageData({
+        storages: [
+          'appcache',
+          'cookies',
+          'filesystem',
+          'indexdb',
+          'shadercache',
+          'websql',
+          'serviceworkers',
+          'cachestorage'
+        ]
+      })
+    ])
+
+    resourcesCleanUpDone = true
+  }
+
+  // MacOS event
+  // https://www.electronjs.org/docs/latest/api/app#event-activate-macos
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
@@ -1081,6 +1193,8 @@ function runApp() {
     const sidenavSettings = baseHandlers.settings._findSidenavSettings()
     const hideTrendingVideos = (await sidenavSettings.hideTrendingVideos)?.value
     const hidePopularVideos = (await sidenavSettings.hidePopularVideos)?.value
+    const backendFallback = (await sidenavSettings.backendFallback)?.value
+    const backendPreference = (await sidenavSettings.backendPreference)?.value
     const hidePlaylists = (await sidenavSettings.hidePlaylists)?.value
 
     const template = [
@@ -1215,7 +1329,7 @@ function runApp() {
             },
             type: 'normal'
           },
-          !hidePopularVideos && {
+          (!hidePopularVideos && (backendFallback || backendPreference === 'invidious')) && {
             label: 'Most Popular',
             click: (_menuItem, browserWindow, _event) => {
               navigateTo('/popular', browserWindow)

@@ -39,6 +39,20 @@ A new blog is now available, {blogTitle}. Click to view more: A new blog is now 
   Click to view more
 Are you sure you want to open this link?: Are you sure you want to open this link?
 
+# Global
+# Anything shared among components / views should be put here
+Global:
+  Videos: Videos
+  Shorts: Shorts
+  Live: Live
+  Community: Community
+  Counts:
+    Video Count: 1 video | {count} videos
+    Channel Count: 1 channel | {count} channels
+    Subscriber Count: 1 subscriber | {count} subscribers
+    View Count: 1 view | {count} views
+    Watching Count: 1 watching | {count} watching
+
 # Search Bar
 Search / Go to URL: Search / Go to URL
 Search Bar:
@@ -85,14 +99,18 @@ Subscriptions:
   # channels that were likely deleted
   Error Channels: Channels with Errors
   Latest Subscriptions: Latest Subscriptions
-  This profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting: This
+  This profile has a large number of subscriptions. Forcing RSS to avoid rate limiting: This
     profile has a large number of subscriptions.  Forcing RSS to avoid rate limiting
   'Your Subscription list is currently empty. Start adding subscriptions to see them here.': Your Subscription list is currently empty. Start adding subscriptions to see them here.
   Disabled Automatic Fetching: You have disabled automatic subscription fetching. Refresh subscriptions to see them here.
   Empty Channels: Your subscribed channels currently does not have any videos.
   'Getting Subscriptions. Please wait.': Getting Subscriptions. Please wait.
+  Empty Posts: Your subscribed channels currently do not have any posts.
   Refresh Subscriptions: Refresh Subscriptions
   Load More Videos: Load More Videos
+  Load More Posts: Load More Posts
+  Subscriptions Tabs: Subscriptions Tabs
+  All Subscription Tabs Hidden: 'All subscription tabs are hidden. To see content here, please unhide some tabs in the "{subsection}" section in "{settingsSection}".'
 More: More
 Channels:
   Channels: Channels
@@ -157,6 +175,7 @@ Settings:
       Beginning: Beginning
       Middle: Middle
       End: End
+      Hidden: Hidden
     Current Invidious Instance: Current Invidious Instance
     The currently set default instance is {instance}: The currently set default instance is {instance}
     No default instance has been set: No default instance has been set
@@ -187,6 +206,8 @@ Settings:
       Light: Light
       Dracula: Dracula
       Catppuccin Mocha: Catppuccin Mocha
+      Pastel Pink: Pastel Pink
+      Hot Pink: Hot Pink
     Main Color Theme:
       Main Color Theme: Main Color Theme
       Red: Red
@@ -280,6 +301,8 @@ Settings:
       Error:
         Forbidden Characters: Forbidden Characters
         Empty File Name: Empty File Name
+    Comment Auto Load:
+      Comment Auto Load: Comment Auto Load
   External Player Settings:
     External Player Settings: External Player Settings
     External Player: External Player
@@ -315,6 +338,13 @@ Settings:
     Fetch Automatically: Fetch Feed Automatically
   Distraction Free Settings:
     Distraction Free Settings: Distraction Free Settings
+    Sections:
+      Side Bar: Side Bar
+      Subscriptions Page: Subscriptions Page
+      Channel Page: Channel Page
+      Watch Page: Watch Page
+      General: General
+    Blur Thumbnails: Blur Thumbnails
     Hide Video Views: Hide Video Views
     Hide Video Likes And Dislikes: Hide Video Likes And Dislikes
     Hide Channel Subscribers: Hide Channel Subscribers
@@ -327,6 +357,7 @@ Settings:
     Hide Active Subscriptions: Hide Active Subscriptions
     Hide Video Description: Hide Video Description
     Hide Comments: Hide Comments
+    Hide Profile Pictures in Comments: Hide Profile Pictures in Comments
     Display Titles Without Excessive Capitalisation: Display Titles Without Excessive Capitalisation
     Hide Live Streams: Hide Live Streams
     Hide Upcoming Premieres: Hide Upcoming Premieres
@@ -334,6 +365,16 @@ Settings:
     Hide Chapters: Hide Chapters
     Hide Channels: Hide Videos From Channels
     Hide Channels Placeholder: Channel Name or ID
+    Hide Featured Channels: Hide Featured Channels
+    Hide Channel Playlists: Hide Channel Playlists
+    Hide Channel Community: Hide Channel Community
+    Hide Channel Shorts: Hide Channel Shorts
+    Hide Channel Podcasts: Hide Channel Podcasts
+    Hide Channel Releases: Hide Channel Releases
+    Hide Subscriptions Videos: Hide Subscriptions Videos
+    Hide Subscriptions Shorts: Hide Subscriptions Shorts
+    Hide Subscriptions Live: Hide Subscriptions Live
+    Hide Subscriptions Community: Hide Subscriptions Community
   Data Settings:
     Data Settings: Data Settings
     Select Import Type: Select Import Type
@@ -399,6 +440,7 @@ Settings:
     Enable SponsorBlock: Enable SponsorBlock
     'SponsorBlock API Url (Default is https://sponsor.ajay.app)': SponsorBlock API Url (Default is https://sponsor.ajay.app)
     Notify when sponsor segment is skipped: Notify when sponsor segment is skipped
+    UseDeArrowTitles: Use DeArrow Video Titles
     Skip Options:
       Skip Option: Skip Option
       Auto Skip: Auto Skip
@@ -451,6 +493,7 @@ About:
   Help: Help
   FreeTube Wiki: FreeTube Wiki
   FAQ: FAQ
+  Discussions: Discussions
   Report a problem: Report a problem
   GitHub issues: GitHub issues
   Please check for duplicates before posting: Please check for duplicates before posting
@@ -469,6 +512,7 @@ About:
 
 Profile:
   Profile Settings: Profile Settings
+  Toggle Profile List: Toggle Profile List
   Profile Select: Profile Select
   Profile Filter: Profile Filter
   All Channels: All Channels
@@ -511,8 +555,6 @@ Profile:
     from any other profile.
 #On Channel Page
 Channel:
-  Subscriber: Subscriber
-  Subscribers: Subscribers
   Subscribe: Subscribe
   Unsubscribe: Unsubscribe
   Channel has been removed from your subscriptions: Channel has been removed from
@@ -525,7 +567,7 @@ Channel:
   Sort By: Sort By
   This channel does not exist: This channel does not exist
   This channel does not allow searching: This channel does not allow searching
-  This channel is age resticted and currently cannot be viewed in FreeTube.: This channel is age resticted and currently cannot be viewed in FreeTube.
+  This channel is age-restricted and currently cannot be viewed in FreeTube.: This channel is age-restricted and currently cannot be viewed in FreeTube.
   Channel Tabs: Channel Tabs
   Videos:
     Videos: Videos
@@ -535,6 +577,12 @@ Channel:
       Newest: Newest
       Oldest: Oldest
       Most Popular: Most Popular
+  Shorts:
+    This channel does not currently have any shorts: This channel does not currently have any shorts
+  Live:
+    Live: Live
+    This channel does not currently have any live streams: This channel does not currently
+      have any live streams
   Playlists:
     Playlists: Playlists
     This channel does not currently have any playlists: This channel does not currently
@@ -543,6 +591,12 @@ Channel:
       Last Video Added: Last Video Added
       Newest: Newest
       Oldest: Oldest
+  Podcasts:
+    Podcasts: Podcasts
+    This channel does not currently have any podcasts: This channel does not currently have any podcasts
+  Releases:
+    Releases: Releases
+    This channel does not currently have any releases: This channel does not currently have any releases
   About:
     About: About
     Channel Description: Channel Description
@@ -554,8 +608,10 @@ Channel:
     Location: Location
     Featured Channels: Featured Channels
   Community:
-    Community: Community
     This channel currently does not have any posts: This channel currently does not have any posts
+    votes: '{votes} votes'
+    Reveal Answers: Reveal Answers
+    Hide Answers: Hide Answers
 Video:
   Mark As Watched: Mark As Watched
   Remove From History: Remove From History
@@ -574,15 +630,13 @@ Video:
   Copy YouTube Channel Link: Copy YouTube Channel Link
   Open Channel in Invidious: Open Channel in Invidious
   Copy Invidious Channel Link: Copy Invidious Channel Link
-  View: View
   Views: Views
   Loop Playlist: Loop Playlist
   Shuffle Playlist: Shuffle Playlist
   Reverse Playlist: Reverse Playlist
   Play Next Video: Play Next Video
   Play Previous Video: Play Previous Video
-  # Context is "X People Watching"
-  Watching: Watching
+  Pause on Current Video: Pause on Current Video
   Watched: Watched
   Autoplay: Autoplay
   Starting soon, please refresh the page to check again: Starting soon, please refresh
@@ -599,11 +653,12 @@ Video:
     supported in this build.
   'Chat is disabled or the Live Stream has ended.': Chat is disabled or the Live Stream
     has ended.
-  Live chat is enabled.  Chat messages will appear here once sent.: Live chat is enabled.  Chat
+  Live chat is enabled. Chat messages will appear here once sent.: Live chat is enabled.  Chat
     messages will appear here once sent.
-  'Live Chat is currently not supported with the Invidious API.  A direct connection to YouTube is required.': Live
+  'Live Chat is currently not supported with the Invidious API. A direct connection to YouTube is required.': Live
     Chat is currently not supported with the Invidious API.  A direct connection to
     YouTube is required.
+  'Live Chat is unavailable for this stream. It may have been disabled by the uploader.': 'Live Chat is unavailable for this stream. It may have been disabled by the uploader.'
   Show Super Chat Comment: Show Super Chat Comment
   Scroll to Bottom: Scroll to Bottom
   Download Video: Download Video
@@ -765,6 +820,7 @@ Comments:
   No more comments available: No more comments available
   Pinned by: Pinned by
   Member: Member
+  Subscribed: Subscribed
   Hearted: Hearted
 Up Next: Up Next
 
@@ -782,8 +838,7 @@ Tooltips:
     Invidious Instance: The Invidious instance that FreeTube will connect to for API
       calls.
     Region for Trending: The region of trends allows you to pick which country's trending
-      videos you want to have displayed. Not all countries displayed are actually
-      supported by YouTube.
+      videos you want to have displayed.
     External Link Handling: |
       Choose the default behavior when a link, which cannot be opened in FreeTube, is clicked.
       By default FreeTube will open the clicked link in your default browser.
@@ -819,6 +874,7 @@ Tooltips:
   Distraction Free Settings:
     Hide Channels: Enter a channel name or channel ID to hide all videos, playlists and the channel itself from appearing in search or trending.
        The channel name entered must be a complete match and is case sensitive.
+    Hide Subscriptions Live: 'This setting is overridden by the app-wide "{appWideSetting}" setting, in the "{subsection}" section of the "{settingsSection}"'
   Subscription Settings:
     Fetch Feeds from RSS: When enabled, FreeTube will use RSS instead of its default
       method for grabbing your subscription feed. RSS is faster and prevents IP blocking,
@@ -835,6 +891,8 @@ Tooltips:
       Disables the "FreeTube is running" background notificiation. Beware, disabling this notification may cause Android to close the app when it is in the background.
     Show Thumbnail in Media Controls:
       If you are experiencing issues with the media controls info getting out of sync, disabling this may resolve them.
+  SponsorBlock Settings:
+    UseDeArrowTitles: Replace video titles with user-submitted titles from DeArrow.
 # Toast Messages
 Local API Error (Click to copy): Local API Error (Click to copy)
 Invidious API Error (Click to copy): Invidious API Error (Click to copy)
@@ -853,12 +911,14 @@ Shuffle is now enabled: Shuffle is now enabled
 The playlist has been reversed: The playlist has been reversed
 Playing Next Video: Playing Next Video
 Playing Previous Video: Playing Previous Video
+Playlist will not pause when current video is finished: Playlist will not pause when current video is finished
+Playlist will pause when current video is finished: Playlist will pause when current video is finished
 Playing Next Video Interval: Playing next video in no time. Click to cancel. | Playing next video in {nextVideoInterval} second. Click to cancel. | Playing next video in {nextVideoInterval} seconds. Click to cancel.
 Canceled next video autoplay: Canceled next video autoplay
 
 Default Invidious instance has been set to {instance}: Default Invidious instance has been set to {instance}
 Default Invidious instance has been cleared: Default Invidious instance has been cleared
-'The playlist has ended.  Enable loop to continue playing': 'The playlist has ended.  Enable
+'The playlist has ended. Enable loop to continue playing': 'The playlist has ended.  Enable
   loop to continue playing'
 Age Restricted:
   This {videoOrPlaylist} is age restricted: This {videoOrPlaylist} is age restricted
@@ -872,6 +932,10 @@ Downloading failed: 'There was an issue downloading "{videoTitle}"'
 Screenshot Success: Saved screenshot as "{filePath}"
 Screenshot Error: Screenshot failed. {error}
 
+Hashtag:
+  Hashtag: Hashtag
+  This hashtag does not currently have any videos: This hashtag does not currently
+      have any videos
 Yes: Yes
 No: No
 Ok: Ok

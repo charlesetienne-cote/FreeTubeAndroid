@@ -6,20 +6,30 @@
     <div
       v-else
     >
-      <h3>
+      <h3
+        class="playlistTitle"
+        :title="playlistTitle"
+      >
         <router-link
-          class="playlistTitle"
+          class="playlistTitleLink"
           :to="`/playlist/${playlistId}`"
         >
           {{ playlistTitle }}
         </router-link>
       </h3>
       <router-link
+        v-if="channelId"
         class="channelName"
         :to="`/channel/${channelId}`"
       >
         {{ channelName }}
       </router-link>
+      <span
+        v-else
+        class="channelName"
+      >
+        {{ channelName }}
+      </span>
       <span
         class="playlistIndex"
       >
@@ -85,14 +95,27 @@
           @keydown.enter.prevent="playNextVideo"
           @keydown.space.prevent="playNextVideo"
         />
+        <font-awesome-icon
+          class="playlistIcon"
+          :class="{ playlistIconActive: pauseOnCurrentVideo }"
+          :icon="['fas', 'pause']"
+          :title="$t('Video.Pause on Current Video')"
+          role="button"
+          tabindex="0"
+          @click="togglePauseOnCurrentVideo"
+          @keydown.enter.prevent="togglePauseOnCurrentVideo"
+          @keydown.space.prevent="togglePauseOnCurrentVideo"
+        />
       </p>
       <div
         v-if="!isLoading"
+        ref="playlistItems"
         class="playlistItems"
       >
         <div
           v-for="(item, index) in playlistItems"
           :key="index"
+          :ref="currentVideoIndex === (index + 1) ? 'currentVideoItem' : null"
           class="playlistItem"
         >
           <div class="videoIndexContainer">
@@ -117,6 +140,7 @@
             :playlist-loop="loopEnabled"
             appearance="watchPlaylistItem"
             force-list-type="list"
+            :initial-visible-state="index < ((currentVideoIndex - 1) + 4) && index > ((currentVideoIndex - 1) - 4)"
             @pause-player="$emit('pause-player')"
           />
         </div>

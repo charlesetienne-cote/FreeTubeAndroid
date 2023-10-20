@@ -1,10 +1,14 @@
-import { defineComponent } from 'vue'
+import { defineComponent, nextTick } from 'vue'
 import { mapMutations } from 'vuex'
 import FtLoader from '../ft-loader/ft-loader.vue'
 import FtCard from '../ft-card/ft-card.vue'
 import FtListVideoLazy from '../ft-list-video-lazy/ft-list-video-lazy.vue'
 import { copyToClipboard, showToast } from '../../helpers/utils'
-import { getLocalPlaylist, parseLocalPlaylistVideo } from '../../helpers/api/local'
+import {
+  getLocalPlaylist,
+  parseLocalPlaylistVideo,
+  untilEndOfLocalPlayList,
+} from '../../helpers/api/local'
 import { invidiousGetPlaylistInfo } from '../../helpers/api/invidious'
 
 export default defineComponent({
@@ -12,7 +16,7 @@ export default defineComponent({
   components: {
     'ft-loader': FtLoader,
     'ft-card': FtCard,
-    'ft-list-video-lazy': FtListVideoLazy
+    'ft-list-video-lazy': FtListVideoLazy,
   },
   props: {
     playlistId: {
@@ -22,7 +26,11 @@ export default defineComponent({
     videoId: {
       type: String,
       required: true
-    }
+    },
+    watchViewLoading: {
+      type: Boolean,
+      required: true
+    },
   },
   data: function () {
     return {
@@ -30,11 +38,12 @@ export default defineComponent({
       shuffleEnabled: false,
       loopEnabled: false,
       reversePlaylist: false,
+      pauseOnCurrentVideo: false,
       channelName: '',
       channelId: '',
       playlistTitle: '',
       playlistItems: [],
-      randomizedPlaylistItems: []
+      randomizedPlaylistItems: [],
     }
   },
   computed: {
@@ -60,7 +69,34 @@ export default defineComponent({
 
     playlistVideoCount: function () {
       return this.playlistItems.length
-    }
+    },
+
+    shouldStopDueToPlaylistEnd: function () {
+      if (!this.videoIsLastInInPlaylistItems) { return false }
+
+      // Loop enabled = should not stop
+      return !this.loopEnabled
+    },
+
+    videoIsLastInInPlaylistItems: function () {
+      if (this.shuffleEnabled) {
+        return this.videoIndexInPlaylistItems === this.randomizedPlaylistItems.length - 1
+      } else {
+        return this.videoIndexInPlaylistItems === this.playlistItems.length - 1
+      }
+    },
+
+    videoIndexInPlaylistItems: function () {
+      if (this.shuffleEnabled) {
+        return this.randomizedPlaylistItems.findIndex((item) => {
+          return item === this.videoId
+        })
+      } else {
+        return this.playlistItems.findIndex((item) => {
+          return (item.id ?? item.videoId) === this.videoId
+        })
+      }
+    },
   },
   watch: {
     videoId: function (newId, oldId) {
@@ -77,6 +113,33 @@ export default defineComponent({
         if ((newVideoIndex - 1) !== oldVideoIndex) {
           // User clicked a different video than expected. Re-shuffle the list
           this.shufflePlaylistItems()
+        }
+      }
+    },
+    watchViewLoading: function (newVal, oldVal) {
+      // This component is loaded/rendered before watch view loaded
+      if (oldVal && !newVal) {
+        // Scroll after watch view loaded, otherwise doesn't work
+        // Mainly for Local API
+        // nextTick(() => this.scrollToCurrentVideo())
+        this.scrollToCurrentVideo()
+      }
+    },
+    isLoading: function (newVal, oldVal) {
+      // This component is loaded/rendered before watch view loaded
+      if (oldVal && !newVal) {
+        // Scroll after this component loaded, otherwise doesn't work
+        // Mainly for Invidious API
+        // `nextTick` is required (tested via reloading)
+        nextTick(() => this.scrollToCurrentVideo())
+      }
+    },
+    playlistId: function (newVal, oldVal) {
+      if (oldVal !== newVal) {
+        if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
+          this.getPlaylistInformationInvidious()
+        } else {
+          this.getPlaylistInformationLocal()
         }
       }
     }
@@ -136,6 +199,16 @@ export default defineComponent({
       }, 1)
     },
 
+    togglePauseOnCurrentVideo: function () {
+      if (this.pauseOnCurrentVideo) {
+        this.pauseOnCurrentVideo = false
+        showToast(this.$t('Playlist will not pause when current video is finished'))
+      } else {
+        this.pauseOnCurrentVideo = true
+        showToast(this.$t('Playlist will pause when current video is finished'))
+      }
+    },
+
     playNextVideo: function () {
       const playlistInfo = {
         playlistId: this.playlistId
@@ -157,7 +230,7 @@ export default defineComponent({
             showToast(this.$t('Playing Next Video'))
             this.shufflePlaylistItems()
           } else {
-            showToast(this.$t('The playlist has ended.  Enable loop to continue playing'))
+            showToast(this.$t('The playlist has ended. Enable loop to continue playing'))
           }
         } else {
           this.$router.push(
@@ -182,8 +255,9 @@ export default defineComponent({
               }
             )
             showToast(this.$t('Playing Next Video'))
+          } else {
+            showToast(this.$t('The playlist has ended. Enable loop to continue playing'))
           }
-          showToast(this.$t('The playlist has ended.  Enable loop to continue playing'))
         } else {
           this.$router.push(
             {
@@ -257,21 +331,12 @@ export default defineComponent({
       if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious' || cachedPlaylist.continuationData === null) {
         this.playlistItems = cachedPlaylist.items
       } else {
-        const items = cachedPlaylist.items
-        let playlist = cachedPlaylist.continuationData
+        const videos = cachedPlaylist.items
+        await untilEndOfLocalPlayList(cachedPlaylist.continuationData, (p) => {
+          videos.push(...p.items.map(parseLocalPlaylistVideo))
+        }, { runCallbackOnceFirst: false })
 
-        do {
-          playlist = await playlist.getContinuation()
-
-          const parsedVideos = playlist.items.map(parseLocalPlaylistVideo)
-          items.push(...parsedVideos)
-
-          if (!playlist.has_continuation) {
-            playlist = null
-          }
-        } while (playlist !== null)
-
-        this.playlistItems = items
+        this.playlistItems = videos
       }
 
       this.isLoading = false
@@ -281,20 +346,27 @@ export default defineComponent({
       this.isLoading = true
 
       try {
-        let playlist = await getLocalPlaylist(this.playlistId)
+        const playlist = await getLocalPlaylist(this.playlistId)
+
+        let channelName
+
+        if (playlist.info.author) {
+          channelName = playlist.info.author.name
+        } else {
+          const subtitle = playlist.info.subtitle.toString()
+
+          const index = subtitle.lastIndexOf('•')
+          channelName = subtitle.substring(0, index).trim()
+        }
 
         this.playlistTitle = playlist.info.title
-        this.channelName = playlist.info.author?.name
+        this.channelName = channelName
         this.channelId = playlist.info.author?.id
 
-        const videos = playlist.items.map(parseLocalPlaylistVideo)
-
-        while (playlist.has_continuation) {
-          playlist = await playlist.getContinuation()
-
-          const parsedVideos = playlist.items.map(parseLocalPlaylistVideo)
-          videos.push(...parsedVideos)
-        }
+        const videos = []
+        await untilEndOfLocalPlayList(playlist, (p) => {
+          videos.push(...p.items.map(parseLocalPlaylistVideo))
+        })
 
         this.playlistItems = videos
 
@@ -317,7 +389,7 @@ export default defineComponent({
     getPlaylistInformationInvidious: function () {
       this.isLoading = true
 
-      invidiousGetPlaylistInfo({ playlistId: this.playlistId }).then((result) => {
+      invidiousGetPlaylistInfo(this.playlistId).then((result) => {
         this.playlistTitle = result.title
         this.channelName = result.author
         this.channelId = result.authorId
@@ -358,6 +430,15 @@ export default defineComponent({
       })
 
       this.randomizedPlaylistItems = items
+    },
+
+    scrollToCurrentVideo: function () {
+      const container = this.$refs.playlistItems
+      const currentVideoItem = (this.$refs.currentVideoItem || [])[0]
+      if (container != null && currentVideoItem != null) {
+        // Watch view can be ready sooner than this component
+        container.scrollTop = currentVideoItem.offsetTop - container.offsetTop
+      }
     },
 
     ...mapMutations([

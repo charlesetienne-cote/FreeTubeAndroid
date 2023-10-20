@@ -8,6 +8,7 @@ import FtFlexBox from '../ft-flex-box/ft-flex-box.vue'
 import FtButton from '../ft-button/ft-button.vue'
 
 import debounce from 'lodash.debounce'
+import allLocales from '../../../../static/locales/activeLocales.json'
 import { showToast } from '../../helpers/utils'
 
 export default defineComponent({
@@ -22,8 +23,6 @@ export default defineComponent({
   },
   data: function () {
     return {
-      instanceNames: [],
-      instanceValues: [],
       backendValues: [
         'invidious',
         'local'
@@ -50,7 +49,8 @@ export default defineComponent({
         '',
         'start',
         'middle',
-        'end'
+        'end',
+        'hidden'
       ],
       externalLinkHandlingValues: [
         '',
@@ -109,7 +109,7 @@ export default defineComponent({
     localeOptions: function () {
       return [
         'system',
-        ...this.$i18n.allLocales
+        ...allLocales
       ]
     },
 
@@ -139,7 +139,8 @@ export default defineComponent({
         this.$t('Settings.General Settings.Thumbnail Preference.Default'),
         this.$t('Settings.General Settings.Thumbnail Preference.Beginning'),
         this.$t('Settings.General Settings.Thumbnail Preference.Middle'),
-        this.$t('Settings.General Settings.Thumbnail Preference.End')
+        this.$t('Settings.General Settings.Thumbnail Preference.End'),
+        this.$t('Settings.General Settings.Thumbnail Preference.Hidden')
       ]
     },
 
@@ -173,7 +174,11 @@ export default defineComponent({
   },
   methods: {
     handleInvidiousInstanceInput: function (input) {
-      const instance = input.replace(/\/$/, '')
+      let instance = input
+      // If NOT something like https:// (1-2 slashes), remove trailing slash
+      if (!/^(https?):(\/){1,2}$/.test(input)) {
+        instance = input.replace(/\/$/, '')
+      }
       this.setCurrentInvidiousInstanceBounce(instance)
     },
 

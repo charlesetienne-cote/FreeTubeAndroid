@@ -1,4 +1,5 @@
-import { defineComponent, nextTick } from 'vue'
+import { defineComponent } from 'vue'
+import debounce from 'lodash.debounce'
 import FtCard from '../../components/ft-card/ft-card.vue'
 import FtFlexBox from '../../components/ft-flex-box/ft-flex-box.vue'
 import FtTooltip from '../../components/ft-tooltip/ft-tooltip.vue'
@@ -25,8 +26,7 @@ export default defineComponent({
       searchDataLimit: 100,
       showLoadMoreButton: false,
       query: '',
-      hasQuery: false,
-      activeData: []
+      activeData: [],
     }
   },
   computed: {
@@ -46,10 +46,7 @@ export default defineComponent({
   watch: {
     query() {
       this.searchDataLimit = 100
-      this.filterPlaylist()
-    },
-    activeData() {
-      this.refreshPage()
+      this.filterPlaylistAsync()
     },
     fullData() {
       this.activeData = this.fullData
@@ -63,13 +60,15 @@ export default defineComponent({
       this.dataLimit = limit
     }
 
+    this.activeData = this.fullData
+
     if (this.activeData.length < this.favoritesPlaylist.videos.length) {
       this.showLoadMoreButton = true
     } else {
       this.showLoadMoreButton = false
     }
 
-    this.activeData = this.fullData
+    this.filterPlaylistDebounce = debounce(this.filterPlaylist, 500)
   },
   methods: {
     increaseLimit: function () {
@@ -81,6 +80,11 @@ export default defineComponent({
         sessionStorage.setItem('favoritesLimit', this.dataLimit)
       }
     },
+    filterPlaylistAsync: function() {
+      // Updating list on every char input could be wasting resources on rendering
+      // So run it with delay (to be cancelled when more input received within time)
+      this.filterPlaylistDebounce()
+    },
     filterPlaylist: function() {
       if (this.query === '') {
         this.activeData = this.fullData
@@ -90,11 +94,12 @@ export default defineComponent({
           this.showLoadMoreButton = false
         }
       } else {
+        const lowerCaseQuery = this.query.toLowerCase()
         const filteredQuery = this.favoritesPlaylist.videos.filter((video) => {
           if (typeof (video.title) !== 'string' || typeof (video.author) !== 'string') {
             return false
           } else {
-            return video.title.toLowerCase().includes(this.query.toLowerCase()) || video.author.toLowerCase().includes(this.query.toLowerCase())
+            return video.title.toLowerCase().includes(lowerCaseQuery) || video.author.toLowerCase().includes(lowerCaseQuery)
           }
         }).sort((a, b) => {
           return b.timeAdded - a.timeAdded
@@ -107,15 +112,5 @@ export default defineComponent({
         this.activeData = filteredQuery.length < this.searchDataLimit ? filteredQuery : filteredQuery.slice(0, this.searchDataLimit)
       }
     },
-    refreshPage: function() {
-      const scrollPos = window.scrollY || window.scrollTop || document.getElementsByTagName('html')[0].scrollTop
-      this.isLoading = true
-      nextTick(() => {
-        this.isLoading = false
-        nextTick(() => {
-          window.scrollTo(0, scrollPos)
-        })
-      })
-    }
   }
 })

@@ -8,7 +8,6 @@ import FtFlexBox from '../ft-flex-box/ft-flex-box.vue'
 import FtButton from '../ft-button/ft-button.vue'
 import FtInput from '../ft-input/ft-input.vue'
 import FtTooltip from '../ft-tooltip/ft-tooltip.vue'
-import { ipcRenderer } from 'electron'
 import { IpcChannels } from '../../../constants'
 import path from 'path'
 import { getPicturesPath } from '../../helpers/utils'
@@ -57,10 +56,14 @@ export default defineComponent({
       ],
       screenshotFolderPlaceholder: '',
       screenshotFilenameExample: '',
-      screenshotDefaultPattern: '%Y%M%D-%H%N%S'
+      screenshotDefaultPattern: '%Y%M%D-%H%N%S',
     }
   },
   computed: {
+    usingElectron: function () {
+      return process.env.IS_ELECTRON
+    },
+
     backendPreference: function () {
       return this.$store.getters.getBackendPreference
     },
@@ -195,11 +198,24 @@ export default defineComponent({
 
     screenshotFilenamePattern: function() {
       return this.$store.getters.getScreenshotFilenamePattern
-    }
+    },
+
+    commentAutoLoadEnabled: function () {
+      return this.$store.getters.getCommentAutoLoadEnabled
+    },
+
+    hideComments: function () {
+      return this.$store.getters.getHideComments
+    },
   },
   watch: {
     screenshotFolder: function() {
       this.getScreenshotFolderPlaceholder()
+    },
+    hideComments: function(newValue) {
+      if (newValue) {
+        this.updateCommentAutoLoadEnabled(false)
+      }
     }
   },
   mounted: function() {
@@ -213,7 +229,11 @@ export default defineComponent({
     },
 
     getScreenshotEmptyFolderPlaceholder: async function() {
-      return path.join(await getPicturesPath(), 'Freetube')
+      if (process.env.IS_ELECTRON) {
+        return path.join(await getPicturesPath(), 'Freetube')
+      } else {
+        return ''
+      }
     },
 
     getScreenshotFolderPlaceholder: function() {
@@ -221,8 +241,6 @@ export default defineComponent({
         this.screenshotFolderPlaceholder = this.screenshotFolder
         return
       }
-      // Screenshots only work in electron right now
-      // TODO📝 make screenshots work in cordova and possibly also in web builds
       if (process.env.IS_ELECTRON) {
         this.getScreenshotEmptyFolderPlaceholder().then((res) => {
           this.screenshotFolderPlaceholder = res
@@ -232,14 +250,17 @@ export default defineComponent({
 
     chooseScreenshotFolder: async function() {
       // only use with electron
-      const folder = await ipcRenderer.invoke(
-        IpcChannels.SHOW_OPEN_DIALOG,
-        { properties: ['openDirectory'] }
-      )
+      if (process.env.IS_ELECTRON) {
+        const { ipcRenderer } = require('electron')
+        const folder = await ipcRenderer.invoke(
+          IpcChannels.SHOW_OPEN_DIALOG,
+          { properties: ['openDirectory'] }
+        )
 
-      if (!folder.canceled) {
-        await this.updateScreenshotFolderPath(folder.filePaths[0])
-        this.getScreenshotFolderPlaceholder()
+        if (!folder.canceled) {
+          await this.updateScreenshotFolderPath(folder.filePaths[0])
+          this.getScreenshotFolderPlaceholder()
+        }
       }
     },
 
@@ -299,6 +320,7 @@ export default defineComponent({
       'updateScreenshotFolderPath',
       'updateScreenshotFilenamePattern',
       'parseScreenshotCustomFileName',
+      'updateCommentAutoLoadEnabled',
     ])
   }
 })

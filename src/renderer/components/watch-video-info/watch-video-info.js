@@ -1,19 +1,18 @@
 import { defineComponent } from 'vue'
 import { mapActions } from 'vuex'
 import FtCard from '../ft-card/ft-card.vue'
-import FtButton from '../ft-button/ft-button.vue'
 import FtIconButton from '../ft-icon-button/ft-icon-button.vue'
 import FtShareButton from '../ft-share-button/ft-share-button.vue'
-import { MAIN_PROFILE_ID } from '../../../constants'
+import FtSubscribeButton from '../ft-subscribe-button/ft-subscribe-button.vue'
 import { formatNumber, openExternalLink, showToast } from '../../helpers/utils'
 
 export default defineComponent({
   name: 'WatchVideoInfo',
   components: {
     'ft-card': FtCard,
-    'ft-button': FtButton,
     'ft-icon-button': FtIconButton,
-    'ft-share-button': FtShareButton
+    'ft-share-button': FtShareButton,
+    'ft-subscribe-button': FtSubscribeButton
   },
   props: {
     id: {
@@ -76,10 +75,6 @@ export default defineComponent({
       type: Array,
       required: true
     },
-    watchingPlaylist: {
-      type: Boolean,
-      required: true
-    },
     playlistId: {
       type: String,
       default: null
@@ -100,10 +95,6 @@ export default defineComponent({
       type: Function,
       required: true
     },
-    theatrePossible: {
-      type: Boolean,
-      required: true
-    },
     lengthSeconds: {
       type: Number,
       required: true
@@ -113,16 +104,7 @@ export default defineComponent({
       required: true
     }
   },
-  data: function () {
-    return {
-      formatTypeLabel: 'VIDEO FORMATS'
-    }
-  },
   computed: {
-    currentInvidiousInstance: function () {
-      return this.$store.getters.getCurrentInvidiousInstance
-    },
-
     hideSharingActions: function() {
       return this.$store.getters.getHideSharingActions
     },
@@ -133,22 +115,6 @@ export default defineComponent({
 
     currentLocale: function () {
       return this.$i18n.locale.replace('_', '-')
-    },
-
-    profileList: function () {
-      return this.$store.getters.getProfileList
-    },
-
-    activeProfile: function () {
-      return this.$store.getters.getActiveProfile
-    },
-
-    hideRecommendedVideos: function () {
-      return this.$store.getters.getHideRecommendedVideos
-    },
-
-    hideLiveChat: function () {
-      return this.$store.getters.getHideLiveChat
     },
 
     hideVideoLikesAndDislikes: function () {
@@ -233,38 +199,19 @@ export default defineComponent({
       if (this.hideVideoViews) {
         return null
       }
-      return formatNumber(this.viewCount) + ` ${this.$t('Video.Views').toLowerCase()}`
+
+      return this.$tc('Global.Counts.View Count', this.viewCount, { count: formatNumber(this.viewCount) })
     },
 
-    isSubscribed: function () {
-      const subIndex = this.activeProfile.subscriptions.findIndex((channel) => {
-        return channel.id === this.channelId
-      })
-
-      if (subIndex === -1) {
-        return false
-      } else {
-        return true
-      }
-    },
-
-    subscribedText: function () {
-      if (this.isSubscribed) {
-        return `${this.$t('Channel.Unsubscribe').toUpperCase()} ${this.subscriptionCountText}`
-      } else {
-        return `${this.$t('Channel.Subscribe').toUpperCase()} ${this.subscriptionCountText}`
-      }
-    },
-
-    dateString() {
+    dateString: function () {
       const date = new Date(this.published)
       const localeDateString = new Intl.DateTimeFormat([this.currentLocale, 'en'], { dateStyle: 'medium' }).format(date)
       // replace spaces with no break spaces to make the date act as a single entity while wrapping
       return `${localeDateString}`.replaceAll(' ', '\u00A0')
     },
 
-    publishedString() {
-      if (this.isLiveContent && this.isLive) {
+    publishedString: function () {
+      if (this.isLive) {
         return this.$t('Video.Started streaming on')
       } else if (this.isLiveContent && !this.isLive) {
         return this.$t('Video.Streamed on')
@@ -296,13 +243,13 @@ export default defineComponent({
       })
 
       this.$watch('$refs.downloadButton.dropdownShown', (dropdownShown) => {
-        this.$parent.infoAreaSticky = !dropdownShown
+        this.$emit('set-info-area-sticky', !dropdownShown)
 
         if (dropdownShown && window.innerWidth >= 901) {
           // adds a slight delay so we know that the dropdown has shown up
           // and won't mess up our scrolling
-          Promise.resolve().then(() => {
-            this.$parent.$refs.infoArea.scrollIntoView()
+          setTimeout(() => {
+            this.$emit('scroll-to-info-area')
           })
         }
       })
@@ -330,90 +277,6 @@ export default defineComponent({
         this.removeFromPlaylist()
       } else {
         this.addToPlaylist()
-      }
-    },
-
-    handleSubscription: function () {
-      if (this.channelId === '') {
-        return
-      }
-
-      const currentProfile = JSON.parse(JSON.stringify(this.activeProfile))
-      const primaryProfile = JSON.parse(JSON.stringify(this.profileList[0]))
-
-      if (this.isSubscribed) {
-        currentProfile.subscriptions = currentProfile.subscriptions.filter((channel) => {
-          return channel.id !== this.channelId
-        })
-
-        this.updateProfile(currentProfile)
-        showToast(this.$t('Channel.Channel has been removed from your subscriptions'))
-
-        if (this.activeProfile._id === MAIN_PROFILE_ID) {
-          // Check if a subscription exists in a different profile.
-          // Remove from there as well.
-          let duplicateSubscriptions = 0
-
-          this.profileList.forEach((profile) => {
-            if (profile._id === MAIN_PROFILE_ID) {
-              return
-            }
-            const parsedProfile = JSON.parse(JSON.stringify(profile))
-            const index = parsedProfile.subscriptions.findIndex((channel) => {
-              return channel.id === this.channelId
-            })
-
-            if (index !== -1) {
-              duplicateSubscriptions++
-
-              parsedProfile.subscriptions = parsedProfile.subscriptions.filter((x) => {
-                return x.id !== this.channelId
-              })
-
-              this.updateProfile(parsedProfile)
-            }
-          })
-
-          if (duplicateSubscriptions > 0) {
-            const message = this.$t('Channel.Removed subscription from {count} other channel(s)', { count: duplicateSubscriptions })
-            showToast(message)
-          }
-        }
-      } else {
-        const subscription = {
-          id: this.channelId,
-          name: this.channelName,
-          thumbnail: this.channelThumbnail
-        }
-        currentProfile.subscriptions.push(subscription)
-
-        this.updateProfile(currentProfile)
-        showToast(this.$t('Channel.Added channel to your subscriptions'))
-
-        if (this.activeProfile._id !== MAIN_PROFILE_ID) {
-          const index = primaryProfile.subscriptions.findIndex((channel) => {
-            return channel.id === this.channelId
-          })
-
-          if (index === -1) {
-            primaryProfile.subscriptions.push(subscription)
-            this.updateProfile(primaryProfile)
-          }
-        }
-      }
-    },
-
-    handleFormatChange: function (format) {
-      switch (format) {
-        case 'dash':
-          this.$parent.enableDashFormat()
-          break
-        case 'legacy':
-          this.$parent.enableLegacyFormat()
-          break
-        case 'audio':
-          this.$parent.enableAudioFormat()
-          break
       }
     },
 
@@ -455,8 +318,7 @@ export default defineComponent({
         lengthSeconds: this.lengthSeconds,
         timeAdded: new Date().getTime(),
         isLive: false,
-        paid: false,
-        type: 'video'
+        type: 'video',
       }
 
       const payload = {
@@ -482,7 +344,6 @@ export default defineComponent({
 
     ...mapActions([
       'openInExternalPlayer',
-      'updateProfile',
       'addVideo',
       'removeVideo',
       'downloadMedia'

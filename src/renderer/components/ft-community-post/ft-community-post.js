@@ -1,36 +1,28 @@
-import Vue from 'vue'
+import { defineComponent } from 'vue'
 import FtListVideo from '../ft-list-video/ft-list-video.vue'
 import FtListPlaylist from '../ft-list-playlist/ft-list-playlist.vue'
+import FtCommunityPoll from '../ft-community-poll/ft-community-poll.vue'
 
 import autolinker from 'autolinker'
 import VueTinySlider from 'vue-tiny-slider'
 
-import {
-  toLocalePublicationString
-} from '../../helpers/utils'
+import { deepCopy, toLocalePublicationString } from '../../helpers/utils'
 import { youtubeImageUrlToInvidious } from '../../helpers/api/invidious'
 
 import 'tiny-slider/dist/tiny-slider.css'
 
-export default Vue.extend({
+export default defineComponent({
   name: 'FtCommunityPost',
   components: {
     'ft-list-playlist': FtListPlaylist,
     'ft-list-video': FtListVideo,
+    'ft-community-poll': FtCommunityPoll,
     'tiny-slider': VueTinySlider
   },
   props: {
     data: {
       type: Object,
       required: true
-    },
-    playlistId: {
-      type: String,
-      default: null
-    },
-    forceListType: {
-      type: String,
-      default: null
     },
     appearance: {
       type: String,
@@ -47,7 +39,8 @@ export default Vue.extend({
       postContent: '',
       commentCount: '',
       isLoading: true,
-      author: ''
+      author: '',
+      authorId: '',
     }
   },
   computed: {
@@ -66,7 +59,7 @@ export default Vue.extend({
       return this.$store.getters.getListType
     }
   },
-  mounted: function () {
+  created: function () {
     this.parseVideoData()
   },
   methods: {
@@ -85,18 +78,16 @@ export default Vue.extend({
         return
       }
       this.postText = autolinker.link(this.data.postText)
-      let authorThumbnails = this.data.authorThumbnails
+      const authorThumbnails = deepCopy(this.data.authorThumbnails)
       if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
-        authorThumbnails = authorThumbnails.map(thumbnail => {
+        authorThumbnails.forEach(thumbnail => {
           thumbnail.url = youtubeImageUrlToInvidious(thumbnail.url)
-          return thumbnail
         })
       } else {
-        authorThumbnails = authorThumbnails.map(thumbnail => {
+        authorThumbnails.forEach(thumbnail => {
           if (thumbnail.url.startsWith('//')) {
             thumbnail.url = 'https:' + thumbnail.url
           }
-          return thumbnail
         })
       }
       this.authorThumbnails = authorThumbnails
@@ -112,6 +103,7 @@ export default Vue.extend({
       this.commentCount = this.data.commentCount
       this.type = (this.data.postContent !== null && this.data.postContent !== undefined) ? this.data.postContent.type : 'text'
       this.author = this.data.author
+      this.authorId = this.data.authorId
       this.isLoading = false
     },
 
@@ -121,7 +113,8 @@ export default Vue.extend({
         return Number.parseInt(b.width) - Number.parseInt(a.width)
       })
 
-      return imageArrayCopy.at(0)?.url ?? ''
+      // Remove cropping directives when applicable
+      return imageArrayCopy.at(0)?.url?.replace(/-c-fcrop64=.*/i, '') ?? ''
     }
   }
 })

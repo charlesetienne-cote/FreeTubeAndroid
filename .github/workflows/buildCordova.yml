@@ -69,6 +69,20 @@ jobs:
     - name: 📦 Pack for 🕸web with Node.js
       run: yarn pack:web
 
+    - name: 🐋 Build docker image
+      run: |
+        docker build -t ghcr.io/marmadilemanteater/freetubecordova-nightly:${{ steps.versionNumber.outputs.result }} .
+        docker build -t ghcr.io/marmadilemanteater/freetubecordova-nightly:latest .
+
+    - name: 🗝 Login to Github Container Registry
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u MarmadileManteater --password-stdin
+
+    - name: 📡 Push docker image to Github Container Registry
+      run: |
+        docker push ghcr.io/marmadilemanteater/freetubecordova-nightly:${{ steps.versionNumber.outputs.result }}
+        docker push ghcr.io/marmadilemanteater/freetubecordova-nightly:latest
+
     - name: 📡 Upload PWA Artifact
       uses: actions/upload-artifact@v3
       with:
@@ -77,6 +91,11 @@ jobs:
 
     - name: 🚧 Setup Android SDK Tools
       uses: android-actions/setup-android@v2.0.9
+
+    - name: ⬇ Download dependency `cordova-plugin-run-in-background`
+      run: |
+        git clone https://bitbucket.org/TheBosZ/cordova-plugin-run-in-background.git
+        sed -i 's@git+https://bitbucket.org/TheBosZ/cordova-plugin-run-in-background.git@../../cordova-plugin-run-in-background@g' ./src/cordova/package.js
 
     - name: 📦 Pack for 📱Android with Node.js & Cordova
       run: yarn pack:cordova

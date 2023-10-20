@@ -2,6 +2,7 @@ import { defineComponent } from 'vue'
 import FtFlexBox from '../ft-flex-box/ft-flex-box.vue'
 import SideNavMoreOptions from '../side-nav-more-options/side-nav-more-options.vue'
 import { youtubeImageUrlToInvidious } from '../../helpers/api/invidious'
+import { deepCopy } from '../../helpers/utils'
 
 export default defineComponent({
   name: 'SideNav',
@@ -28,25 +29,23 @@ export default defineComponent({
     activeProfile: function () {
       return this.$store.getters.getActiveProfile
     },
+    locale: function () {
+      return this.$i18n.locale.replace('_', '-')
+    },
     activeSubscriptions: function () {
-      const profile = JSON.parse(JSON.stringify(this.activeProfile))
-      return profile.subscriptions.sort((a, b) => {
-        const nameA = a.name.toLowerCase()
-        const nameB = b.name.toLowerCase()
-        if (nameA < nameB) {
-          return -1
-        }
-        if (nameA > nameB) {
-          return 1
-        }
-        return 0
-      }).map((channel) => {
-        if (this.backendPreference === 'invidious') {
-          channel.thumbnail = youtubeImageUrlToInvidious(channel.thumbnail, this.currentInvidiousInstance)
-        }
+      const subscriptions = deepCopy(this.activeProfile.subscriptions)
 
-        return channel
+      subscriptions.sort((a, b) => {
+        return a.name?.toLowerCase().localeCompare(b.name?.toLowerCase(), this.locale)
       })
+
+      if (this.backendPreference === 'invidious') {
+        subscriptions.forEach((channel) => {
+          channel.thumbnail = youtubeImageUrlToInvidious(channel.thumbnail, this.currentInvidiousInstance)
+        })
+      }
+
+      return subscriptions
     },
     hidePopularVideos: function () {
       return this.$store.getters.getHidePopularVideos

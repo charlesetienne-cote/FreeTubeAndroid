@@ -10,35 +10,35 @@ import cordova from 'cordova'
 // https://support.google.com/youtube/answer/11585688#change_handle
 export const CHANNEL_HANDLE_REGEX = /^@[\w.-]{3,30}$/
 
+const PUBLISHED_TEXT_REGEX = /(\d+)\s?([a-z]+)/i
+/**
+ * @param {string} publishedText
+ */
 export function calculatePublishedDate(publishedText) {
   const date = new Date()
   if (publishedText === 'Live') {
     return publishedText
   }
 
-  const textSplit = publishedText.split(' ')
+  const match = publishedText.match(PUBLISHED_TEXT_REGEX)
 
-  if (textSplit[0].toLowerCase() === 'streamed') {
-    textSplit.shift()
-  }
-
-  const timeFrame = textSplit[1]
-  const timeAmount = parseInt(textSplit[0])
+  const timeFrame = match[2]
+  const timeAmount = parseInt(match[1])
   let timeSpan = null
 
-  if (timeFrame.indexOf('second') > -1) {
+  if (timeFrame.startsWith('second') || timeFrame === 's') {
     timeSpan = timeAmount * 1000
-  } else if (timeFrame.indexOf('minute') > -1) {
+  } else if (timeFrame.startsWith('minute') || timeFrame === 'm') {
     timeSpan = timeAmount * 60000
-  } else if (timeFrame.indexOf('hour') > -1) {
+  } else if (timeFrame.startsWith('hour') || timeFrame === 'h') {
     timeSpan = timeAmount * 3600000
-  } else if (timeFrame.indexOf('day') > -1) {
+  } else if (timeFrame.startsWith('day') || timeFrame === 'd') {
     timeSpan = timeAmount * 86400000
-  } else if (timeFrame.indexOf('week') > -1) {
+  } else if (timeFrame.startsWith('week') || timeFrame === 'w') {
     timeSpan = timeAmount * 604800000
-  } else if (timeFrame.indexOf('month') > -1) {
+  } else if (timeFrame.startsWith('month') || timeFrame === 'mo') {
     timeSpan = timeAmount * 2592000000
-  } else if (timeFrame.indexOf('year') > -1) {
+  } else if (timeFrame.startsWith('year') || timeFrame === 'y') {
     timeSpan = timeAmount * 31556952000
   }
 
@@ -47,40 +47,43 @@ export function calculatePublishedDate(publishedText) {
 
 export function toLocalePublicationString ({ publishText, isLive = false, isUpcoming = false, isRSS = false }) {
   if (isLive) {
-    return '0' + i18n.t('Video.Watching')
+    return i18n.tc('Global.Counts.Watching Count', 0, { count: 0 })
   } else if (isUpcoming || publishText === null) {
     // the check for null is currently just an inferring of knowledge, because there is no other possibility left
     return `${i18n.t('Video.Published.Upcoming')}: ${publishText}`
   } else if (isRSS) {
     return publishText
   }
-  const strings = publishText.split(' ')
-  // filters out the streamed x hours ago and removes the streamed in order to keep the rest of the code working
-  if (strings[0].toLowerCase() === 'streamed') {
-    strings.shift()
-  }
-  const singular = (strings[0] === '1')
+
+  const match = publishText.match(PUBLISHED_TEXT_REGEX)
+  const singular = (match[1] === '1')
   let translationKey = ''
-  switch (strings[1].substring(0, 2)) {
+  switch (match[2].substring(0, 2)) {
     case 'se':
+    case 's':
       translationKey = 'Video.Published.Second'
       break
     case 'mi':
+    case 'm':
       translationKey = 'Video.Published.Minute'
       break
     case 'ho':
+    case 'h':
       translationKey = 'Video.Published.Hour'
       break
     case 'da':
+    case 'd':
       translationKey = 'Video.Published.Day'
       break
     case 'we':
+    case 'w':
       translationKey = 'Video.Published.Week'
       break
     case 'mo':
       translationKey = 'Video.Published.Month'
       break
     case 'ye':
+    case 'y':
       translationKey = 'Video.Published.Year'
       break
     default:
@@ -91,7 +94,7 @@ export function toLocalePublicationString ({ publishText, isLive = false, isUpco
   }
 
   const unit = i18n.t(translationKey)
-  return i18n.t('Video.Publicationtemplate', { number: strings[0], unit })
+  return i18n.t('Video.Publicationtemplate', { number: match[1], unit })
 }
 
 export function buildVTTFileLocally(storyboard, videoLengthSeconds) {
@@ -159,6 +162,7 @@ export async function getFormatsFromHLSManifest(manifestUrl) {
 
   const formats = []
   let currentHeight = 0
+  let currentFPS = 0
 
   for (const line of lines) {
     if (line.startsWith('#')) {
@@ -166,14 +170,17 @@ export async function getFormatsFromHLSManifest(manifestUrl) {
         continue
       }
 
-      const height = line
-        .split(',')
-        .find(part => part.startsWith('RESOLUTION'))
+      const parts = line.split(',')
+      const height = parts.find(part => part.startsWith('RESOLUTION'))
         .split('x')[1]
+      const fps = parts.find(part => part.startsWith('FRAME-RATE'))
+        .split('=')[1]
       currentHeight = parseInt(height)
+      currentFPS = parseInt(fps)
     } else {
       formats.push({
         height: currentHeight,
+        fps: currentFPS,
         url: line.trim()
       })
     }
@@ -183,7 +190,13 @@ export async function getFormatsFromHLSManifest(manifestUrl) {
 }
 
 export function showToast(message, time = null, action = null) {
-  FtToastEvents.$emit('toast-open', message, time, action)
+  FtToastEvents.dispatchEvent(new CustomEvent('toast-open', {
+    detail: {
+      message,
+      time,
+      action
+    }
+  }))
 }
 
 /**
@@ -194,7 +207,7 @@ export function showToast(message, time = null, action = null) {
    * @param {string} messageOnSuccess the message to be displayed as a toast when the copy succeeds (optional)
    * @param {string} messageOnError the message to be displayed as a toast when the copy fails (optional)
    */
-export async function copyToClipboard(content, { messageOnSuccess = null, messageOnError = null }) {
+export async function copyToClipboard(content, { messageOnSuccess = null, messageOnError = null } = {}) {
   let clipboardAPI = navigator.clipboard.writeText.bind(navigator.clipboard)
   if (process.env.IS_CORDOVA) {
     // Convert the callbacks to promise notation
@@ -422,7 +435,7 @@ export function createWebURL(path) {
 
 // strip html tags but keep <br>, <b>, </b> <s>, </s>, <i>, </i>
 export function stripHTML(value) {
-  return value.replaceAll(/(<(?!br|\/?[bis]>)([^>]+)>)/gi, '')
+  return value.replaceAll(/(<(?!br|\/?[abis]|img>)([^>]+)>)/gi, '')
 }
 
 /**
@@ -480,22 +493,22 @@ export function replaceFilenameForbiddenChars(filenameOriginal) {
   switch (process.platform) {
     case 'win32':
       forbiddenChars = {
-        '<': '<', // U+FF1C
-        '>': '>', // U+FF1E
-        ':': ':', // U+FF1A
-        '"': '"', // U+FF02
-        '/': '/', // U+FF0F
-        '\\': '\'', // U+FF3C
-        '|': '|', // U+FF5C
-        '?': '?', // U+FF1F
-        '*': '*' // U+FF0A
+        '<': '＜', // U+FF1C
+        '>': '＞', // U+FF1E
+        ':': '：', // U+FF1A
+        '"': '＂', // U+FF02
+        '/': '／', // U+FF0F
+        '\\': '＼', // U+FF3C
+        '|': '｜', // U+FF5C
+        '?': '？', // U+FF1F
+        '*': '＊' // U+FF0A
       }
       break
     case 'darwin':
-      forbiddenChars = { '/': '/', ':': ':' }
+      forbiddenChars = { '/': '／', ':': '：' }
       break
     case 'linux':
-      forbiddenChars = { '/': '/' }
+      forbiddenChars = { '/': '／' }
       break
     default:
       break
@@ -604,6 +617,13 @@ export function getVideoParamsFromUrl(url) {
         return paramsObject
       }
     },
+    // youtube.com/live
+    function () {
+      if (/^\/live\/[\w-]+$/.test(urlObject.pathname)) {
+        extractParams(urlObject.pathname.replace('/live/', ''))
+        return paramsObject
+      }
+    },
     // cloudtube
     function () {
       if (/^cadence\.(gq|moe)$/.test(urlObject.host) && /^\/cloudtube\/video\/[\w-]+$/.test(urlObject.pathname)) {
@@ -643,15 +663,6 @@ export function formatNumber(number, options = undefined) {
   return Intl.NumberFormat([i18n.locale.replace('_', '-'), 'en'], options).format(number)
 }
 
-/**
- * This will return true if a string is null, undefined or empty.
- * @param {string} _string the string to process
- * @returns {bool} whether the string is empty or not
- */
-export function isNullOrEmpty(_string) {
-  return _string == null || _string === ''
-}
-
 export function getTodayDateStrLocalTimezone() {
   const timeNow = new Date()
   // `Date#getTimezoneOffset` returns the difference, in minutes
@@ -661,4 +672,26 @@ export function getTodayDateStrLocalTimezone() {
   // e.g. 2011-10-05T14:48:00.000Z
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
   return timeNowStr.split('T')[0]
+}
+
+/**
+ * Escapes HTML tags to avoid XSS
+ * @param {string} untrusted
+ * @returns {string}
+ */
+export function escapeHTML(untrusted) {
+  return untrusted.replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('\'', '&apos;')
+}
+
+/**
+ * Performs a deep copy of a javascript object
+ * @param {Object} obj
+ * @returns {Object}
+ */
+export function deepCopy(obj) {
+  return JSON.parse(JSON.stringify(obj))
 }

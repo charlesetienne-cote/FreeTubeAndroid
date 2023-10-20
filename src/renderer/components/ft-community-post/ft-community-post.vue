@@ -8,16 +8,43 @@
     <div
       class="author-div"
     >
-      <img
+      <template
         v-if="authorThumbnails.length > 0"
-        :src="getBestQualityImage(authorThumbnails)"
-        class="communityThumbnail"
-        alt=""
       >
+        <router-link
+          v-if="authorId"
+          :to="`/channel/${authorId}`"
+          tabindex="-1"
+          aria-hidden="true"
+        >
+          <img
+            :src="getBestQualityImage(authorThumbnails)"
+            class="communityThumbnail"
+            alt=""
+          >
+        </router-link>
+        <img
+          v-else
+          :src="getBestQualityImage(authorThumbnails)"
+          class="communityThumbnail"
+          alt=""
+        >
+      </template>
       <p
         class="authorName"
       >
-        {{ author }}
+        <router-link
+          v-if="authorId"
+          :to="`/channel/${authorId}`"
+          class="authorNameLink"
+        >
+          {{ author }}
+        </router-link>
+        <template
+          v-else
+        >
+          {{ author }}
+        </template>
       </p>
       <p
         class="publishedText"
@@ -25,7 +52,10 @@
         {{ publishedText }}
       </p>
     </div>
-    <p v-html="postText" />
+    <p
+      class="postText"
+      v-html="postText"
+    />
     <tiny-slider
       v-if="type === 'multiImage' && postContent.content.length > 0"
       v-bind="tinySliderOptions"
@@ -57,36 +87,9 @@
       />
     </div>
     <div
-      v-if="type === 'poll'"
+      v-if="type === 'poll' || type === 'quiz'"
     >
-      <div
-        class="poll-count"
-      >
-        {{ postContent.totalVotes }}
-      </div>
-      <div
-        v-for="(poll, index) in postContent.content"
-        :key="index"
-      >
-        <div
-          class="poll-option"
-        >
-          <span
-            class="circle"
-          />
-          <div
-            class="poll-text"
-          >
-            <!-- <img
-              v-if="poll.image != null && poll.image.length >0"
-              :src="getBestQualityImage(poll.image)"
-              class="poll-image"
-              alt=""
-            > -->
-            {{ poll.text }}
-          </div>
-        </div>
-      </div>
+      <ft-community-poll :data="postContent" />
     </div>
     <div
       v-if="type === 'playlist'"
@@ -104,11 +107,6 @@
         class="thumbs-up-icon"
         :icon="['fas', 'thumbs-up']"
       /> {{ voteCount }}</span>
-      <span class="dislikeCount"><font-awesome-icon
-        class="thumbs-down-icon"
-        :icon="['fas', 'thumbs-down']"
-        flip="horizontal"
-      /></span>
       <span class="commentCount">
         <font-awesome-icon
           class="comment-count-icon"
@@ -119,5 +117,5 @@
 </template>
 
 <script src="./ft-community-post.js" />
-<style src="./ft-community-post.scss" lang="scss" />
+<style scoped src="./ft-community-post.scss" lang="scss" />
 <style src="./slider-style.css" lang="css" />

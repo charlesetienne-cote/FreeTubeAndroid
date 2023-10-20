@@ -6,7 +6,11 @@ import PlaylistInfo from '../../components/playlist-info/playlist-info.vue'
 import FtListVideoLazy from '../../components/ft-list-video-lazy/ft-list-video-lazy.vue'
 import FtFlexBox from '../../components/ft-flex-box/ft-flex-box.vue'
 import FtButton from '../../components/ft-button/ft-button.vue'
-import { getLocalPlaylist, parseLocalPlaylistVideo } from '../../helpers/api/local'
+import {
+  getLocalPlaylist,
+  getLocalPlaylistContinuation,
+  parseLocalPlaylistVideo,
+} from '../../helpers/api/local'
 import { extractNumberFromString } from '../../helpers/utils'
 import { invidiousGetPlaylistInfo, youtubeImageUrlToInvidious } from '../../helpers/api/invidious'
 
@@ -83,15 +87,27 @@ export default defineComponent({
       this.isLoading = true
 
       getLocalPlaylist(this.playlistId).then((result) => {
+        let channelName
+
+        if (result.info.author) {
+          channelName = result.info.author.name
+        } else {
+          const subtitle = result.info.subtitle.toString()
+
+          const index = subtitle.lastIndexOf('•')
+          channelName = subtitle.substring(0, index).trim()
+        }
+
         this.infoData = {
           id: this.playlistId,
           title: result.info.title,
           description: result.info.description ?? '',
           firstVideoId: result.items[0].id,
+          playlistThumbnail: result.info.thumbnails[0].url,
           viewCount: extractNumberFromString(result.info.views),
           videoCount: extractNumberFromString(result.info.total_items),
           lastUpdated: result.info.last_updated ?? '',
-          channelName: result.info.author?.name ?? '',
+          channelName,
           channelThumbnail: result.info.author?.best_thumbnail?.url ?? '',
           channelId: result.info.author?.id,
           infoSource: 'local'
@@ -176,12 +192,16 @@ export default defineComponent({
     getNextPageLocal: function () {
       this.isLoadingMore = true
 
-      this.continuationData.getContinuation().then((result) => {
-        const parsedVideos = result.items.map(parseLocalPlaylistVideo)
-        this.playlistItems = this.playlistItems.concat(parsedVideos)
+      getLocalPlaylistContinuation(this.continuationData).then((result) => {
+        if (result) {
+          const parsedVideos = result.items.map(parseLocalPlaylistVideo)
+          this.playlistItems = this.playlistItems.concat(parsedVideos)
 
-        if (result.has_continuation) {
-          this.continuationData = result
+          if (result.has_continuation) {
+            this.continuationData = result
+          } else {
+            this.continuationData = null
+          }
         } else {
           this.continuationData = null
         }
