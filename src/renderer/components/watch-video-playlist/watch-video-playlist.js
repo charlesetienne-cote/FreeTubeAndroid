@@ -136,7 +136,7 @@ export default defineComponent({
     },
     playlistId: function (newVal, oldVal) {
       if (oldVal !== newVal) {
-        if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
+        if (!(process.env.IS_CORDOVA || process.env.IS_ELECTRON) || this.backendPreference === 'invidious') {
           this.getPlaylistInformationInvidious()
         } else {
           this.getPlaylistInformationLocal()
@@ -149,7 +149,7 @@ export default defineComponent({
 
     if (cachedPlaylist?.id === this.playlistId) {
       this.loadCachedPlaylistInformation(cachedPlaylist)
-    } else if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
+    } else if (!(process.env.IS_CORDOVA || process.env.IS_ELECTRON) || this.backendPreference === 'invidious') {
       this.getPlaylistInformationInvidious()
     } else {
       this.getPlaylistInformationLocal()
@@ -402,7 +402,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if (process.env.IS_ELECTRON && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           this.getPlaylistInformationLocal()
         } else {

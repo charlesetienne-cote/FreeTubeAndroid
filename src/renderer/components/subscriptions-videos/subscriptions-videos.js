@@ -131,7 +131,7 @@ export default defineComponent({
       this.errorChannels = []
       const videoListFromRemote = (await Promise.all(channelsToLoadFromRemote.map(async (channel) => {
         let videos = []
-        if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
+        if (!(process.env.IS_CORDOVA || process.env.IS_ELECTRON) || this.backendPreference === 'invidious') {
           if (useRss) {
             videos = await this.getChannelVideosInvidiousRSS(channel)
           } else {
@@ -213,7 +213,7 @@ export default defineComponent({
       const feedUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`
 
       try {
-        const response = await fetch(feedUrl)
+        const response = await (process.env.IS_CORDOVA ? cordovaFetch : fetch)(feedUrl)
 
         if (response.status === 404) {
           // playlists don't exist if the channel was terminated but also if it doesn't have the tab,
@@ -278,7 +278,7 @@ export default defineComponent({
               resolve(this.getChannelVideosInvidiousRSS(channel, failedAttempts + 1))
               break
             case 1:
-              if (process.env.IS_ELECTRON && this.backendFallback) {
+              if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendFallback) {
                 showToast(this.$t('Falling back to the local API'))
                 resolve(this.getChannelVideosLocalScraper(channel, failedAttempts + 1))
               } else {
@@ -319,7 +319,7 @@ export default defineComponent({
           case 0:
             return this.getChannelVideosInvidiousScraper(channel, failedAttempts + 1)
           case 1:
-            if (process.env.IS_ELECTRON && this.backendFallback) {
+            if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendFallback) {
               showToast(this.$t('Falling back to the local API'))
               return this.getChannelVideosLocalRSS(channel, failedAttempts + 1)
             } else {
