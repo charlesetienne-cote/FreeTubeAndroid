@@ -58,6 +58,6 @@
 
   .flexBox {
     margin-block-start: 60px;
-    margin-block-end: -75px;
+    margin-block-end: 60px;
   }
 }
