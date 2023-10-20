@@ -292,7 +292,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if (process.env.IS_ELECTRON && this.backendFallback && this.backendPreference === 'invidious') {
+        if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendFallback && this.backendPreference === 'invidious') {
           showToast(this.$t('Falling back to local API'))
           this.getCommentDataLocal()
         } else {
