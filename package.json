@@ -54,6 +54,7 @@
     "rebuild:electron": "electron-builder install-app-deps",
     "release": "run-s test build",
     "run:cordova": "cd dist/cordova && npx cordova run android",
+    "release:cordova": "node _scripts/releaseCordova.js --version-number=default",
     "ci": "yarn install --silent --frozen-lockfile"
   },
   "dependencies": {
