@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
         val w = binding.webView
         w.settings.javaScriptEnabled = true
         w.settings.allowUniversalAccessFromFileURLs = true
+        w.settings.allowFileAccessFromFileURLs = true
         w.loadUrl("file:///android_asset/index.html")
     }
 }
