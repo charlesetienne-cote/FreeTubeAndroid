@@ -294,7 +294,7 @@ export default defineComponent({
       this.checkIfPlaylist()
       this.checkIfTimestamp()
 
-      if (!process.env.IS_ELECTRON || this.backendPreference === 'invidious') {
+      if (!(process.env.IS_ELECTRON || process.env.IS_ANDROID) || this.backendPreference === 'invidious') {
         this.getVideoInformationInvidious()
       } else {
         this.getVideoInformationLocal()
@@ -895,7 +895,7 @@ export default defineComponent({
             copyToClipboard(err.responseText)
           })
           console.error(err)
-          if (process.env.IS_ELECTRON && this.backendPreference === 'invidious' && this.backendFallback) {
+          if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
             showToast(this.$t('Falling back to Local API'))
             this.getVideoInformationLocal()
           } else {
@@ -1220,7 +1220,7 @@ export default defineComponent({
             copyToClipboard(err)
           })
           console.error(err)
-          if (!process.env.IS_ELECTRON || (this.backendPreference === 'local' && this.backendFallback)) {
+          if (!(process.env.IS_ELECTRON || process.env.IS_ANDROID) || (this.backendPreference === 'local' && this.backendFallback)) {
             showToast(this.$t('Falling back to Invidious API'))
             this.getVideoInformationInvidious()
           }

@@ -19,12 +19,11 @@ const config = {
     web: path.join(__dirname, '../src/renderer/main.js'),
   },
   output: {
-    path: path.join(__dirname, '../dist/web'),
+    path: path.join(__dirname, '../android/app/src/main/assets'),
     filename: '[name].js',
   },
   externals: {
-    electron: '{}',
-    'youtubei.js': '{}'
+    electron: '{}'
   },
   module: {
     rules: [
@@ -114,7 +113,7 @@ const config = {
     new webpack.DefinePlugin({
       'process.env.IS_ELECTRON': false,
       'process.env.IS_ELECTRON_MAIN': false,
-      'process.env.IS_ANDROID': false,
+      'process.env.IS_ANDROID': true,
 
       // video.js' vhs-utils supports both atob() in web browsers and Buffer in node
       // As the FreeTube web build only runs in web browsers, we can override their check for atob() here: https://github.com/videojs/vhs-utils/blob/main/src/decode-b64-to-uint8-array.js#L3
