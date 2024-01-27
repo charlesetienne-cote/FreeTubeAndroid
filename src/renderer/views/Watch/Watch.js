@@ -1599,6 +1599,11 @@ export default defineComponent({
       let fileLocation
       let uriSchema
 
+      if (process.env.IS_ANDROID) {
+        this.videoStoryboardSrc = `data:text/vtt;base64,${btoa(results)}`
+        return
+      }
+
       // Dev mode doesn't have access to the file:// schema, so we access
       // storyboards differently when run in dev
       if (process.env.NODE_ENV === 'development') {

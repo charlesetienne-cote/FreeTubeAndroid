@@ -39,7 +39,11 @@ async function createInnertube(options = { withPlayer: false, location: undefine
   let cache
   if (options.withPlayer) {
     const userData = await getUserDataPath()
-    cache = new PlayerCache(join(userData, 'player_cache'))
+    if (userData != null) {
+      cache = new PlayerCache(join(userData, 'player_cache'))
+    } else {
+      cache = undefined
+    }
   }
 
   return await Innertube.create({
