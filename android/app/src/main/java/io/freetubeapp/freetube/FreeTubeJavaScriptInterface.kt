@@ -39,16 +39,16 @@ class FreeTubeJavaScriptInterface {
     }
     session.setPlaybackState(
       PlaybackState.Builder()
-        .setState(state, position, 1.0f)
+        .setState(state, position, 1.0f, )
         .addCustomAction(playPauseButton[0], playPauseButton[1], pausePlayIcon)
-        .setActions(PlaybackState.ACTION_PLAY_PAUSE and PlaybackState.ACTION_SEEK_TO)
+        .setActions(PlaybackState.ACTION_SEEK_TO)
         .build()
     )
   }
 
   @SuppressLint("MissingPermission")
   @RequiresApi(Build.VERSION_CODES.O)
-  private fun setMetadata(session: MediaSession, trackName: String, artist: String, art: String?, pushNotification: Boolean = true) {
+  private fun setMetadata(session: MediaSession, trackName: String, artist: String, duration: Long, art: String?, pushNotification: Boolean = true) {
     val mediaStyle = Notification.MediaStyle().setMediaSession(session.sessionToken)
     var notification: Notification? = null
 
@@ -74,6 +74,7 @@ class FreeTubeJavaScriptInterface {
           .putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
           .putBitmap(MediaMetadata.METADATA_KEY_ART, bitmapArt)
           .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, bitmapArt)
+          .putLong(MediaMetadata.METADATA_KEY_DURATION, duration)
           .build()
       )
     } else {
@@ -81,6 +82,7 @@ class FreeTubeJavaScriptInterface {
         MediaMetadata.Builder()
           .putString(MediaMetadata.METADATA_KEY_TITLE, trackName)
           .putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
+          .putLong(MediaMetadata.METADATA_KEY_DURATION, duration)
           .build()
       )
     }
@@ -93,7 +95,7 @@ class FreeTubeJavaScriptInterface {
   @SuppressLint("MissingPermission")
   @RequiresApi(Build.VERSION_CODES.O)
   @JavascriptInterface
-  fun createMediaSession(title: String, artist: String, thumbnail: String? = null) {
+  fun createMediaSession(title: String, artist: String, duration: Long = 0, thumbnail: String? = null) {
     val notificationManager = NotificationManagerCompat.from(context)
     val channel = NotificationChannel(CHANNEL_ID, "Media Controls", NotificationManager.IMPORTANCE_MIN)
     notificationManager.createNotificationChannel(channel)
@@ -102,6 +104,8 @@ class FreeTubeJavaScriptInterface {
     // don't create multiple sessions for one channel
     // it messes with custom actions
     if (mediaSession == null) {
+      // add the callbacks && listeners
+
       session = MediaSession(context, CHANNEL_ID)
       mediaSession = session
       session.setCallback(object : MediaSession.Callback() {
@@ -117,6 +121,9 @@ class FreeTubeJavaScriptInterface {
 
         override fun onSeekTo(pos: Long) {
           super.onSeekTo(pos)
+          context.runOnUiThread {
+            context.webView.loadUrl(String.format("javascript: window.notifyMediaSessionListeners('seek', %s)", pos))
+          }
         }
 
         override fun onPlay() {
@@ -137,7 +144,7 @@ class FreeTubeJavaScriptInterface {
       .build()
 
     // use the set metadata function without pushing a notification
-    setMetadata(session, title, artist, thumbnail, false)
+    setMetadata(session, title, artist, duration, thumbnail, false)
     setState(session, PlaybackState.STATE_PLAYING)
 
     // hush hush ide, this is a special kind of notification which doesn't seem to require permissions
@@ -151,7 +158,7 @@ class FreeTubeJavaScriptInterface {
 
   @SuppressLint("NewApi")
   @JavascriptInterface
-  fun updateMediaSessionData(trackName: String, artist: String, art: String? = null) {
-    setMetadata(mediaSession!!, trackName, artist, art)
+  fun updateMediaSessionData(trackName: String, artist: String, duration: Long, art: String? = null) {
+    setMetadata(mediaSession!!, trackName, artist, duration, art)
   }
 }

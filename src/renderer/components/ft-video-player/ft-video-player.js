@@ -408,6 +408,7 @@ export default defineComponent({
     window.addEventListener('beforeunload', this.stopPowerSaveBlocker)
   },
   beforeDestroy: function () {
+    window.clearAllMediaSessionEventListeners()
     document.removeEventListener('keydown', this.keyboardShortcutHandler)
     if (this.player !== null) {
       this.exitFullWindow()
@@ -446,7 +447,9 @@ export default defineComponent({
           // (when default quality is low like 240p)
           playerBandwidthOption.bandwidth = this.selectedBitrate * VHS_BANDWIDTH_VARIANCE + 1
         }
-
+        window.addMediaSessionEventListener('seek', (position) => {
+          this.player.currentTime(position / 1000)
+        })
         this.player = videojs(this.$refs.video, {
           html5: {
             preloadTextTracks: false,

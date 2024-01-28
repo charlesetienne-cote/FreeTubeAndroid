@@ -37,7 +37,6 @@ import {
   youtubeImageUrlToInvidious
 } from '../../helpers/api/invidious'
 import {
-  STATE_PAUSED,
   createMediaSession
 } from '../../helpers/android'
 
@@ -277,7 +276,7 @@ export default defineComponent({
     },
     async thumbnail() {
       if (process.env.IS_ANDROID) {
-        createMediaSession(this.videoTitle, this.channelName, this.thumbnail)
+        createMediaSession(this.videoTitle, this.channelName, this.videoLengthSeconds * 1000, this.thumbnail)
       }
     },
     userPlaylistsReady() {
@@ -288,7 +287,6 @@ export default defineComponent({
     this.videoId = this.$route.params.id
     this.activeFormat = this.defaultVideoFormat
     this.useTheatreMode = this.defaultTheatreMode && this.theatrePossible
-
     this.onMountedDependOnLocalStateLoading()
   },
   methods: {

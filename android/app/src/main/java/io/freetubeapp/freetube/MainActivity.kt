@@ -2,6 +2,8 @@ package io.freetubeapp.freetube
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
 import io.freetubeapp.freetube.databinding.ActivityMainBinding
@@ -31,6 +33,26 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     webView.addJavascriptInterface(jsInterface, "Android")
 
     webView.loadUrl("file:///android_asset/index.html")
+    Handler(Looper.getMainLooper()).postDelayed({
+      webView.loadUrl(
+        "javascript: window.mediaSessionListeners = {};" +
+          "window.addMediaSessionEventListener = function (eventName, listener) {debugger;" +
+          "  if (!(eventName in window.mediaSessionListeners)) {" +
+          "    window.mediaSessionListeners[eventName] = [];" +
+          "  }" +
+          "  window.mediaSessionListeners[eventName].push(listener);" +
+          "};" +
+          "window.notifyMediaSessionListeners = function (eventName, ...message) {debugger;" +
+          "if ((eventName in window.mediaSessionListeners)) {" +
+          "    window.mediaSessionListeners[eventName].forEach(listener => listener(...message));" +
+          "  }" +
+          "};" +
+          "window.clearAllMediaSessionEventListeners = function () {" +
+          "    window.mediaSessionListeners = {}" +
+          "};"
+      )
+    }, 100)
+
   }
 
   fun listenForPermissionsCallbacks(listener: (Int, Array<String?>, IntArray) -> Unit) {
