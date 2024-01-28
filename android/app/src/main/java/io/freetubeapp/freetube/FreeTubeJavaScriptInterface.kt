@@ -123,13 +123,11 @@ class FreeTubeJavaScriptInterface {
         override fun onCustomAction(action: String, extras: Bundle?) {
           super.onCustomAction(action, extras)
           if (action == "pause") {
-            setState(session, PlaybackState.STATE_PAUSED)
             context.runOnUiThread {
               context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('pause')")
             }
           }
           if (action == "play") {
-            setState(session, PlaybackState.STATE_PLAYING)
             context.runOnUiThread {
               context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('play')")
             }
@@ -172,9 +170,12 @@ class FreeTubeJavaScriptInterface {
   @JavascriptInterface
   fun updateMediaSessionState(state: String?, position: String? = null) {
     var givenState = state?.toInt()
-    if (state === null) {
+    if (state == null) {
       givenState = lastState
     } else {
+    }
+    if (position != null) {
+      lastPosition = position.toLong()!!
     }
     setState(mediaSession!!, givenState!!, position?.toLong())
   }
