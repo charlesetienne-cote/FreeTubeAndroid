@@ -1,7 +1,6 @@
 package io.freetubeapp.freetube
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -11,8 +10,10 @@ import android.webkit.WebChromeClient
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import io.freetubeapp.freetube.databinding.ActivityMainBinding
-
 
 
 class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
@@ -23,7 +24,15 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   lateinit var webView: BackgroundPlayWebView
 
   override fun onCreate(savedInstanceState: Bundle?) {
+
     super.onCreate(savedInstanceState)
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+
+    val windowInsetsController =
+      WindowCompat.getInsetsController(window, window.decorView)
+    windowInsetsController.systemBarsBehavior =
+      WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
     permissionsListeners = arrayOf<(Int, Array<String?>, IntArray) -> Unit>().toMutableList()
     binding = ActivityMainBinding.inflate(layoutInflater)
     setContentView(binding.root)
@@ -41,35 +50,20 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     webView.addJavascriptInterface(jsInterface, "Android")
     webView.webChromeClient = object: WebChromeClient() {
       override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
         fullscreenView = view!!
         view.layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         this@MainActivity.binding.root.addView(view)
         webView.visibility = View.GONE
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-          window.decorView.windowInsetsController!!.hide(
-            android.view.WindowInsets.Type.statusBars()
-              or android.view.WindowInsets.Type.navigationBars()
-          )
-        } else {
-          window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
-          actionBar?.hide()
-        }
+        this@MainActivity.binding.root.fitsSystemWindows = false
       }
 
       override fun onHideCustomView() {
         webView.visibility = View.VISIBLE
         this@MainActivity.binding.root.removeView(fullscreenView)
         fullscreenView = null
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-          window.decorView.windowInsetsController!!.show(
-            android.view.WindowInsets.Type.statusBars()
-              or android.view.WindowInsets.Type.navigationBars()
-          )
-        } else {
-          window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-          actionBar?.show()
-        }
+        windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
+        this@MainActivity.binding.root.fitsSystemWindows = true
       }
     }
     webView.loadUrl("file:///android_asset/index.html")
