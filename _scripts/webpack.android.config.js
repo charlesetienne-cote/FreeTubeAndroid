@@ -23,7 +23,8 @@ const config = {
     filename: '[name].js',
   },
   externals: {
-    electron: '{}'
+    electron: '{}',
+    android: 'Android'
   },
   module: {
     rules: [

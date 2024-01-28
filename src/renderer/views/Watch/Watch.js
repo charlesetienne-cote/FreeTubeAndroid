@@ -36,6 +36,10 @@ import {
   invidiousGetVideoInformation,
   youtubeImageUrlToInvidious
 } from '../../helpers/api/invidious'
+import {
+  STATE_PAUSED,
+  createMediaSession
+} from '../../helpers/android'
 
 /**
  * @typedef {object} AudioSource
@@ -269,6 +273,11 @@ export default defineComponent({
             this.getVideoInformationLocal(this.videoId)
           }
           break
+      }
+    },
+    async thumbnail() {
+      if (process.env.IS_ANDROID) {
+        createMediaSession(this.videoTitle, this.channelName, this.thumbnail)
       }
     },
     userPlaylistsReady() {
