@@ -77,6 +77,7 @@ export default defineComponent({
   },
   data: function () {
     return {
+      previousHistoryOffset: 1,
       isLoading: true,
       firstLoad: true,
       useTheatreMode: false,
@@ -294,7 +295,8 @@ export default defineComponent({
       this.$refs.videoPlayer.player.pause()
     })
     window.addMediaSessionEventListener('next', () => {
-      if (this.watchingPlaylist && this.$refs.watchVideoPlaylist.shouldStopDueToPlaylistEnd) {
+      this.previousHistoryOffset = 1
+      if (this.playlistId != null) {
         // Let `watchVideoPlaylist` handle end of playlist, no countdown needed
         this.$refs.watchVideoPlaylist.playNextVideo()
         return
@@ -315,7 +317,19 @@ export default defineComponent({
       })
     })
     window.addMediaSessionEventListener('previous', () => {
-      window.history.back()
+      if (this.playlistId != null) {
+        if (this.$refs.watchVideoPlaylist.videoIndexInPlaylistItems === 0) {
+          // don't do anything
+          return
+        }
+        // Let `watchVideoPlaylist` handle end of playlist, no countdown needed
+        this.$refs.watchVideoPlaylist.playPreviousVideo()
+        return
+      }
+      this.$router.push({
+        path: `/watch/${this.$store.getters.getHistoryCacheSorted[this.previousHistoryOffset].videoId}`
+      })
+      this.previousHistoryOffset++
     })
     this.videoId = this.$route.params.id
     this.activeFormat = this.defaultVideoFormat
@@ -1390,6 +1404,7 @@ export default defineComponent({
           if (this.watchingPlaylist) {
             this.$refs.watchVideoPlaylist.playNextVideo()
           } else {
+            this.previousHistoryOffset = 1
             this.$router.push({
               path: `/watch/${nextVideoId}`
             })
@@ -1822,6 +1837,8 @@ export default defineComponent({
 
     ...mapActions([
       'updateHistory',
+      'grabHistory',
+      'removeFromHistory',
       'updateWatchProgress',
       'updateLastViewedPlaylist',
       'updatePlaylistLastPlayedAt',
