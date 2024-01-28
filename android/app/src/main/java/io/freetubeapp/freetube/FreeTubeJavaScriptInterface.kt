@@ -9,7 +9,6 @@ import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Build
-import android.os.Bundle
 import android.webkit.JavascriptInterface
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -36,12 +35,6 @@ class FreeTubeJavaScriptInterface {
   }
   private fun setState(session: MediaSession, state: Int, position: Long? = null) {
     lastState = state
-    var pausePlayIcon = androidx.media3.ui.R.drawable.exo_icon_pause
-    var playPauseButton = arrayOf("pause", "Pause")
-    if (state == PlaybackState.STATE_PAUSED) {
-      playPauseButton = arrayOf("play", "Play")
-      pausePlayIcon = androidx.media3.ui.R.drawable.exo_icon_play
-    }
     var statePosition: Long
     if (position == null) {
       statePosition = lastPosition
@@ -51,8 +44,9 @@ class FreeTubeJavaScriptInterface {
     session.setPlaybackState(
       PlaybackState.Builder()
         .setState(state, statePosition, 1.0f, )
-        .addCustomAction(playPauseButton[0], playPauseButton[1], pausePlayIcon)
-        .setActions(PlaybackState.ACTION_SEEK_TO)
+        .setActions(PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS or
+        PlaybackState.ACTION_PLAY_FROM_MEDIA_ID or
+        PlaybackState.ACTION_PLAY_FROM_SEARCH or PlaybackState.ACTION_SEEK_TO)
         .build()
     )
   }
@@ -120,20 +114,19 @@ class FreeTubeJavaScriptInterface {
       session = MediaSession(context, CHANNEL_ID)
       mediaSession = session
       session.setCallback(object : MediaSession.Callback() {
-        override fun onCustomAction(action: String, extras: Bundle?) {
-          super.onCustomAction(action, extras)
-          if (action == "pause") {
-            context.runOnUiThread {
-              context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('pause')")
-            }
-          }
-          if (action == "play") {
-            context.runOnUiThread {
-              context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('play')")
-            }
+        override fun onSkipToNext() {
+          super.onSkipToNext()
+          context.runOnUiThread {
+            context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('next')")
           }
         }
 
+        override fun onSkipToPrevious() {
+          super.onSkipToPrevious()
+          context.runOnUiThread {
+            context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('previous')")
+          }
+        }
         override fun onSeekTo(pos: Long) {
           super.onSeekTo(pos)
           lastPosition = pos
@@ -144,10 +137,16 @@ class FreeTubeJavaScriptInterface {
 
         override fun onPlay() {
           super.onPlay()
+          context.runOnUiThread {
+            context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('play')")
+          }
         }
 
         override fun onPause() {
           super.onPause()
+          context.runOnUiThread {
+            context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('pause')")
+          }
         }
       })
     } else {

@@ -284,10 +284,46 @@ export default defineComponent({
     },
   },
   mounted: function () {
+    window.addMediaSessionEventListener('seek', (position) => {
+      this.$refs.videoPlayer.player.currentTime(position / 1000)
+    })
+    window.addMediaSessionEventListener('play', () => {
+      this.$refs.videoPlayer.player.play()
+    })
+    window.addMediaSessionEventListener('pause', () => {
+      this.$refs.videoPlayer.player.pause()
+    })
+    window.addMediaSessionEventListener('next', () => {
+      if (this.watchingPlaylist && this.$refs.watchVideoPlaylist.shouldStopDueToPlaylistEnd) {
+        // Let `watchVideoPlaylist` handle end of playlist, no countdown needed
+        this.$refs.watchVideoPlaylist.playNextVideo()
+        return
+      }
+      let nextVideoId = null
+      if (!this.watchingPlaylist) {
+        const forbiddenTitles = this.forbiddenTitles
+        const channelsHidden = this.channelsHidden
+        nextVideoId = this.recommendedVideos.find((video) =>
+          !this.isHiddenVideo(forbiddenTitles, channelsHidden, video)
+        )?.videoId
+        if (!nextVideoId) {
+          return
+        }
+      }
+      this.$router.push({
+        path: `/watch/${nextVideoId}`
+      })
+    })
+    window.addMediaSessionEventListener('previous', () => {
+      window.history.back()
+    })
     this.videoId = this.$route.params.id
     this.activeFormat = this.defaultVideoFormat
     this.useTheatreMode = this.defaultTheatreMode && this.theatrePossible
     this.onMountedDependOnLocalStateLoading()
+  },
+  beforeDestroy() {
+    window.clearAllMediaSessionEventListeners()
   },
   methods: {
     onMountedDependOnLocalStateLoading() {
