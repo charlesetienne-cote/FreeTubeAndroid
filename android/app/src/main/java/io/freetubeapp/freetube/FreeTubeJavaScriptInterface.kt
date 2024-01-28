@@ -18,6 +18,8 @@ import java.net.URL
 class FreeTubeJavaScriptInterface {
   private var context: MainActivity
   private var mediaSession: MediaSession?
+  private var lastPosition: Long
+  private var lastState: Int
   companion object {
     private const val CHANNEL_ID = "media_controls"
     private const val NOTIFICATION_ID = 1
@@ -25,21 +27,30 @@ class FreeTubeJavaScriptInterface {
   constructor(main: MainActivity) {
     context = main
     mediaSession = null
+    lastPosition = 0
+    lastState = PlaybackState.STATE_PLAYING
   }
   @JavascriptInterface
   fun createToast(text: String) {
     Toast.makeText(context, text, Toast.LENGTH_LONG).show()
   }
-  private fun setState(session: MediaSession, state: Int, position: Long = 0) {
+  private fun setState(session: MediaSession, state: Int, position: Long? = null) {
+    lastState = state
     var pausePlayIcon = androidx.media3.ui.R.drawable.exo_icon_pause
     var playPauseButton = arrayOf("pause", "Pause")
     if (state == PlaybackState.STATE_PAUSED) {
       playPauseButton = arrayOf("play", "Play")
       pausePlayIcon = androidx.media3.ui.R.drawable.exo_icon_play
     }
+    var statePosition: Long
+    if (position == null) {
+      statePosition = lastPosition
+    } else {
+      statePosition = position
+    }
     session.setPlaybackState(
       PlaybackState.Builder()
-        .setState(state, position, 1.0f, )
+        .setState(state, statePosition, 1.0f, )
         .addCustomAction(playPauseButton[0], playPauseButton[1], pausePlayIcon)
         .setActions(PlaybackState.ACTION_SEEK_TO)
         .build()
@@ -113,14 +124,21 @@ class FreeTubeJavaScriptInterface {
           super.onCustomAction(action, extras)
           if (action == "pause") {
             setState(session, PlaybackState.STATE_PAUSED)
+            context.runOnUiThread {
+              context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('pause')")
+            }
           }
           if (action == "play") {
             setState(session, PlaybackState.STATE_PLAYING)
+            context.runOnUiThread {
+              context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('play')")
+            }
           }
         }
 
         override fun onSeekTo(pos: Long) {
           super.onSeekTo(pos)
+          lastPosition = pos
           context.runOnUiThread {
             context.webView.loadUrl(String.format("javascript: window.notifyMediaSessionListeners('seek', %s)", pos))
           }
@@ -152,8 +170,13 @@ class FreeTubeJavaScriptInterface {
   }
 
   @JavascriptInterface
-  fun updateMediaSessionState(state: Int, position: Long = 0) {
-    setState(mediaSession!!, state, position)
+  fun updateMediaSessionState(state: String?, position: String? = null) {
+    var givenState = state?.toInt()
+    if (state === null) {
+      givenState = lastState
+    } else {
+    }
+    setState(mediaSession!!, givenState!!, position?.toLong())
   }
 
   @SuppressLint("NewApi")

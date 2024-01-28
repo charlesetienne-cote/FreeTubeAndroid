@@ -15,6 +15,6 @@ export function createMediaSession(title, artist, duration, cover = null) {
   android.createMediaSession(title, artist, duration, cover)
 }
 
-export function updateMediaSessionState(state, position = 0) {
-  android.updateMediaSessionState(state, position)
+export function updateMediaSessionState(state, position = null) {
+  android.updateMediaSessionState(state?.toString() || null, position)
 }

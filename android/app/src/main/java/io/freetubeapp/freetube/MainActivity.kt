@@ -36,13 +36,13 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     Handler(Looper.getMainLooper()).postDelayed({
       webView.loadUrl(
         "javascript: window.mediaSessionListeners = {};" +
-          "window.addMediaSessionEventListener = function (eventName, listener) {debugger;" +
+          "window.addMediaSessionEventListener = function (eventName, listener) {" +
           "  if (!(eventName in window.mediaSessionListeners)) {" +
           "    window.mediaSessionListeners[eventName] = [];" +
           "  }" +
           "  window.mediaSessionListeners[eventName].push(listener);" +
           "};" +
-          "window.notifyMediaSessionListeners = function (eventName, ...message) {debugger;" +
+          "window.notifyMediaSessionListeners = function (eventName, ...message) {" +
           "if ((eventName in window.mediaSessionListeners)) {" +
           "    window.mediaSessionListeners[eventName].forEach(listener => listener(...message));" +
           "  }" +

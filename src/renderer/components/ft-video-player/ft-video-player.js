@@ -24,6 +24,7 @@ import {
 } from '../../helpers/utils'
 import { getProxyUrl } from '../../helpers/api/invidious'
 import store from '../../store'
+import { STATE_PAUSED, STATE_PLAYING, updateMediaSessionState } from '../../helpers/android'
 
 const EXPECTED_PLAY_RELATED_ERROR_MESSAGES = [
   // This is thrown when `play()` called but user already viewing another page
@@ -450,6 +451,12 @@ export default defineComponent({
         window.addMediaSessionEventListener('seek', (position) => {
           this.player.currentTime(position / 1000)
         })
+        window.addMediaSessionEventListener('play', () => {
+          this.player.play()
+        })
+        window.addMediaSessionEventListener('pause', () => {
+          this.player.pause()
+        })
         this.player = videojs(this.$refs.video, {
           html5: {
             preloadTextTracks: false,
@@ -687,6 +694,9 @@ export default defineComponent({
         })
 
         this.player.on('play', async () => {
+          if (process.env.IS_ANDROID) {
+            updateMediaSessionState(STATE_PLAYING.toString())
+          }
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'playing'
           }
@@ -699,6 +709,9 @@ export default defineComponent({
         })
 
         this.player.on('pause', () => {
+          if (process.env.IS_ANDROID) {
+            updateMediaSessionState(STATE_PAUSED)
+          }
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'paused'
           }
@@ -722,6 +735,10 @@ export default defineComponent({
             this.updateStatsContent()
           }
           this.$emit('timeupdate')
+          if (process.env.IS_ANDROID) {
+            // todo add code to update state of media session
+            updateMediaSessionState(null, Math.floor(this.player.currentTime() * 1000).toString())
+          }
         })
 
         this.player.textTrackSettings.on('modalclose', (_) => {
