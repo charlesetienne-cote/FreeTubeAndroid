@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.widget.FrameLayout
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
 import androidx.core.view.WindowCompat
@@ -24,38 +25,48 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   private lateinit var keepAliveIntent: Intent
   private var fullscreenView: View? = null
   lateinit var webView: BackgroundPlayWebView
-
+  @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
-
     super.onCreate(savedInstanceState)
 
+    // this keeps android from shutting off the app to conserve battery
     keepAliveService = KeepAliveService()
     keepAliveIntent = Intent(this, keepAliveService.javaClass)
-
     startService(keepAliveIntent)
 
+    // this gets the controller for hiding and showing the system bars
     WindowCompat.setDecorFitsSystemWindows(window, false)
     val windowInsetsController =
       WindowCompat.getInsetsController(window, window.decorView)
     windowInsetsController.systemBarsBehavior =
       WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
+    // initialize the list of listeners for permissions handlers
     permissionsListeners = arrayOf<(Int, Array<String?>, IntArray) -> Unit>().toMutableList()
+
     binding = ActivityMainBinding.inflate(layoutInflater)
     setContentView(binding.root)
-
     webView = binding.webView
 
+    // bind the back button to the web-view history
+    onBackPressedDispatcher.addCallback {
+      if (webView.canGoBack()) {
+        webView.goBack()
+      } else {
+        this@MainActivity.moveTaskToBack(true)
+      }
+    }
+
     webView.settings.javaScriptEnabled = true
-    // this is the 🥃 special sauce that makes local api streaming a possibility:
-    @Suppress("DEPRECATION")
+
+    // this is the 🥃 special sauce that makes local api streaming a possibility
     webView.settings.allowUniversalAccessFromFileURLs = true
-    @Suppress("DEPRECATION")
     webView.settings.allowFileAccessFromFileURLs = true
 
     val jsInterface = FreeTubeJavaScriptInterface(this)
     webView.addJavascriptInterface(jsInterface, "Android")
     webView.webChromeClient = object: WebChromeClient() {
+
       override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
         fullscreenView = view!!
