@@ -112,6 +112,7 @@ class FreeTubeJavaScriptInterface {
       // add the callbacks && listeners
 
       session = MediaSession(context, CHANNEL_ID)
+      session.isActive = true
       mediaSession = session
       session.setCallback(object : MediaSession.Callback() {
         override fun onSkipToNext() {
