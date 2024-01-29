@@ -20,14 +20,21 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
 
   private lateinit var binding: ActivityMainBinding
   private lateinit var permissionsListeners: MutableList<(Int, Array<String?>, IntArray) -> Unit>
-  private var fullscreenView: View? = null;
+  private lateinit var keepAliveService: KeepAliveService
+  private lateinit var keepAliveIntent: Intent
+  private var fullscreenView: View? = null
   lateinit var webView: BackgroundPlayWebView
 
   override fun onCreate(savedInstanceState: Bundle?) {
 
     super.onCreate(savedInstanceState)
-    WindowCompat.setDecorFitsSystemWindows(window, false)
 
+    keepAliveService = KeepAliveService()
+    keepAliveIntent = Intent(this, keepAliveService.javaClass)
+
+    startService(keepAliveIntent)
+
+    WindowCompat.setDecorFitsSystemWindows(window, false)
     val windowInsetsController =
       WindowCompat.getInsetsController(window, window.decorView)
     windowInsetsController.systemBarsBehavior =
