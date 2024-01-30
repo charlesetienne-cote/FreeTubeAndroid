@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     webView.webViewClient = object: WebViewClient() {
       override fun onPageFinished(view: WebView?, url: String?) {
         webView.loadUrl(
-          "javascript: window.mediaSessionListeners = {};" +
+          "javascript: window.mediaSessionListeners = window.mediaSessionListeners || {};" +
             "window.addMediaSessionEventListener = function (eventName, listener) {" +
             "  if (!(eventName in window.mediaSessionListeners)) {" +
             "    window.mediaSessionListeners[eventName] = [];" +

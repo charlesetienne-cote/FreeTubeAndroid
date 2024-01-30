@@ -285,52 +285,54 @@ export default defineComponent({
     },
   },
   mounted: function () {
-    window.addMediaSessionEventListener('seek', (position) => {
-      this.$refs.videoPlayer.player.currentTime(position / 1000)
-    })
-    window.addMediaSessionEventListener('play', () => {
-      this.$refs.videoPlayer.player.play()
-    })
-    window.addMediaSessionEventListener('pause', () => {
-      this.$refs.videoPlayer.player.pause()
-    })
-    window.addMediaSessionEventListener('next', () => {
-      this.previousHistoryOffset = 1
-      if (this.playlistId != null) {
-        // Let `watchVideoPlaylist` handle end of playlist, no countdown needed
-        this.$refs.watchVideoPlaylist.playNextVideo()
-        return
-      }
-      let nextVideoId = null
-      if (!this.watchingPlaylist) {
-        const forbiddenTitles = this.forbiddenTitles
-        const channelsHidden = this.channelsHidden
-        nextVideoId = this.recommendedVideos.find((video) =>
-          !this.isHiddenVideo(forbiddenTitles, channelsHidden, video)
-        )?.videoId
-        if (!nextVideoId) {
+    if (process.env.IS_ANDROID) {
+      window.addMediaSessionEventListener('seek', (position) => {
+        this.$refs.videoPlayer.player.currentTime(position / 1000)
+      })
+      window.addMediaSessionEventListener('play', () => {
+        this.$refs.videoPlayer.player.play()
+      })
+      window.addMediaSessionEventListener('pause', () => {
+        this.$refs.videoPlayer.player.pause()
+      })
+      window.addMediaSessionEventListener('next', () => {
+        this.previousHistoryOffset = 1
+        if (this.playlistId != null) {
+          // Let `watchVideoPlaylist` handle end of playlist, no countdown needed
+          this.$refs.watchVideoPlaylist.playNextVideo()
           return
         }
-      }
-      this.$router.push({
-        path: `/watch/${nextVideoId}`
+        let nextVideoId = null
+        if (!this.watchingPlaylist) {
+          const forbiddenTitles = this.forbiddenTitles
+          const channelsHidden = this.channelsHidden
+          nextVideoId = this.recommendedVideos.find((video) =>
+            !this.isHiddenVideo(forbiddenTitles, channelsHidden, video)
+          )?.videoId
+          if (!nextVideoId) {
+            return
+          }
+        }
+        this.$router.push({
+          path: `/watch/${nextVideoId}`
+        })
       })
-    })
-    window.addMediaSessionEventListener('previous', () => {
-      if (this.playlistId != null) {
-        if (this.$refs.watchVideoPlaylist.videoIndexInPlaylistItems === 0) {
-          // don't do anything
+      window.addMediaSessionEventListener('previous', () => {
+        if (this.playlistId != null) {
+          if (this.$refs.watchVideoPlaylist.videoIndexInPlaylistItems === 0) {
+            // don't do anything
+            return
+          }
+          // Let `watchVideoPlaylist` handle end of playlist, no countdown needed
+          this.$refs.watchVideoPlaylist.playPreviousVideo()
           return
         }
-        // Let `watchVideoPlaylist` handle end of playlist, no countdown needed
-        this.$refs.watchVideoPlaylist.playPreviousVideo()
-        return
-      }
-      this.$router.push({
-        path: `/watch/${this.$store.getters.getHistoryCacheSorted[this.previousHistoryOffset].videoId}`
+        this.$router.push({
+          path: `/watch/${this.$store.getters.getHistoryCacheSorted[this.previousHistoryOffset].videoId}`
+        })
+        this.previousHistoryOffset++
       })
-      this.previousHistoryOffset++
-    })
+    }
     this.videoId = this.$route.params.id
     this.activeFormat = this.defaultVideoFormat
     this.useTheatreMode = this.defaultTheatreMode && this.theatrePossible
