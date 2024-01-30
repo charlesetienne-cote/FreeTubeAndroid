@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.media.MediaMetadata
 import android.media.session.MediaSession
@@ -154,9 +156,13 @@ class FreeTubeJavaScriptInterface {
       session = mediaSession!!
     }
     val mediaStyle = Notification.MediaStyle().setMediaSession(session.sessionToken)
+    val notificationIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setClass(context,  MainActivity::class.java)
+
     val notification = Notification.Builder(context, CHANNEL_ID)
       .setStyle(mediaStyle)
       .setSmallIcon(R.drawable.ic_media_notification_icon)
+      .setContentIntent(PendingIntent.getActivity(context,1, notificationIntent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
       .build()
 
     // use the set metadata function without pushing a notification
