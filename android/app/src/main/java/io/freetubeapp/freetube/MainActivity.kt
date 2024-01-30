@@ -62,6 +62,8 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     // this is the 🥃 special sauce that makes local api streaming a possibility
     webView.settings.allowUniversalAccessFromFileURLs = true
     webView.settings.allowFileAccessFromFileURLs = true
+    // allow playlist ▶auto-play in background
+    webView.settings.mediaPlaybackRequiresUserGesture = false
 
     val jsInterface = FreeTubeJavaScriptInterface(this)
     webView.addJavascriptInterface(jsInterface, "Android")
