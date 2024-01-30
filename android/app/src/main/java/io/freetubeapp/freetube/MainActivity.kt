@@ -2,11 +2,11 @@ package io.freetubeapp.freetube
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -86,26 +86,30 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
         this@MainActivity.binding.root.fitsSystemWindows = true
       }
     }
+    webView.webViewClient = object: WebViewClient() {
+      override fun onPageFinished(view: WebView?, url: String?) {
+        webView.loadUrl(
+          "javascript: window.mediaSessionListeners = {};" +
+            "window.addMediaSessionEventListener = function (eventName, listener) {" +
+            "  if (!(eventName in window.mediaSessionListeners)) {" +
+            "    window.mediaSessionListeners[eventName] = [];" +
+            "  }" +
+            "  window.mediaSessionListeners[eventName].push(listener);" +
+            "};" +
+            "window.notifyMediaSessionListeners = function (eventName, ...message) {" +
+            "if ((eventName in window.mediaSessionListeners)) {" +
+            "    window.mediaSessionListeners[eventName].forEach(listener => listener(...message));" +
+            "  }" +
+            "};" +
+            "window.clearAllMediaSessionEventListeners = function () {" +
+            "    window.mediaSessionListeners = {}" +
+            "};"
+        )
+        super.onPageFinished(view, url)
+      }
+    }
+
     webView.loadUrl("file:///android_asset/index.html")
-    Handler(Looper.getMainLooper()).postDelayed({
-      webView.loadUrl(
-        "javascript: window.mediaSessionListeners = {};" +
-          "window.addMediaSessionEventListener = function (eventName, listener) {" +
-          "  if (!(eventName in window.mediaSessionListeners)) {" +
-          "    window.mediaSessionListeners[eventName] = [];" +
-          "  }" +
-          "  window.mediaSessionListeners[eventName].push(listener);" +
-          "};" +
-          "window.notifyMediaSessionListeners = function (eventName, ...message) {" +
-          "if ((eventName in window.mediaSessionListeners)) {" +
-          "    window.mediaSessionListeners[eventName].forEach(listener => listener(...message));" +
-          "  }" +
-          "};" +
-          "window.clearAllMediaSessionEventListeners = function () {" +
-          "    window.mediaSessionListeners = {}" +
-          "};"
-      )
-    }, 100)
 
   }
 
