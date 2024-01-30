@@ -156,7 +156,7 @@ class FreeTubeJavaScriptInterface {
     val mediaStyle = Notification.MediaStyle().setMediaSession(session.sessionToken)
     val notification = Notification.Builder(context, CHANNEL_ID)
       .setStyle(mediaStyle)
-      .setSmallIcon(androidx.media3.ui.R.drawable.exo_icon_play)
+      .setSmallIcon(R.drawable.ic_media_notification_icon)
       .build()
 
     // use the set metadata function without pushing a notification
