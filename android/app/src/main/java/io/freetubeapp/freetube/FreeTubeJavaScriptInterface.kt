@@ -12,7 +12,6 @@ import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Build
 import android.webkit.JavascriptInterface
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
 import java.net.URL
@@ -33,6 +32,11 @@ class FreeTubeJavaScriptInterface {
     lastPosition = 0
     lastState = PlaybackState.STATE_PLAYING
   }
+
+  /**
+   * retrieves actions for the media controls
+   * @param state the current state of the media controls (ex PlaybackState.STATE_PLAYING or PlaybackState.STATE_PAUSED
+   */
   private fun getActions(state: Int = lastState): Array<Notification.Action> {
     var neutralAction = arrayOf("Pause", "pause")
     var neutralIcon = androidx.media3.ui.R.drawable.exo_icon_pause
@@ -58,32 +62,80 @@ class FreeTubeJavaScriptInterface {
       ).build()
     )
   }
-  @JavascriptInterface
-  fun createToast(text: String) {
-    Toast.makeText(context, text, Toast.LENGTH_LONG).show()
+
+  /**
+   * retrieves the media style for the media controls notification
+   */
+  private fun getMediaStyle(): Notification.MediaStyle? {
+    if (mediaSession != null) {
+      return Notification.MediaStyle()
+        .setMediaSession(mediaSession!!.sessionToken).setShowActionsInCompactView(0, 1, 2)
+    } else {
+      return null
+    }
   }
+
+  /**
+   * Gets a fresh media controls notification given the current `mediaSession`
+   * @param actions a list of actions for the media controls (defaults to `getActions()`)
+   */
+  @RequiresApi(Build.VERSION_CODES.O)
+  private fun getMediaControlsNotification(actions: Array<Notification.Action> = getActions()): Notification? {
+    val mediaStyle = getMediaStyle()
+    if (mediaStyle != null) {
+      // when clicking the notification, launch the app as if the user tapped on it in their launcher (open an existing instance if able)
+      val notificationIntent = Intent(Intent.ACTION_MAIN)
+        .addCategory(Intent.CATEGORY_LAUNCHER)
+        .setClass(context,  MainActivity::class.java)
+      return Notification.Builder(context, CHANNEL_ID)
+        .setStyle(getMediaStyle())
+        .setSmallIcon(R.drawable.ic_media_notification_icon)
+        .addAction(
+          actions[0]
+        )
+        .addAction(
+          actions[1]
+        )
+        .addAction(
+          actions[2]
+        )
+        .setContentIntent(
+          PendingIntent.getActivity(
+            context, 1, notificationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+          )
+        )
+        .build()
+    } else {
+      return null
+    }
+  }
+
+  /**
+   * pushes a notification
+   * @param notification the notification the be pushed (usually a media controls notification)
+   */
+  @SuppressLint("MissingPermission")
+  private fun pushNotification(notification: Notification) {
+    NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+    lastNotification = notification
+  }
+
+  /**
+   * sets the state of the media session
+   * @param session the current media session
+   * @param state the state of playback
+   * @param position the position in milliseconds of playback
+   */
   @SuppressLint("MissingPermission")
   private fun setState(session: MediaSession, state: Int, position: Long? = null) {
 
     if (state != lastState) {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        // need to reissue a notification if we want to update the actions
         var actions = getActions(state)
-        val notification = Notification.Builder(context, CHANNEL_ID)
-          .setStyle(Notification.MediaStyle()
-            .setMediaSession(session.sessionToken))
-          .setSmallIcon(R.drawable.ic_media_notification_icon)
-          .addAction(
-            actions[0]
-          )
-          .addAction(
-            actions[1]
-          )
-          .addAction(
-            actions[2]
-          )
-          .build()
-        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
-        lastNotification = notification
+        val notification = getMediaControlsNotification(actions)
+        pushNotification(notification!!)
       }
     }
     lastState = state
@@ -103,28 +155,19 @@ class FreeTubeJavaScriptInterface {
     )
   }
 
+  /**
+   * sets the metadata of the media session
+   * @param session the current media session
+   * @param trackName the video name
+   * @param artist the channel name
+   * @param duration duration in milliseconds
+   */
   @SuppressLint("MissingPermission")
   @RequiresApi(Build.VERSION_CODES.O)
   private fun setMetadata(session: MediaSession, trackName: String, artist: String, duration: Long, art: String?, pushNotification: Boolean = true) {
-    val mediaStyle = Notification.MediaStyle()
-        .setMediaSession(session.sessionToken)
     var notification: Notification? = null
-
     if (pushNotification) {
-      var actions = getActions()
-      notification = Notification.Builder(context, CHANNEL_ID)
-        .setStyle(mediaStyle)
-        .setSmallIcon(R.drawable.ic_media_notification_icon)
-        .addAction(
-          actions[0]
-        )
-        .addAction(
-          actions[1]
-        )
-        .addAction(
-          actions[2]
-        )
-        .build()
+      notification = getMediaControlsNotification()
     }
 
     if (art != null) {
@@ -155,12 +198,17 @@ class FreeTubeJavaScriptInterface {
       )
     }
     if (pushNotification && notification != null) {
-      NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
-      lastNotification = notification
+      pushNotification(notification)
     }
   }
 
-
+  /**
+   * creates (or updates) a media session
+   * @param title the track name / video title
+   * @param artist the author / channel name
+   * @param duration the duration in milliseconds of the video
+   * @param thumbnail a URL to the thumbnail for the video
+   */
   @SuppressLint("MissingPermission")
   @RequiresApi(Build.VERSION_CODES.O)
   @JavascriptInterface
@@ -218,38 +266,20 @@ class FreeTubeJavaScriptInterface {
     } else {
       session = mediaSession!!
     }
-    val mediaStyle = Notification.MediaStyle().setMediaSession(session.sessionToken)
-    val notificationIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setClass(context,  MainActivity::class.java)
 
-    var actions = getActions()
-    val notification = Notification.Builder(context, CHANNEL_ID)
-      .setStyle(mediaStyle)
-      .setSmallIcon(R.drawable.ic_media_notification_icon)
-      .addAction(
-        actions[0]
-      )
-      .addAction(
-        actions[1]
-      )
-      .addAction(
-        actions[2]
-      )
-      .setContentIntent(
-        PendingIntent.getActivity(
-          context, 1, notificationIntent,
-          PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-      )
-      .build()
+    val notification = getMediaControlsNotification()
     // use the set metadata function without pushing a notification
     setMetadata(session, title, artist, duration, thumbnail, false)
     setState(session, PlaybackState.STATE_PLAYING)
 
-    // hush hush ide, this is a special kind of notification which doesn't seem to require permissions
-    notificationManager.notify(NOTIFICATION_ID, notification)
-    lastNotification = notification
+    pushNotification(notification!!)
   }
 
+  /**
+   * updates the state of the active media session
+   * @param state the state; should be an Int (as a string because the java bridge)
+   * @param position the position; should be a Long (as a string because the java bridge)
+   */
   @JavascriptInterface
   fun updateMediaSessionState(state: String?, position: String? = null) {
     var givenState = state?.toInt()
@@ -263,6 +293,13 @@ class FreeTubeJavaScriptInterface {
     setState(mediaSession!!, givenState!!, position?.toLong())
   }
 
+  /**
+   * updates the metadata of the active media session
+   * @param trackName the video title
+   * @param artist the channel name
+   * @param duration the length of the video in milliseconds
+   * @param art the URL to the video thumbnail
+   */
   @SuppressLint("NewApi")
   @JavascriptInterface
   fun updateMediaSessionData(trackName: String, artist: String, duration: Long, art: String? = null) {
