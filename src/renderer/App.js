@@ -15,6 +15,7 @@ import { marked } from 'marked'
 import { IpcChannels } from '../constants'
 import packageDetails from '../../package.json'
 import { openExternalLink, openInternalPath, showToast } from './helpers/utils'
+import 'core-js'
 
 let ipcRenderer = null
 
