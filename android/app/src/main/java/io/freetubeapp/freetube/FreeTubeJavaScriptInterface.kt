@@ -21,6 +21,8 @@ class FreeTubeJavaScriptInterface {
   private var mediaSession: MediaSession?
   private var lastPosition: Long
   private var lastState: Int
+  private var lastNotification: Notification? = null
+
   companion object {
     private const val CHANNEL_ID = "media_controls"
     private const val NOTIFICATION_ID = 1
@@ -31,11 +33,59 @@ class FreeTubeJavaScriptInterface {
     lastPosition = 0
     lastState = PlaybackState.STATE_PLAYING
   }
+  private fun getActions(state: Int = lastState): Array<Notification.Action> {
+    var neutralAction = arrayOf("Pause", "pause")
+    var neutralIcon = androidx.media3.ui.R.drawable.exo_icon_pause
+    if (state == PlaybackState.STATE_PAUSED) {
+      neutralAction = arrayOf("Play", "play")
+      neutralIcon = androidx.media3.ui.R.drawable.exo_icon_play
+    }
+    return arrayOf(
+      Notification.Action.Builder(
+        androidx.media3.ui.R.drawable.exo_ic_skip_previous,
+        "Back",
+        PendingIntent.getBroadcast(context, 1, Intent(context, MediaControlsReceiver::class.java).setAction("previous"), PendingIntent.FLAG_IMMUTABLE)
+      ).build(),
+      Notification.Action.Builder(
+        neutralIcon,
+        neutralAction[0],
+        PendingIntent.getBroadcast(context, 1, Intent(context, MediaControlsReceiver::class.java).setAction(neutralAction[1]), PendingIntent.FLAG_IMMUTABLE)
+      ).build(),
+      Notification.Action.Builder(
+        androidx.media3.ui.R.drawable.exo_ic_skip_next,
+        "Next",
+        PendingIntent.getBroadcast(context, 1, Intent(context, MediaControlsReceiver::class.java).setAction("next"), PendingIntent.FLAG_IMMUTABLE)
+      ).build()
+    )
+  }
   @JavascriptInterface
   fun createToast(text: String) {
     Toast.makeText(context, text, Toast.LENGTH_LONG).show()
   }
+  @SuppressLint("MissingPermission")
   private fun setState(session: MediaSession, state: Int, position: Long? = null) {
+
+    if (state != lastState) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        var actions = getActions(state)
+        val notification = Notification.Builder(context, CHANNEL_ID)
+          .setStyle(Notification.MediaStyle()
+            .setMediaSession(session.sessionToken))
+          .setSmallIcon(R.drawable.ic_media_notification_icon)
+          .addAction(
+            actions[0]
+          )
+          .addAction(
+            actions[1]
+          )
+          .addAction(
+            actions[2]
+          )
+          .build()
+        NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+        lastNotification = notification
+      }
+    }
     lastState = state
     var statePosition: Long
     if (position == null) {
@@ -61,35 +111,18 @@ class FreeTubeJavaScriptInterface {
     var notification: Notification? = null
 
     if (pushNotification) {
-      var neutralAction = arrayOf("Play", "play")
-      var neutralIcon = androidx.media3.ui.R.drawable.exo_icon_play
-      if (lastState == PlaybackState.STATE_PLAYING) {
-        neutralAction = arrayOf("Pause", "pause")
-        neutralIcon = androidx.media3.ui.R.drawable.exo_icon_pause
-      }
-      Notification.Builder(context, CHANNEL_ID)
+      var actions = getActions()
+      notification = Notification.Builder(context, CHANNEL_ID)
         .setStyle(mediaStyle)
         .setSmallIcon(R.drawable.ic_media_notification_icon)
         .addAction(
-          Notification.Action.Builder(
-            androidx.media3.ui.R.drawable.exo_ic_skip_previous,
-            "Back",
-            PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction("previous"), PendingIntent.FLAG_IMMUTABLE)
-          ).build()
+          actions[0]
         )
         .addAction(
-          Notification.Action.Builder(
-            neutralIcon,
-            neutralAction[0],
-            PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction(neutralAction[1]), PendingIntent.FLAG_IMMUTABLE)
-          ).build()
+          actions[1]
         )
         .addAction(
-          Notification.Action.Builder(
-            androidx.media3.ui.R.drawable.exo_ic_skip_next,
-            "Next",
-            PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction("next"), PendingIntent.FLAG_IMMUTABLE)
-          ).build()
+          actions[2]
         )
         .build()
     }
@@ -123,6 +156,7 @@ class FreeTubeJavaScriptInterface {
     }
     if (pushNotification && notification != null) {
       NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+      lastNotification = notification
     }
   }
 
@@ -187,31 +221,18 @@ class FreeTubeJavaScriptInterface {
     val mediaStyle = Notification.MediaStyle().setMediaSession(session.sessionToken)
     val notificationIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setClass(context,  MainActivity::class.java)
 
-    var neutralAction = arrayOf("Play", "play")
-    var neutralIcon = androidx.media3.ui.R.drawable.exo_icon_play
+    var actions = getActions()
     val notification = Notification.Builder(context, CHANNEL_ID)
       .setStyle(mediaStyle)
       .setSmallIcon(R.drawable.ic_media_notification_icon)
       .addAction(
-        Notification.Action.Builder(
-          androidx.media3.ui.R.drawable.exo_ic_skip_previous,
-          "Back",
-          PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction("previous"), PendingIntent.FLAG_IMMUTABLE)
-        ).build()
+        actions[0]
       )
       .addAction(
-        Notification.Action.Builder(
-          neutralIcon,
-          neutralAction[0],
-          PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction(neutralAction[1]), PendingIntent.FLAG_IMMUTABLE)
-        ).build()
+        actions[1]
       )
       .addAction(
-        Notification.Action.Builder(
-          androidx.media3.ui.R.drawable.exo_ic_skip_next,
-          "Next",
-          PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction("next"), PendingIntent.FLAG_IMMUTABLE)
-        ).build()
+        actions[2]
       )
       .setContentIntent(
         PendingIntent.getActivity(
@@ -226,6 +247,7 @@ class FreeTubeJavaScriptInterface {
 
     // hush hush ide, this is a special kind of notification which doesn't seem to require permissions
     notificationManager.notify(NOTIFICATION_ID, notification)
+    lastNotification = notification
   }
 
   @JavascriptInterface

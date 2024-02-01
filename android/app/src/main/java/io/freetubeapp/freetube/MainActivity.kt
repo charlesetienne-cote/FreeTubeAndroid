@@ -25,10 +25,11 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   private lateinit var keepAliveIntent: Intent
   private var fullscreenView: View? = null
   lateinit var webView: BackgroundPlayWebView
+  lateinit var jsInterface: FreeTubeJavaScriptInterface
   @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
+    MediaControlsReceiver.Static.main = this
     // this keeps android from shutting off the app to conserve battery
     keepAliveService = KeepAliveService()
     keepAliveIntent = Intent(this, keepAliveService.javaClass)
@@ -65,7 +66,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     // allow playlist ▶auto-play in background
     webView.settings.mediaPlaybackRequiresUserGesture = false
 
-    val jsInterface = FreeTubeJavaScriptInterface(this)
+    jsInterface = FreeTubeJavaScriptInterface(this)
     webView.addJavascriptInterface(jsInterface, "Android")
     webView.webChromeClient = object: WebChromeClient() {
 
