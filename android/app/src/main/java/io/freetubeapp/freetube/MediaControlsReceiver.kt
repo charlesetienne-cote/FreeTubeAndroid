@@ -9,12 +9,12 @@ open class MediaControlsReceiver : BroadcastReceiver {
   constructor() {
   }
   companion object Static {
-    lateinit var main: MainActivity
+    lateinit var notifyMediaSessionListeners: (String) -> Unit
   }
 
 
   override fun onReceive(context: Context?, intent: Intent?) {
     val action = intent!!.action
-    main.webView.loadUrl(String.format("javascript: window.notifyMediaSessionListeners('%s')", action))
+    notifyMediaSessionListeners(action!!)
   }
 }

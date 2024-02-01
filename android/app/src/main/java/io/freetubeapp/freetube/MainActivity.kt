@@ -29,7 +29,10 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    MediaControlsReceiver.Static.main = this
+    MediaControlsReceiver.notifyMediaSessionListeners = {
+      action ->
+      webView.loadUrl(String.format("javascript: window.notifyMediaSessionListeners('%s')", action))
+    }
     // this keeps android from shutting off the app to conserve battery
     keepAliveService = KeepAliveService()
     keepAliveIntent = Intent(this, keepAliveService.javaClass)
