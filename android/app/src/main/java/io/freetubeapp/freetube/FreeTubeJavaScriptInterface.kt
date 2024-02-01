@@ -45,7 +45,7 @@ class FreeTubeJavaScriptInterface {
     }
     session.setPlaybackState(
       PlaybackState.Builder()
-        .setState(state, statePosition, 1.0f, )
+        .setState(state, statePosition, 1.0f)
         .setActions(PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS or
         PlaybackState.ACTION_PLAY_FROM_MEDIA_ID or
         PlaybackState.ACTION_PLAY_FROM_SEARCH or PlaybackState.ACTION_SEEK_TO)
@@ -56,13 +56,41 @@ class FreeTubeJavaScriptInterface {
   @SuppressLint("MissingPermission")
   @RequiresApi(Build.VERSION_CODES.O)
   private fun setMetadata(session: MediaSession, trackName: String, artist: String, duration: Long, art: String?, pushNotification: Boolean = true) {
-    val mediaStyle = Notification.MediaStyle().setMediaSession(session.sessionToken)
+    val mediaStyle = Notification.MediaStyle()
+        .setMediaSession(session.sessionToken)
     var notification: Notification? = null
 
     if (pushNotification) {
+      var neutralAction = arrayOf("Play", "play")
+      var neutralIcon = androidx.media3.ui.R.drawable.exo_icon_play
+      if (lastState == PlaybackState.STATE_PLAYING) {
+        neutralAction = arrayOf("Pause", "pause")
+        neutralIcon = androidx.media3.ui.R.drawable.exo_icon_pause
+      }
       Notification.Builder(context, CHANNEL_ID)
         .setStyle(mediaStyle)
-        .setSmallIcon(androidx.media3.ui.R.drawable.exo_icon_play)
+        .setSmallIcon(R.drawable.ic_media_notification_icon)
+        .addAction(
+          Notification.Action.Builder(
+            androidx.media3.ui.R.drawable.exo_ic_skip_previous,
+            "Back",
+            PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction("previous"), PendingIntent.FLAG_IMMUTABLE)
+          ).build()
+        )
+        .addAction(
+          Notification.Action.Builder(
+            neutralIcon,
+            neutralAction[0],
+            PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction(neutralAction[1]), PendingIntent.FLAG_IMMUTABLE)
+          ).build()
+        )
+        .addAction(
+          Notification.Action.Builder(
+            androidx.media3.ui.R.drawable.exo_ic_skip_next,
+            "Next",
+            PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction("next"), PendingIntent.FLAG_IMMUTABLE)
+          ).build()
+        )
         .build()
     }
 
@@ -105,6 +133,7 @@ class FreeTubeJavaScriptInterface {
   fun createMediaSession(title: String, artist: String, duration: Long = 0, thumbnail: String? = null) {
     val notificationManager = NotificationManagerCompat.from(context)
     val channel = NotificationChannel(CHANNEL_ID, "Media Controls", NotificationManager.IMPORTANCE_MIN)
+    channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
     notificationManager.createNotificationChannel(channel)
     var session: MediaSession
 
@@ -158,13 +187,39 @@ class FreeTubeJavaScriptInterface {
     val mediaStyle = Notification.MediaStyle().setMediaSession(session.sessionToken)
     val notificationIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setClass(context,  MainActivity::class.java)
 
+    var neutralAction = arrayOf("Play", "play")
+    var neutralIcon = androidx.media3.ui.R.drawable.exo_icon_play
     val notification = Notification.Builder(context, CHANNEL_ID)
       .setStyle(mediaStyle)
       .setSmallIcon(R.drawable.ic_media_notification_icon)
-      .setContentIntent(PendingIntent.getActivity(context,1, notificationIntent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+      .addAction(
+        Notification.Action.Builder(
+          androidx.media3.ui.R.drawable.exo_ic_skip_previous,
+          "Back",
+          PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction("previous"), PendingIntent.FLAG_IMMUTABLE)
+        ).build()
+      )
+      .addAction(
+        Notification.Action.Builder(
+          neutralIcon,
+          neutralAction[0],
+          PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction(neutralAction[1]), PendingIntent.FLAG_IMMUTABLE)
+        ).build()
+      )
+      .addAction(
+        Notification.Action.Builder(
+          androidx.media3.ui.R.drawable.exo_ic_skip_next,
+          "Next",
+          PendingIntent.getBroadcast(context, 1, Intent(context.applicationContext, MediaControlsReceiver::class.java).setAction("next"), PendingIntent.FLAG_IMMUTABLE)
+        ).build()
+      )
+      .setContentIntent(
+        PendingIntent.getActivity(
+          context, 1, notificationIntent,
+          PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+      )
       .build()
-
     // use the set metadata function without pushing a notification
     setMetadata(session, title, artist, duration, thumbnail, false)
     setState(session, PlaybackState.STATE_PLAYING)

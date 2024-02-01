@@ -35,7 +35,7 @@ class KeepAliveService : Service() {
         Notification.Builder(this.applicationContext, CHANNEL_ID)
           .setContentTitle("FreeTube is running in the background.")
           .setCategory(Notification.CATEGORY_SERVICE)
-          .setSmallIcon(R.drawable.ic_launcher_foreground)
+          .setSmallIcon(R.drawable.ic_media_notification_icon)
           .build())
     } else {
       startForeground(1,
