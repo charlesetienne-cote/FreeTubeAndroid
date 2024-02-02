@@ -105,6 +105,7 @@ class FreeTubeJavaScriptInterface {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
           )
         )
+        .setVisibility(Notification.VISIBILITY_PUBLIC)
         .build()
     } else {
       return null
