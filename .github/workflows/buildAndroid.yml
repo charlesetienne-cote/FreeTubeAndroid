@@ -23,7 +23,14 @@ jobs:
       with:
         result-encoding: string
         script: |
-          return '${{ steps.pkg.outputs.version }}-new-nightly-${{ github.run_number }}'
+          return '${{ steps.pkg.outputs.version }}-nightly-${{ github.run_number }}'
+
+    - name: Update package.json version
+      uses: jossef/action-set-json-field@v2.1
+      with:
+        file: package.json
+        field: name
+        value: freetube-nightly
 
     - name: Update package.json version
       uses: jossef/action-set-json-field@v2.1
