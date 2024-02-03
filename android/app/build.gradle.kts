@@ -1,3 +1,31 @@
+import groovy.json.JsonSlurper
+
+fun getVersionInfo(project: Project): Pair<String, Int>? {
+  val json = JsonSlurper()
+  val packageJsonPath = project.file("../../package.json")
+
+  val packageJson = json.parse(packageJsonPath) as Map<String, Any>
+  val versionName = packageJson["version"] as String
+  
+  val parts = versionName.split("-")
+  val numbers = parts[0].split(".")
+  val major = numbers[0].toInt()
+  val minor = numbers[1].toInt()
+  val patch = numbers[2].toInt()
+  var build = 0
+  if (parts.size > 2) {
+    build = parts[2].toInt()
+  } else if (numbers.size > 3) {
+    build = numbers[3].toInt()
+  }
+
+  val versionCode = major * 10000000 + minor * 10000000 + patch * 1000 + build
+
+  return Pair(versionName, versionCode)
+}
+
+val versionInfo = getVersionInfo(project)
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -10,11 +38,11 @@ android {
         enable = true
     }
     defaultConfig {
-        applicationId = "io.freetubeapp.freetube.newdevelopment"
+        applicationId = "io.freetubeapp.freetube.development"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionInfo!!.second
+        versionName = versionInfo!!.first
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
