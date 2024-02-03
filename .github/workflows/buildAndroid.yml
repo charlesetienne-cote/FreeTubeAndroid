@@ -23,7 +23,7 @@ jobs:
       with:
         result-encoding: string
         script: |
-          return `${{ steps.pkg.outputs.version }}-nightly-${${{ github.run_number }} + 1}`
+          return `${{ steps.pkg.outputs.version }}-nightly-${${{ github.run_number }} + 387}`
 
     - name: Update package.json version
       uses: jossef/action-set-json-field@v2.1
