@@ -18,6 +18,15 @@ jobs:
       id: pkg
       uses: jaywcjlove/github-action-package@v1.3.0
 
+    - name: Set Version Number Variable
+      id: versionNumber
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          return `${{ steps.pkg.outputs.version }}-nightly-${${{ github.run_number }} + 387}`
+
+
     - name: Update package.json name
       uses: jossef/action-set-json-field@v2.1
       with:
@@ -31,14 +40,6 @@ jobs:
         file: package.json
         field: version
         value: ${{ steps.versionNumber.outputs.result }}
-
-    - name: Set Version Number Variable
-      id: versionNumber
-      uses: actions/github-script@v6
-      with:
-        result-encoding: string
-        script: |
-          return `${{ steps.pkg.outputs.version }}-nightly-${${{ github.run_number }} + 387}`
 
     - name: 🧶 Yarn install
       run: yarn ci
