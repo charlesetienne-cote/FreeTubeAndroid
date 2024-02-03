@@ -39,6 +39,12 @@ jobs:
         field: version
         value: ${{ steps.versionNumber.outputs.result }}
 
+    - name: 🧶 Yarn install
+      run: yarn ci
+
+    - name: 📦 Pack for 📱Android
+      run: yarn pack:android:dev
+
     - name: Move into directory
       run: cd android/
 
