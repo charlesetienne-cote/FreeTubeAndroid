@@ -25,7 +25,7 @@ jobs:
         script: |
           return `${{ steps.pkg.outputs.version }}-nightly-${${{ github.run_number }} + 387}`
 
-    - name: Update package.json version
+    - name: Update package.json name
       uses: jossef/action-set-json-field@v2.1
       with:
         file: package.json
@@ -45,8 +45,8 @@ jobs:
     - name: 📦 Pack for 📱Android
       run: yarn pack:android:dev
 
-    - name: Move into directory
-      run: cd android/
+    - name: Update name
+      run: sed -i 's/"FreeTube Android"/"${{ steps.pkg.outputs.productName }}"/g' android/settings.gradle.kts
 
     - name: set up JDK 17
       uses: actions/setup-java@v3
