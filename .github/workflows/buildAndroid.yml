@@ -25,6 +25,13 @@ jobs:
         script: |
           return '${{ steps.pkg.outputs.version }}-new-nightly-${{ github.run_number }}'
 
+    - name: Update package.json version
+      uses: jossef/action-set-json-field@v2.1
+      with:
+        file: package.json
+        field: version
+        value: ${{ steps.versionNumber.outputs.result }}
+
     - name: Move into directory
       run: cd android/
 
