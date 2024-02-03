@@ -1,5 +1,6 @@
 import groovy.json.JsonSlurper
 
+
 class VersionInfo {
   val appId: String
   val version: String
@@ -25,6 +26,7 @@ fun getVersionInfo(project: Project): VersionInfo {
   val patch = numbers[2].toInt()
   var build = 0
   if (parts.size > 2) {
+    println(parts)
     build = parts[2].toInt()
   } else if (numbers.size > 3) {
     build = numbers[3].toInt()
