@@ -1,12 +1,23 @@
 import groovy.json.JsonSlurper
 
-fun getVersionInfo(project: Project): Pair<String, Int>? {
+class VersionInfo {
+  val appId: String
+  val version: String
+  val versionCode: Int
+  constructor(givenId: String, givenVersion: String, givenCode: Int) {
+    appId = givenId
+    version = givenVersion
+    versionCode = givenCode
+  }
+}
+
+fun getVersionInfo(project: Project): VersionInfo {
   val json = JsonSlurper()
   val packageJsonPath = project.file("../../package.json")
 
   val packageJson = json.parse(packageJsonPath) as Map<String, Any>
   val versionName = packageJson["version"] as String
-  
+  val appName = "io.freetubeapp." + packageJson["name"]
   val parts = versionName.split("-")
   val numbers = parts[0].split(".")
   val major = numbers[0].toInt()
@@ -21,7 +32,7 @@ fun getVersionInfo(project: Project): Pair<String, Int>? {
 
   val versionCode = major * 10000000 + minor * 10000000 + patch * 1000 + build
 
-  return Pair(versionName, versionCode)
+  return VersionInfo(appName, versionName, versionCode)
 }
 
 val versionInfo = getVersionInfo(project)
@@ -38,11 +49,11 @@ android {
         enable = true
     }
     defaultConfig {
-        applicationId = "io.freetubeapp.freetube.development"
+        applicationId = versionInfo.appId
         minSdk = 24
         targetSdk = 34
-        versionCode = versionInfo!!.second
-        versionName = versionInfo!!.first
+        versionCode = versionInfo.versionCode
+        versionName = versionInfo.version
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
