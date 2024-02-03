@@ -35,7 +35,7 @@ jobs:
       with:
         result-encoding: string
         script: |
-          return '${{ steps.pkg.outputs.version }}-nightly-${{ github.run_number }}'
+          return '${{ steps.pkg.outputs.version }}-nightly-${{ github.run_number + 386 }}'
     - name: Set App ID Variable
       id: appId
       uses: actions/github-script@v6
