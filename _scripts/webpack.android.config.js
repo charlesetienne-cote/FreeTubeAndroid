@@ -162,7 +162,8 @@ const config = {
       // video.js's mpd-parser uses @xmldom/xmldom so that it can support both node and web browsers
       // As FreeTube only runs in electron and web browsers, we can use the native DOMParser class, instead of the "polyfill"
       // https://caniuse.com/mdn-api_domparser
-      '@xmldom/xmldom$': path.resolve(__dirname, '_domParser.js')
+      '@xmldom/xmldom$': path.resolve(__dirname, '_domParser.js'),
+      'localforage': path.resolve(__dirname, '_localforage.js')
     },
     fallback: {
       'fs/promises': path.resolve(__dirname, '_empty.js'),

@@ -14,6 +14,8 @@ import android.os.Build
 import android.webkit.JavascriptInterface
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
+import java.io.File
+import java.io.FileInputStream
 import java.net.URL
 class FreeTubeJavaScriptInterface {
   private var context: MainActivity
@@ -23,14 +25,29 @@ class FreeTubeJavaScriptInterface {
   private var lastNotification: Notification? = null
 
   companion object {
+    private const val DATA_DIRECTORY = "data://"
     private const val CHANNEL_ID = "media_controls"
     private const val NOTIFICATION_ID = 1
   }
+
   constructor(main: MainActivity) {
     context = main
     mediaSession = null
     lastPosition = 0
     lastState = PlaybackState.STATE_PLAYING
+  }
+
+  /**
+   * Returns a directory given a directory (returns the full directory for shortened directories like `data://`)
+   */
+  private fun getDirectory(directory: String): String {
+    val path =  if (directory == DATA_DIRECTORY) {
+      // this is the directory cordova gave us access to before
+      context.getExternalFilesDir(null)!!.parent
+    } else {
+      directory
+    }
+    return path
   }
 
   /**
@@ -173,9 +190,7 @@ class FreeTubeJavaScriptInterface {
 
     if (art != null) {
       // todo move this to a function and add try catch
-      val url = URL(art)
-      val connection = url.openConnection()
-      connection.doInput = true
+      val connection = URL(art).openConnection()
       connection.connect()
       val input = connection.getInputStream()
       val bitmapArt = BitmapFactory.decodeStream(input)
@@ -305,5 +320,28 @@ class FreeTubeJavaScriptInterface {
   @JavascriptInterface
   fun updateMediaSessionData(trackName: String, artist: String, duration: Long, art: String? = null) {
     setMetadata(mediaSession!!, trackName, artist, duration, art)
+  }
+
+  @JavascriptInterface
+  fun readFile(basedir: String, filename: String): String {
+    try {
+      val path = getDirectory(basedir)
+      val file = File(path, filename)
+      return FileInputStream(file).bufferedReader().use { it.readText() }
+    } catch (ex: Exception) {
+      return ""
+    }
+  }
+
+  @JavascriptInterface
+  fun writeFile(basedir: String, filename: String, content: String): Boolean {
+    try {
+      val path = getDirectory(basedir)
+      var file = File(path, filename)
+      file.writeText(content)
+      return true
+    } catch (ex: Exception) {
+      return false
+    }
   }
 }
