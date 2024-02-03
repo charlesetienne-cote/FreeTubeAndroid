@@ -45,6 +45,11 @@ plugins {
 }
 
 android {
+    signingConfigs {
+      getByName("debug") {
+        // inject signing config
+      }
+    }
     namespace = "io.freetubeapp.freetube"
     compileSdk = 34
     dataBinding {
@@ -58,6 +63,7 @@ android {
         versionName = versionInfo.version
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {

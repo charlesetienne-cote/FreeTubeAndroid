@@ -46,6 +46,21 @@ jobs:
     - name: 📦 Pack for 📱Android
       run: yarn pack:android:dev
 
+    - name: 🦴 Fetch keystore from secrets
+      run: |
+         while read -r line;
+         do
+           echo "${line}" >> freetube.keystore.asc
+         done <<< '${{ secrets.KEYSTORE }}'
+         gpg -d --passphrase '${{ secrets.KEYSTORE_PASSWORD }}' --batch freetube.keystore.asc >> freetube.keystore
+
+    - name: Inject signing config from secrets
+      run: |
+        sed -i '@// inject signing config@//inject signing config\r\nstorePassword = "${{ secrets.KEYSTORE_PASSWORD }}"@g' android/app/build.gradle.kts
+        sed -i '@// inject signing config@//inject signing config\r\nstoreFile = file("../../freetube.keystore")@g' android/app/build.gradle.kts
+        sed -i '@// inject signing config@//inject signing config\r\nkeyPassword = "${{ secrets.KEYSTORE_PASSWORD }}"@g' android/app/build.gradle.kts
+        sed -i '@// inject signing config@keyAlias = "freetubecordova"@g' android/app/build.gradle.kts
+
     - name: Update name
       run: |
         sed -i 's/"FreeTube Android"/"FreeTube Nightly"/g' android/settings.gradle.kts
