@@ -56,9 +56,9 @@ jobs:
 
     - name: Inject signing config from secrets
       run: |
-        sed -i 's@// inject signing config@//inject signing config\r\nstorePassword = "${{ secrets.KEYSTORE_PASSWORD }}"@' android/app/build.gradle.kts
-        sed -i 's@// inject signing config@//inject signing config\r\nstoreFile = file("../../freetube.keystore")@' android/app/build.gradle.kts
-        sed -i 's@// inject signing config@//inject signing config\r\nkeyPassword = "${{ secrets.KEYSTORE_PASSWORD }}"@' android/app/build.gradle.kts
+        sed -i 's@// inject signing config@// inject signing config\r\nstorePassword = "${{ secrets.KEYSTORE_PASSWORD }}"@' android/app/build.gradle.kts
+        sed -i 's@// inject signing config@// inject signing config\r\nstoreFile = file("../../freetube.keystore")@' android/app/build.gradle.kts
+        sed -i 's@// inject signing config@// inject signing config\r\nkeyPassword = "${{ secrets.KEYSTORE_PASSWORD }}"@' android/app/build.gradle.kts
         sed -i 's@// inject signing config@keyAlias = "freetubecordova"@' android/app/build.gradle.kts
         cat android/app/build.gradle.kts
 
