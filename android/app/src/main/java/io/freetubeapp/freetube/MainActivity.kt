@@ -138,5 +138,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   override fun onDestroy() {
     super.onDestroy()
     stopService(keepAliveIntent)
+    jsInterface.cancelMediaNotification()
+    webView.destroy()
   }
 }

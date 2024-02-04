@@ -17,6 +17,8 @@ import androidx.core.app.NotificationManagerCompat
 import java.io.File
 import java.io.FileInputStream
 import java.net.URL
+import java.util.UUID.*
+
 class FreeTubeJavaScriptInterface {
   private var context: MainActivity
   private var mediaSession: MediaSession?
@@ -27,7 +29,8 @@ class FreeTubeJavaScriptInterface {
   companion object {
     private const val DATA_DIRECTORY = "data://"
     private const val CHANNEL_ID = "media_controls"
-    private const val NOTIFICATION_ID = 1
+    private val NOTIFICATION_ID = (2..1000).random()
+    private val NOTIFICATION_TAG = String.format("%s", randomUUID())
   }
 
   constructor(main: MainActivity) {
@@ -135,7 +138,10 @@ class FreeTubeJavaScriptInterface {
    */
   @SuppressLint("MissingPermission")
   private fun pushNotification(notification: Notification) {
-    NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+    val manager = NotificationManagerCompat.from(context)
+    // cancel any existing notifications
+    manager.cancel(NOTIFICATION_ID)
+    manager.notify(NOTIFICATION_TAG, NOTIFICATION_ID, notification)
     lastNotification = notification
   }
 
@@ -320,6 +326,12 @@ class FreeTubeJavaScriptInterface {
   @JavascriptInterface
   fun updateMediaSessionData(trackName: String, artist: String, duration: Long, art: String? = null) {
     setMetadata(mediaSession!!, trackName, artist, duration, art)
+  }
+
+  @JavascriptInterface
+  fun cancelMediaNotification() {
+    val manager = NotificationManagerCompat.from(context)
+    manager.cancel(NOTIFICATION_TAG, NOTIFICATION_ID)
   }
 
   @JavascriptInterface

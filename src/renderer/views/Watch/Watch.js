@@ -39,6 +39,7 @@ import {
 import {
   createMediaSession
 } from '../../helpers/android'
+import android from 'android'
 
 /**
  * @typedef {object} AudioSource
@@ -340,6 +341,7 @@ export default defineComponent({
   },
   beforeDestroy() {
     window.clearAllMediaSessionEventListeners()
+    android.cancelMediaNotification()
   },
   methods: {
     onMountedDependOnLocalStateLoading() {
