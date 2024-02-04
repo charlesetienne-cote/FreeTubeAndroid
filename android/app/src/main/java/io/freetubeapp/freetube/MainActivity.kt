@@ -134,4 +134,9 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   override fun onNewIntent(intent: Intent?) {
     super.onNewIntent(intent)
   }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    stopService(keepAliveIntent)
+  }
 }
