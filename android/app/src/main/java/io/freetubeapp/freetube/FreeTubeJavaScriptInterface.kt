@@ -139,8 +139,6 @@ class FreeTubeJavaScriptInterface {
   @SuppressLint("MissingPermission")
   private fun pushNotification(notification: Notification) {
     val manager = NotificationManagerCompat.from(context)
-    // cancel any existing notifications
-    cancelMediaNotification()
     manager.notify(NOTIFICATION_TAG, NOTIFICATION_ID, notification)
     lastNotification = notification
   }
