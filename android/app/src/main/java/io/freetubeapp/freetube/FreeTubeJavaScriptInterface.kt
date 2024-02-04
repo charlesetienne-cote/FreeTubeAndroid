@@ -140,7 +140,7 @@ class FreeTubeJavaScriptInterface {
   private fun pushNotification(notification: Notification) {
     val manager = NotificationManagerCompat.from(context)
     // cancel any existing notifications
-    manager.cancel(NOTIFICATION_ID)
+    cancelMediaNotification()
     manager.notify(NOTIFICATION_TAG, NOTIFICATION_ID, notification)
     lastNotification = notification
   }
