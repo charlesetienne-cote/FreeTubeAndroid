@@ -2,12 +2,21 @@ import android from 'android'
 
 export const STATE_PLAYING = 3
 export const STATE_PAUSED = 2
+export const MIME_TYPES = {
+  db: 'application/octet-stream',
+  json: 'application/json',
+  csv: 'text/comma-separated-values',
+  opml: 'application/octet-stream',
+  xml: 'text/xml'
+}
+export const FILE_TYPES = Object.fromEntries(Object.entries(MIME_TYPES).map(([key, value]) => [value, key]))
 
 /**
  * @typedef SaveDialogResponse
  * @property {boolean} canceled
  * @property {'SUCCESS'|'USER_CANCELED'} type
  * @property {string?} uri
+ * @property {string[]} filePaths
  */
 
 /**
@@ -32,30 +41,59 @@ export function updateMediaSessionState(state, position = null) {
 }
 
 /**
- * Requests a save with a dialog
- * @param {string} fileName name of requested file
- * @param {string} fileType mime type
+ * Handles the response of a `requestDialog` function from the bridge
+ * @param {string} promiseId
  * @returns {Promise<SaveDialogResponse>} either a uri based on the user's input or a cancelled response
  */
-export async function requestSaveDialog(fileName, fileType) {
-  // request a 💾save dialog
-  const promiseId = android.requestSaveDialog(fileName, fileType)
+async function handleDialogResponse(promiseId) {
   // await the promise returned from the ☕ bridge
-  const response = await window.awaitAsyncResult(promiseId)
+  let response = await window.awaitAsyncResult(promiseId)
   // handle case if user cancels prompt
   if (response === 'USER_CANCELED') {
     return {
       canceled: true,
-      type: response,
-      uri: null
+      type: null,
+      uri: null,
+      filePaths: []
     }
   } else {
+    response = JSON.parse(response)
+    let typedUri = response?.uri
+    if (response?.type in FILE_TYPES && typedUri.indexOf('.') === -1) {
+      typedUri = `${typedUri}.${FILE_TYPES[response?.type]}`
+    }
     return {
       canceled: false,
       type: 'SUCCESS',
-      uri: response
+      uri: response.uri,
+      filePaths: [typedUri]
     }
   }
+}
+
+/**
+ * Requests a save file dialog
+ * @param {string} fileName name of requested file
+ * @param {string} fileType mime type
+ * @returns {Promise<SaveDialogResponse>} either a uri based on the user's input or a cancelled response
+ */
+export function requestSaveDialog(fileName, fileType) {
+  // request a 💾save dialog
+  const promiseId = android.requestSaveDialog(fileName, fileType)
+  return handleDialogResponse(promiseId)
+}
+
+/**
+ * Requests an open file dialog
+ * @param {string[]} fileType mime type of acceptable inputs
+ * @returns {Promise<SaveDialogResponse>} either a uri based on the user's input or a cancelled response
+ */
+export function requestOpenDialog(fileTypes) {
+  const types = Array.from(new Set(fileTypes.map((type) => type in MIME_TYPES ? MIME_TYPES[type] : type)))
+
+  // request a 🗄file open dialog
+  const promiseId = android.requestOpenDialog(types.join(','))
+  return handleDialogResponse(promiseId)
 }
 
 /**
@@ -76,4 +114,16 @@ export function writeFile(arg1, arg2, arg3 = undefined) {
     content = arg3
   }
   return android.writeFile(baseUri, path, content)
+}
+
+export function readFile(arg1, arg2 = undefined) {
+  let baseUri, path
+  if (arg2 === undefined) {
+    baseUri = arg1
+    path = ''
+  } else {
+    baseUri = arg1
+    path = arg2
+  }
+  return android.readFile(baseUri, path)
 }

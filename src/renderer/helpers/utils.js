@@ -4,7 +4,7 @@ import { IpcChannels } from '../../constants'
 import FtToastEvents from '../components/ft-toast/ft-toast-events'
 import i18n from '../i18n/index'
 import router from '../router/index'
-import { requestSaveDialog, writeFile } from './android'
+import { readFile, requestOpenDialog, requestSaveDialog, writeFile } from './android'
 
 // allowed characters in channel handle: A-Z, a-z, 0-9, -, _, .
 // https://support.google.com/youtube/answer/11585688#change_handle
@@ -273,6 +273,8 @@ export async function showOpenDialog (options) {
   if (process.env.IS_ELECTRON) {
     const { ipcRenderer } = require('electron')
     return await ipcRenderer.invoke(IpcChannels.SHOW_OPEN_DIALOG, options)
+  } else if (process.env.IS_ANDROID) {
+    return await requestOpenDialog(options.filters[0].extensions)
   } else {
     return await new Promise((resolve) => {
       const fileInput = document.createElement('input')
@@ -317,6 +319,13 @@ export function readFileFromDialog(response, index = 0) {
           resolve(new TextDecoder('utf-8').decode(data))
         })
         .catch(reject)
+    } else if (process.env.IS_ANDROID) {
+      const { uri } = response
+      try {
+        resolve(readFile(uri))
+      } catch (err) {
+        reject(err)
+      }
     } else {
       // if this is web, use FileReader
       try {

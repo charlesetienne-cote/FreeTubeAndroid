@@ -110,9 +110,10 @@ export default defineComponent({
       response.filePaths.forEach(filePath => {
         if (filePath.endsWith('.csv')) {
           this.importCsvYouTubeSubscriptions(textDecode)
-        } else if (filePath.endsWith('.db')) {
+          // opml and db are the same mime type 🤷‍♀️
+        } else if ((textDecode.trim().startsWith('{') && filePath.endsWith('.opml')) || filePath.endsWith('.db')) {
           this.importFreeTubeSubscriptions(textDecode)
-        } else if (filePath.endsWith('.opml') || filePath.endsWith('.xml')) {
+        } else if (textDecode.trim().startsWith('<') && (filePath.endsWith('.opml') || filePath.endsWith('.xml'))) {
           this.importOpmlYouTubeSubscriptions(textDecode)
         } else if (filePath.endsWith('.json')) {
           textDecode = JSON.parse(textDecode)
@@ -690,7 +691,8 @@ export default defineComponent({
       }
 
       response.filePaths.forEach(filePath => {
-        if (filePath.endsWith('.db')) {
+        // db and opml are the same mime type in android
+        if (filePath.endsWith('.db') || filePath.endsWith('.opml')) {
           this.importFreeTubeHistory(textDecode.split('\n'))
         } else if (filePath.endsWith('.json')) {
           this.importYouTubeHistory(JSON.parse(textDecode))
