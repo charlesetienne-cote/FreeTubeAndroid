@@ -4,6 +4,7 @@ import { IpcChannels } from '../../constants'
 import FtToastEvents from '../components/ft-toast/ft-toast-events'
 import i18n from '../i18n/index'
 import router from '../router/index'
+import { requestSaveDialog, writeFile } from './android'
 
 // allowed characters in channel handle: A-Z, a-z, 0-9, -, _, .
 // https://support.google.com/youtube/answer/11585688#change_handle
@@ -335,6 +336,8 @@ export async function showSaveDialog (options) {
   if (process.env.IS_ELECTRON) {
     const { ipcRenderer } = require('electron')
     return await ipcRenderer.invoke(IpcChannels.SHOW_SAVE_DIALOG, options)
+  } else if (process.env.IS_ANDROID) {
+    return await requestSaveDialog(options.defaultPath.split('/').at(-1), 'application/octet-stream')
   } else {
     // If the native filesystem api is available
     if ('showSaveFilePicker' in window) {
@@ -366,6 +369,12 @@ export async function writeFileFromDialog (response, content) {
   if (process.env.IS_ELECTRON) {
     const { filePath } = response
     return await fs.writeFile(filePath, content)
+  } else if (process.env.IS_ANDROID) {
+    /** @type {import('./android').SaveDialogResponse} */
+    const saveDialogResponse = response
+    if (!writeFile(saveDialogResponse.uri, content)) {
+      throw new Error(saveDialogResponse.uri)
+    }
   } else {
     if ('showOpenFilePicker' in window) {
       const { handle } = response

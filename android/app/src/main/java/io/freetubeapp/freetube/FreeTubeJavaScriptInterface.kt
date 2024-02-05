@@ -1,6 +1,7 @@
 package io.freetubeapp.freetube
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,13 +11,16 @@ import android.graphics.BitmapFactory
 import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
+import android.net.Uri
 import android.os.Build
 import android.webkit.JavascriptInterface
+import androidx.activity.result.ActivityResult
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
 import java.io.File
 import java.io.FileInputStream
 import java.net.URL
+import java.net.URLEncoder
 import java.util.UUID.*
 
 class FreeTubeJavaScriptInterface {
@@ -41,7 +45,8 @@ class FreeTubeJavaScriptInterface {
   }
 
   /**
-   * Returns a directory given a directory (returns the full directory for shortened directories like `data://`)
+   * @param directory a shortened directory uri
+   * @return a full directory uri
    */
   private fun getDirectory(directory: String): String {
     val path =  if (directory == DATA_DIRECTORY) {
@@ -326,12 +331,18 @@ class FreeTubeJavaScriptInterface {
     setMetadata(mediaSession!!, trackName, artist, duration, art)
   }
 
+  /**
+   * cancels the active media notification
+   */
   @JavascriptInterface
   fun cancelMediaNotification() {
     val manager = NotificationManagerCompat.from(context)
     manager.cancel(NOTIFICATION_TAG, NOTIFICATION_ID)
   }
 
+  /**
+   * reads a file from storage
+   */
   @JavascriptInterface
   fun readFile(basedir: String, filename: String): String {
     try {
@@ -343,15 +354,85 @@ class FreeTubeJavaScriptInterface {
     }
   }
 
+  /**
+   * writes a file to storage
+   */
   @JavascriptInterface
   fun writeFile(basedir: String, filename: String, content: String): Boolean {
     try {
+      if (basedir.startsWith("content://")) {
+        // urls created by save dialog
+        val stream = context.contentResolver.openOutputStream(Uri.parse(basedir), "wt")
+        stream!!.write(content.toByteArray())
+        stream!!.flush()
+        stream!!.close()
+        return true
+      }
       val path = getDirectory(basedir)
       var file = File(path, filename)
+      if (!file.exists()) {
+        file.createNewFile()
+      }
       file.writeText(content)
       return true
     } catch (ex: Exception) {
       return false
     }
+  }
+
+  /**
+   * requests a save dialog, resolves a js promise when done, resolves with `USER_CANCELED` if the user cancels
+   * @return a js promise id
+   */
+  @JavascriptInterface
+  fun requestSaveDialog(fileName: String, fileType: String): String {
+    val promise = jsPromise()
+    val saveDialogIntent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+      .addCategory(Intent.CATEGORY_OPENABLE)
+      .setType(fileType)
+      .putExtra(Intent.EXTRA_TITLE, fileName)
+    context.listenForActivityResults {
+      result: ActivityResult? ->
+      if (result!!.resultCode == Activity.RESULT_CANCELED) {
+        resolve(promise, "USER_CANCELED")
+      }
+      try {
+        val uri = result!!.data!!.data
+        // something about the java bridge url decodes all strings, so I am going to double encode this one
+        val uriBase = "content://com.android.providers.downloads.documents/document/"
+        var stringUri =  uri.toString().replace(uriBase, "")
+
+        resolve(promise,  "${uriBase}${URLEncoder.encode(stringUri, "utf-8")}")
+      } catch (ex: Exception) {
+        reject(promise, ex.toString())
+      }
+    }
+    context.activityResultLauncher.launch(saveDialogIntent)
+    return promise
+  }
+
+  /**
+   * @return the id of a promise on the window
+   */
+  private fun jsPromise(): String {
+    val id = "${randomUUID()}"
+    context.runOnUiThread {
+      context.webView.loadUrl("javascript: window['${id}'] = {}; window['${id}'].promise = new Promise((resolve, reject) => { window['${id}'].resolve = resolve; window['${id}'].reject = reject })")
+    }
+    return id
+  }
+
+  /**
+   * resolves a js promise given the id
+   */
+  private fun resolve(id: String, message: String) {
+    context.webView.loadUrl("javascript: window['${id}'].resolve(\"${message}\")")
+  }
+
+  /**
+   * rejects a js promise given the id
+   */
+  private fun reject(id: String, message: String) {
+    context.webView.loadUrl("javascript: window['${id}'].reject(new Error(\"${message}\"))")
   }
 }

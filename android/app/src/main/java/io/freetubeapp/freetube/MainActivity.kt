@@ -9,6 +9,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import androidx.activity.addCallback
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
 import androidx.core.view.WindowCompat
@@ -21,14 +24,27 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
 
   private lateinit var binding: ActivityMainBinding
   private lateinit var permissionsListeners: MutableList<(Int, Array<String?>, IntArray) -> Unit>
+  private lateinit var activityResultListeners: MutableList<(ActivityResult?) -> Unit>
   private lateinit var keepAliveService: KeepAliveService
   private lateinit var keepAliveIntent: Intent
   private var fullscreenView: View? = null
   lateinit var webView: BackgroundPlayWebView
   lateinit var jsInterface: FreeTubeJavaScriptInterface
+  lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
   @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+
+    activityResultListeners = mutableListOf()
+
+    activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+      for (listener in activityResultListeners) {
+        listener(it)
+      }
+      // clear the listeners
+      activityResultListeners = mutableListOf()
+    }
+
     MediaControlsReceiver.notifyMediaSessionListeners = {
       action ->
       webView.loadUrl(String.format("javascript: window.notifyMediaSessionListeners('%s')", action))
@@ -107,7 +123,22 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
             "};" +
             "window.clearAllMediaSessionEventListeners = function () {" +
             "    window.mediaSessionListeners = {}" +
-            "};"
+            "};" +
+            "window.awaitAsyncResult = function (id) {" +
+              "    return new Promise((resolve, reject) => {" +
+              "        const interval = setInterval(async () => {" +
+              "            if (id in window) {" +
+              "                clearInterval(interval);" +
+              "                try {" +
+              "                    const result = await window[id].promise;" +
+              "                    resolve(result)" +
+              "                } catch (ex) {" +
+              "                    reject(ex)" +
+              "                }" +
+              "            }" +
+              "        }, 1)" +
+              "    }) " +
+              "}"
         )
         super.onPageFinished(view, url)
       }
@@ -120,6 +151,10 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   fun listenForPermissionsCallbacks(listener: (Int, Array<String?>, IntArray) -> Unit) {
     permissionsListeners.add(listener)
   }
+  fun listenForActivityResults(listener: (ActivityResult?) -> Unit) {
+    activityResultListeners.add(listener)
+  }
+
   override fun onRequestPermissionsResult(
     requestCode: Int, permissions: Array<String?>,
     grantResults: IntArray
