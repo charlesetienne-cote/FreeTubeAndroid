@@ -346,6 +346,12 @@ class FreeTubeJavaScriptInterface {
   @JavascriptInterface
   fun readFile(basedir: String, filename: String): String {
     try {
+      if (basedir.startsWith("content://")) {
+        val stream = context.contentResolver.openInputStream(Uri.parse(basedir))
+        val content = String(stream!!.readBytes())
+        stream!!.close()
+        return content
+      }
       val path = getDirectory(basedir)
       val file = File(path, filename)
       return FileInputStream(file).bufferedReader().use { it.readText() }
@@ -398,16 +404,38 @@ class FreeTubeJavaScriptInterface {
       }
       try {
         val uri = result!!.data!!.data
+        var stringUri =  uri.toString()
         // something about the java bridge url decodes all strings, so I am going to double encode this one
-        val uriBase = "content://com.android.providers.downloads.documents/document/"
-        var stringUri =  uri.toString().replace(uriBase, "")
-
-        resolve(promise,  "${uriBase}${URLEncoder.encode(stringUri, "utf-8")}")
+        resolve(promise, "{ \"uri\": \"${URLEncoder.encode(stringUri, "utf-8")}\" }")
       } catch (ex: Exception) {
         reject(promise, ex.toString())
       }
     }
     context.activityResultLauncher.launch(saveDialogIntent)
+    return promise
+  }
+  @JavascriptInterface
+  fun requestOpenDialog(fileTypes: String): String {
+    val promise = jsPromise()
+    val openDialogIntent = Intent(Intent.ACTION_GET_CONTENT)
+      .setType("*/*")
+      .putExtra(Intent.EXTRA_MIME_TYPES, fileTypes.split(",").toTypedArray())
+
+    context.listenForActivityResults {
+        result: ActivityResult? ->
+      if (result!!.resultCode == Activity.RESULT_CANCELED) {
+        resolve(promise, "USER_CANCELED")
+      }
+      try {
+        val uri = result!!.data!!.data
+        var mimeType = context.contentResolver.getType(uri!!)
+
+        resolve(promise, "{ \"uri\": \"${URLEncoder.encode(uri.toString(), "utf-8")}\", \"type\": \"${mimeType}\" }")
+      } catch (ex: Exception) {
+        reject(promise, ex.toString())
+      }
+    }
+    context.activityResultLauncher.launch(openDialogIntent)
     return promise
   }
 
@@ -426,7 +454,7 @@ class FreeTubeJavaScriptInterface {
    * resolves a js promise given the id
    */
   private fun resolve(id: String, message: String) {
-    context.webView.loadUrl("javascript: window['${id}'].resolve(\"${message}\")")
+    context.webView.loadUrl("javascript: window['${id}'].resolve(`${message}`)")
   }
 
   /**

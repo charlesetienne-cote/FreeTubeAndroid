@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
@@ -107,6 +108,16 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
       }
     }
     webView.webViewClient = object: WebViewClient() {
+      override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+        if (request!!.url!!.scheme == "file") {
+          // don't send file url requests to a web browser (it will crash the app)
+          return true
+        }
+        // send all requests to a real web browser
+        val intent = Intent(Intent.ACTION_VIEW, request!!.url)
+        this@MainActivity.startActivity(intent)
+        return true
+      }
       override fun onPageFinished(view: WebView?, url: String?) {
         webView.loadUrl(
           "javascript: window.mediaSessionListeners = window.mediaSessionListeners || {};" +

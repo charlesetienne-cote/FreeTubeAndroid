@@ -109,12 +109,13 @@ export default defineComponent({
       }
       response.filePaths.forEach(filePath => {
         // db and opml are the same mime type in android
-        if (textDecode.trim().startsWith('{') && filePath.endsWith('.opml')) {
-          filePath = filePath.split().splice(filePath.length - 5, 5, '.db'.split()).join()
+        if (process.env.IS_ANDROID) {
+          if (textDecode.trim().startsWith('{') && filePath.endsWith('.opml')) {
+            filePath = filePath.split().splice(filePath.length - 5, 5, '.db'.split()).join()
+          }
         }
         if (filePath.endsWith('.csv')) {
           this.importCsvYouTubeSubscriptions(textDecode)
-          // opml and db are the same mime type 🤷‍♀️
         } else if (filePath.endsWith('.db')) {
           this.importFreeTubeSubscriptions(textDecode)
         } else if (filePath.endsWith('.opml') || filePath.endsWith('.xml')) {
@@ -696,8 +697,10 @@ export default defineComponent({
 
       response.filePaths.forEach(filePath => {
         // db and opml are the same mime type in android
-        if (textDecode.trim().startsWith('{') && filePath.endsWith('.opml')) {
-          filePath = filePath.split().splice(filePath.length - 5, 5, '.db'.split()).join()
+        if (process.env.IS_ANDROID) {
+          if (textDecode.trim().startsWith('{') && filePath.endsWith('.opml')) {
+            filePath = filePath.split().splice(filePath.length - 5, 5, '.db'.split()).join()
+          }
         }
         if (filePath.endsWith('.db')) {
           this.importFreeTubeHistory(textDecode.split('\n'))
