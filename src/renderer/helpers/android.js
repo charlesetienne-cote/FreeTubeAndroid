@@ -100,7 +100,7 @@ export function requestOpenDialog(fileTypes) {
  * @param {string} arg1 base uri or path
  * @param {string} arg2 path or content
  * @param {string?} arg3 content or undefined
- * @returns
+ * @returns {boolean} was able to successfully write?
  */
 export function writeFile(arg1, arg2, arg3 = undefined) {
   let baseUri, path, content
@@ -116,14 +116,79 @@ export function writeFile(arg1, arg2, arg3 = undefined) {
   return android.writeFile(baseUri, path, content)
 }
 
-export function readFile(arg1, arg2 = undefined) {
-  let baseUri, path
-  if (arg2 === undefined) {
-    baseUri = arg1
-    path = ''
-  } else {
-    baseUri = arg1
-    path = arg2
-  }
+/**
+ * a soft file read which returns '' if the file doesn't exist yet
+ * @param {string} baseUri base of the uri
+ * @param {string?} path (optional) path on top of base
+ * @returns {string} file contents or '' if no file was found
+ */
+export function readFile(baseUri, path = '') {
   return android.readFile(baseUri, path)
+}
+
+/**
+ * @typedef ContentResultsInfo
+ * @property {string} trimmedContent the original content, trimmed of whitespace
+ * @property {boolean} startsLikeJson whether file content appears to be json-like
+ * @property {boolean} startsLikeXml whether file content appears to be xml
+ * @property {string} fileType the portion of the file path after the last dot
+ * @property {boolean} reportsOpml whether or not the file type is 'opml'
+ */
+
+/**
+ * @typedef ContentResults
+ * @property {'db'|'opml'|string} type the determined real file type
+ * @property {ContentResultsInfo} info the information which lead to this conclusion
+ */
+
+/**
+ * detects the real file type of an `octet-stream` mime-typed file in android
+ * @param {string} content
+ * @param {string} filePath
+ * @returns {ContentResults}
+ */
+export function detectAmbiguousContent(content, filePath) {
+  const trimmedContent = content.trim()
+  const startsLikeJson = trimmedContent[0] === '{'
+  const startsLikeXml = trimmedContent[0] === '<'
+  const fileType = filePath.slice(filePath.lastIndexOf('.'), filePath.length)
+  const reportsOpml = fileType === 'opml'
+  const type = startsLikeJson && reportsOpml
+    ? 'db'
+    : startsLikeXml && reportsOpml
+      ? 'opml'
+      : fileType
+  return {
+    type,
+    info: {
+      trimmedContent,
+      startsLikeJson,
+      startsLikeXml,
+      fileType,
+      reportsOpml
+    }
+  }
+}
+
+/**
+ * @param {string} filePath
+ * @param {string} newFileType
+ * @returns {string}
+ */
+export function replaceFileType(filePath, newFileType) {
+  return `${filePath.slice(0, filePath.lastIndexOf('.'))}.${newFileType}`
+}
+
+/**
+ *
+ * @param {string} content
+ * @param {string} filePath
+ * @returns
+ */
+export function handleAmbigiousContent(content, filePath) {
+  const { type, info } = detectAmbiguousContent(content, filePath)
+  if (info.fileType !== type) {
+    filePath = replaceFileType(filePath, type)
+  }
+  return filePath
 }

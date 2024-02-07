@@ -21,6 +21,7 @@ import {
 } from '../../helpers/utils'
 import { invidiousAPICall } from '../../helpers/api/invidious'
 import { getLocalChannel } from '../../helpers/api/local'
+import { handleAmbigiousContent } from '../../helpers/android'
 
 export default defineComponent({
   name: 'DataSettings',
@@ -108,11 +109,8 @@ export default defineComponent({
         return
       }
       response.filePaths.forEach(filePath => {
-        // db and opml are the same mime type in android
         if (process.env.IS_ANDROID) {
-          if (textDecode.trim().startsWith('{') && filePath.endsWith('.opml')) {
-            filePath = filePath.split().splice(filePath.length - 5, 5, '.db'.split()).join()
-          }
+          filePath = handleAmbigiousContent(textDecode, filePath)
         }
         if (filePath.endsWith('.csv')) {
           this.importCsvYouTubeSubscriptions(textDecode)
@@ -698,9 +696,7 @@ export default defineComponent({
       response.filePaths.forEach(filePath => {
         // db and opml are the same mime type in android
         if (process.env.IS_ANDROID) {
-          if (textDecode.trim().startsWith('{') && filePath.endsWith('.opml')) {
-            filePath = filePath.split().splice(filePath.length - 5, 5, '.db'.split()).join()
-          }
+          filePath = handleAmbigiousContent(textDecode, filePath)
         }
         if (filePath.endsWith('.db')) {
           this.importFreeTubeHistory(textDecode.split('\n'))
