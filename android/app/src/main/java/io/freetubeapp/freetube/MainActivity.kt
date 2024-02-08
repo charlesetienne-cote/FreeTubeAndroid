@@ -20,6 +20,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import io.freetubeapp.freetube.databinding.ActivityMainBinding
+import java.net.URLEncoder
 
 
 class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
@@ -170,9 +171,19 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
         super.onPageFinished(view, url)
       }
     }
-
-    webView.loadUrl("file:///android_asset/index.html")
-
+    if (intent!!.data !== null) {
+      val url = intent!!.data.toString()
+      val host = intent!!.data!!.host.toString()
+      val intentPath = if (host != "youtube.com" && host != "youtu.be" && host != "m.youtube.com" && host != "www.youtube.com") {
+        url.replace("${intent!!.data!!.host}", "youtube.com")
+      } else {
+        url
+      }
+      val intentEncoded = URLEncoder.encode(intentPath)
+      webView.loadUrl("file:///android_asset/index.html?intent=${intentEncoded}")
+    } else {
+      webView.loadUrl("file:///android_asset/index.html")
+    }
   }
 
   fun listenForPermissionsCallbacks(listener: (Int, Array<String?>, IntArray) -> Unit) {
@@ -193,16 +204,22 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     permissionsListeners.clear()
   }
 
+  /**
+   * handles new intents which involve deep links (aka supported links)
+   */
   @SuppressLint("MissingSuperCall")
   override fun onNewIntent(intent: Intent?) {
-    val uri = intent!!.data
-    val isYT = uri!!.host!! == "www.youtube.com" || uri!!.host!! == "youtube.com" || uri!!.host!! == "m.youtube.com" || uri!!.host!! == "youtu.be"
-    val url = if (!isYT) {
-      uri.toString().replace(uri.host.toString(), "www.youtube.com")
-    } else {
-      uri
+    if (intent!!.data !== null) {
+      val uri = intent!!.data
+      val isYT =
+        uri!!.host!! == "www.youtube.com" || uri!!.host!! == "youtube.com" || uri!!.host!! == "m.youtube.com" || uri!!.host!! == "youtu.be"
+      val url = if (!isYT) {
+        uri.toString().replace(uri.host.toString(), "www.youtube.com")
+      } else {
+        uri
+      }
+      webView.loadUrl("javascript: window.notifyYoutubeLinkHandlers(\"${url}\")")
     }
-    webView.loadUrl("javascript: window.notifyYoutubeLinkHandlers(\"${url}\")")
   }
 
   override fun onDestroy() {

@@ -185,6 +185,11 @@ export default defineComponent({
           window.addYoutubeLinkHandler((link) => {
             this.handleYoutubeLink(link)
           })
+          if (location.search.indexOf('?intent=') !== -1) {
+            const intent = location.search.split('?intent=')[1]
+            const uri = decodeURIComponent(intent)
+            this.handleYoutubeLink(uri)
+          }
         }
 
         this.dataReady = true
