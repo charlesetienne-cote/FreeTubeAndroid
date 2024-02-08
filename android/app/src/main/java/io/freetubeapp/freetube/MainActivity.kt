@@ -1,5 +1,6 @@
 package io.freetubeapp.freetube
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -192,8 +193,10 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     permissionsListeners.clear()
   }
 
+  @SuppressLint("MissingSuperCall")
   override fun onNewIntent(intent: Intent?) {
-    super.onNewIntent(intent)
+
+    webView.loadUrl("javascript: window.notifyYoutubeLinkHandlers(\"${intent!!.data.toString()}\")")
   }
 
   override fun onDestroy() {
