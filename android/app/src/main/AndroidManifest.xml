@@ -39,13 +39,56 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.FreeTubeAndroid"
-            android:configChanges="orientation|screenSize">
+            android:configChanges="orientation|screenSize"
+            android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+          <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+
+            <data android:scheme="https" />
+            <data android:host="m.youtube.com" />
+            <data android:host="www.youtube.com" />
+            <data android:host="youtube.com" />
+            <data android:host="youtu.be" />
+            <!-- supported links -->
+              <data android:host="invidious.fdn.fr" />
+              <data android:host="vid.puffyan.us" />
+              <data android:host="invidious.flokinet.to" />
+              <data android:host="inv.bp.projectsegfau.lt" />
+              <data android:host="invidious.lunar.icu" />
+              <data android:host="invidious.io.lol" />
+              <data android:host="inv.tux.pizza" />
+              <data android:host="invidious.privacydev.net" />
+              <data android:host="yt.artemislena.eu" />
+              <data android:host="vid.priv.au" />
+              <data android:host="onion.tube" />
+              <data android:host="yt.oelrichsgarcia.de" />
+              <data android:host="invidious.protokolla.fi" />
+              <data android:host="invidious.asir.dev" />
+              <data android:host="iv.nboeck.de" />
+              <data android:host="invidious.private.coffee" />
+              <data android:host="iv.datura.network" />
+              <data android:host="anontube.lvkaszus.pl" />
+              <data android:host="inv.us.projectsegfau.lt" />
+              <data android:host="invidious.perennialte.ch" />
+              <data android:host="invidious.drgns.space" />
+              <data android:host="invidious.einfachzocken.eu" />
+              <data android:host="invidious.slipfox.xyz" />
+              <data android:host="invidious.no-logs.com" />
+              <data android:host="yt.drgnz.club" />
+              <data android:host="yt.cdaut.de" />
+              <data android:host="iv.melmac.space" />
+              <data android:host="inv.citw.lgbt" />
+            <!-- /supported links -->
+          </intent-filter>
+
+    </activity>
     </application>
 
 </manifest>

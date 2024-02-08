@@ -195,8 +195,14 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
 
   @SuppressLint("MissingSuperCall")
   override fun onNewIntent(intent: Intent?) {
-
-    webView.loadUrl("javascript: window.notifyYoutubeLinkHandlers(\"${intent!!.data.toString()}\")")
+    val uri = intent!!.data
+    val isYT = uri!!.host!! == "www.youtube.com" || uri!!.host!! == "youtube.com" || uri!!.host!! == "m.youtube.com" || uri!!.host!! == "youtu.be"
+    val url = if (!isYT) {
+      uri.toString().replace(uri.host.toString(), "www.youtube.com")
+    } else {
+      uri
+    }
+    webView.loadUrl("javascript: window.notifyYoutubeLinkHandlers(\"${url}\")")
   }
 
   override fun onDestroy() {
