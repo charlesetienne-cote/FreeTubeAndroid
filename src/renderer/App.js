@@ -180,6 +180,12 @@ export default defineComponent({
           this.watchSystemTheme()
           await this.checkExternalPlayer()
         }
+        if (process.env.IS_ANDROID) {
+          // function defined on webview window
+          window.addYoutubeLinkHandler((link) => {
+            this.handleYoutubeLink(link)
+          })
+        }
 
         this.dataReady = true
 

@@ -113,6 +113,12 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
           // don't send file url requests to a web browser (it will crash the app)
           return true
         }
+        val regex = """^https?:\/\/((www\.)?youtube\.com(\/embed)?|youtu\.be)\/.*$"""
+
+        if (Regex(regex).containsMatchIn(request!!.url!!.toString())) {
+          webView.loadUrl("javascript: window.notifyYoutubeLinkHandlers(\"${request!!.url}\")")
+          return true
+        }
         // send all requests to a real web browser
         val intent = Intent(Intent.ACTION_VIEW, request!!.url)
         this@MainActivity.startActivity(intent)
@@ -149,6 +155,15 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
               "            }" +
               "        }, 1)" +
               "    }) " +
+              "};" +
+              "window.youtubeLinkHandlers = window.youtubeLinkHandlers || [];" +
+              "window.addYoutubeLinkHandler = function (handler) {" +
+              "  const i = window.youtubeLinkHandlers.length;" +
+              "  window.youtubeLinkHandlers.push(handler);" +
+              "  return i" +
+              "};" +
+              "window.notifyYoutubeLinkHandlers = function (message) {" +
+              "  window.youtubeLinkHandlers.forEach((handler) => handler(message))" +
               "}"
         )
         super.onPageFinished(view, url)
