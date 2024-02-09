@@ -112,6 +112,13 @@ class FreeTubeJavaScriptInterface {
       val notificationIntent = Intent(Intent.ACTION_MAIN)
         .addCategory(Intent.CATEGORY_LAUNCHER)
         .setClass(context,  MainActivity::class.java)
+
+      // always reuse notification
+      if (lastNotification != null) {
+        lastNotification!!.actions = actions
+        return lastNotification
+      }
+
       return Notification.Builder(context, CHANNEL_ID)
         .setStyle(getMediaStyle())
         .setSmallIcon(R.drawable.ic_media_notification_icon)
