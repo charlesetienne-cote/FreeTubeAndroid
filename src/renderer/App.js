@@ -159,10 +159,13 @@ export default defineComponent({
   mounted: function () {
     this.grabUserSettings().then(async () => {
       this.checkThemeSettings()
-
-      await this.fetchInvidiousInstances()
-      if (this.defaultInvidiousInstance === '') {
-        await this.setRandomCurrentInvidiousInstance()
+      try {
+        await this.fetchInvidiousInstances()
+        if (this.defaultInvidiousInstance === '') {
+          await this.setRandomCurrentInvidiousInstance()
+        }
+      } catch (ex) {
+        console.error(ex)
       }
 
       this.grabAllProfiles(this.$t('Profile.All Channels')).then(async () => {
