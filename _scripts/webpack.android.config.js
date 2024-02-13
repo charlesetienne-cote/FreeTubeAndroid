@@ -179,9 +179,14 @@ const processLocalesPlugin = new ProcessLocalesPlugin({
   inputDir: path.join(__dirname, '../static/locales'),
   outputDir: 'static/locales',
 })
-
+const processAndroidLocales = new ProcessLocalesPlugin({
+  compress: false,
+  inputDir: path.join(__dirname, '../static/locales-android'),
+  outputDir: 'static/locales-android',
+})
 config.plugins.push(
   processLocalesPlugin,
+  processAndroidLocales,
   new webpack.DefinePlugin({
     'process.env.LOCALE_NAMES': JSON.stringify(processLocalesPlugin.localeNames),
     'process.env.GEOLOCATION_NAMES': JSON.stringify(fs.readdirSync(path.join(__dirname, '..', 'static', 'geolocations')).map(filename => filename.replace('.json', '')))
@@ -197,7 +202,7 @@ config.plugins.push(
           to: path.join(__dirname, '../dist/web/static'),
           globOptions: {
             dot: true,
-            ignore: ['**/.*', '**/locales/**', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
+            ignore: ['**/.*', '**/locales/**', '**/locales-android/**', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
           },
         },
     ]

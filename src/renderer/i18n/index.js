@@ -40,13 +40,26 @@ export async function loadLocale(locale) {
     const url = createWebURL(`/static/locales/${locale}.json`)
     let data
     if (process.env.IS_ANDROID) {
+      const androidUrl = createWebURL(`/static/locales-android/${locale}.json`)
       // Fetch API cannot load file:///. URL scheme "file" is not supported.
-      data = JSON.parse(await new Promise((resolve, reject) => {
+      data = Object.assign(JSON.parse(await new Promise((resolve, reject) => {
         const req = new XMLHttpRequest()
         req.onload = () => resolve(req.responseText)
         req.open('GET', url)
         req.send()
-      }))
+      })), JSON.parse(await new Promise((resolve, reject) => {
+        const req = new XMLHttpRequest()
+        req.onload = () => {
+          if (req.status === 200) {
+            resolve(req.responseText)
+          } else {
+            // silently fail if it doesn't find android specific strings
+            resolve('{}')
+          }
+        }
+        req.open('GET', androidUrl)
+        req.send()
+      })))
     } else {
       const response = await fetch(url)
       data = await response.json()
