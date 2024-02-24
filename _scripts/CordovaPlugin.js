@@ -1,6 +1,6 @@
 
 // #region Imports
-const { mkdir, writeFile } = require('fs/promises')
+const { mkdir, writeFile, readFile } = require('fs/promises')
 const fse = require('fs-extra')
 const path = require('path')
 const util = require('util')
@@ -32,6 +32,12 @@ class CordovaPlugin {
         await execWithLiveOutput(`cd ${outputDirectory} && yarn install`)
         // Restore the platform specific data
         await execWithLiveOutput(`cd ${outputDirectory} && yarn restore`)
+        const manifestXML = path.join(outputDirectory, 'platforms/android/app/src/main/AndroidManifest.xml')
+        const manifestString = (await readFile(manifestXML)).toString()
+          .replaceAll('<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>', '')
+          .replaceAll('<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>', '')
+        await writeFile(manifestXML, manifestString)
+
         process.env.NODE_ENV = environment
       } else {
         await copy(path.join(__dirname, '..', '_icons', '.icon-set'), path.join(outputDirectory, 'res', 'icon', 'android'), { recursive: true, force: true })
