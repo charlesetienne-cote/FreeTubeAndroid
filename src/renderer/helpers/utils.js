@@ -5,6 +5,8 @@ import FtToastEvents from '../components/ft-toast/ft-toast-events'
 import i18n from '../i18n/index'
 import router from '../router/index'
 import cordova from 'cordova'
+import { cordovaFetch } from './api/local'
+import store from '../store'
 
 // allowed characters in channel handle: A-Z, a-z, 0-9, -, _, .
 // https://support.google.com/youtube/answer/11585688#change_handle
@@ -155,7 +157,8 @@ export function buildVTTFileLocally(storyboard, videoLengthSeconds) {
 }
 
 export async function getFormatsFromHLSManifest(manifestUrl) {
-  const response = await fetch(manifestUrl)
+  const ffetch = process.env.IS_CORDOVA ? cordovaFetch : fetch
+  const response = await ffetch(manifestUrl)
   const text = await response.text()
 
   const lines = text.split('\n').filter(line => line)
@@ -178,10 +181,16 @@ export async function getFormatsFromHLSManifest(manifestUrl) {
       currentHeight = parseInt(height)
       currentFPS = parseInt(fps)
     } else {
+      const proxyVideos = store.getters.getProxyVideos
+      const host = store.getters.getCurrentInvidiousInstance
+      let url = line.trim()
+      if (proxyVideos || !process.env.IS_ELECTRON) {
+        url = `${host}${new URL(url).pathname}`
+      }
       formats.push({
         height: currentHeight,
         fps: currentFPS,
-        url: line.trim()
+        url
       })
     }
   }

@@ -325,6 +325,36 @@ export default defineComponent({
     window.addEventListener('beforeunload', this.handleWatchProgress)
   },
   methods: {
+    setHlsUrl: async function (hlsUrl) {
+      try {
+        const formats = await getFormatsFromHLSManifest(hlsUrl)
+
+        this.videoSourceList = formats
+          .sort((formatA, formatB) => {
+            return formatB.height - formatA.height
+          })
+          .map((format) => {
+            return {
+              url: format.url,
+              fps: format.fps,
+              type: 'application/x-mpegURL',
+              label: 'Dash',
+              qualityLabel: `${format.height}p`
+            }
+          })
+      } catch (e) {
+        console.error('Failed to extract formats form HLS manifest, falling back to passing it directly to video.js', e)
+
+        this.videoSourceList = [
+          {
+            url: hlsUrl,
+            type: 'application/x-mpegURL',
+            label: 'Dash',
+            qualityLabel: 'Live'
+          }
+        ]
+      }
+    },
     changeTimestamp: function (timestamp) {
       this.$refs.videoPlayer.player.currentTime(timestamp)
     },
@@ -493,34 +523,7 @@ export default defineComponent({
         }
 
         if ((this.isLive || this.isPostLiveDvr) && !this.isUpcoming) {
-          try {
-            const formats = await getFormatsFromHLSManifest(result.streaming_data.hls_manifest_url)
-
-            this.videoSourceList = formats
-              .sort((formatA, formatB) => {
-                return formatB.height - formatA.height
-              })
-              .map((format) => {
-                return {
-                  url: format.url,
-                  fps: format.fps,
-                  type: 'application/x-mpegURL',
-                  label: 'Dash',
-                  qualityLabel: `${format.height}p`
-                }
-              })
-          } catch (e) {
-            console.error('Failed to extract formats form HLS manifest, falling back to passing it directly to video.js', e)
-
-            this.videoSourceList = [
-              {
-                url: result.streaming_data.hls_manifest_url,
-                type: 'application/x-mpegURL',
-                label: 'Dash',
-                qualityLabel: 'Live'
-              }
-            ]
-          }
+          await this.setHlsUrl(result.streaming_data.hls_manifest_url)
 
           this.showLegacyPlayer = true
           this.showDashPlayer = false
@@ -807,15 +810,7 @@ export default defineComponent({
             this.showLegacyPlayer = true
             this.showDashPlayer = false
             this.activeFormat = 'legacy'
-
-            this.videoSourceList = [
-              {
-                url: result.hlsUrl,
-                type: 'application/x-mpegURL',
-                label: 'Dash',
-                qualityLabel: 'Live'
-              }
-            ]
+            await this.setHlsUrl(result.hlsUrl)
 
             // Grabs the adaptive formats from Invidious.  Might be worth making these work.
             // The type likely needs to be changed in order for these to be played properly.
