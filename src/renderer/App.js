@@ -16,6 +16,7 @@ import { IpcChannels } from '../constants'
 import packageDetails from '../../package.json'
 import { openExternalLink, openInternalPath, showToast } from './helpers/utils'
 import 'core-js'
+import android from 'android'
 
 let ipcRenderer = null
 
@@ -193,6 +194,8 @@ export default defineComponent({
             const uri = decodeURIComponent(intent)
             this.handleYoutubeLink(uri)
           }
+          // hides the splash screen
+          android.notifyReady()
         }
 
         this.dataReady = true

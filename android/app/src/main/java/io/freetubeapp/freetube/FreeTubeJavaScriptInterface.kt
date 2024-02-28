@@ -447,6 +447,14 @@ class FreeTubeJavaScriptInterface {
   }
 
   /**
+   * notifies the context that the js is loaded && ready
+   */
+  @JavascriptInterface
+  fun notifyReady() {
+    context.isReady = true
+  }
+
+  /**
    * @return the id of a promise on the window
    */
   private fun jsPromise(): String {

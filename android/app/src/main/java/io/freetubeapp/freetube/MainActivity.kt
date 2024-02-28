@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -34,9 +35,28 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   lateinit var webView: BackgroundPlayWebView
   lateinit var jsInterface: FreeTubeJavaScriptInterface
   lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
+  var isReady: Boolean = false
   @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+
+    val content: View = findViewById(android.R.id.content)
+    content.viewTreeObserver.addOnPreDrawListener(
+      object : ViewTreeObserver.OnPreDrawListener {
+        override fun onPreDraw(): Boolean {
+          // Check whether the initial data is ready.
+          return if (isReady) {
+            // The content is ready. Start drawing.
+            content.viewTreeObserver.removeOnPreDrawListener(this)
+            true
+          } else {
+            // The content isn't ready. Suspend.
+            false
+          }
+        }
+      }
+    )
+
 
     activityResultListeners = mutableListOf()
 
