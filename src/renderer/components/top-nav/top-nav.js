@@ -282,7 +282,7 @@ export default defineComponent({
         this.searchSuggestionsDataList = results.suggestions
       }).catch((err) => {
         console.error(err)
-        if (process.env.IS_ELECTRON && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendFallback) {
           console.error(
             'Error gettings search suggestions.  Falling back to Local API'
           )

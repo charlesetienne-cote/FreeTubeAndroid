@@ -1552,7 +1552,7 @@ export default defineComponent({
       // If we are in Electron,
       // we can use YouTube.js' DASH manifest generator to generate the manifest.
       // Using YouTube.js' gives us support for multiple audio tracks (currently not supported by Invidious)
-      if (process.env.IS_ELECTRON) {
+      if (process.env.IS_ELECTRON || process.env.IS_ANDROID) {
         // Invidious' API response doesn't include the height and width (and fps and qualityLabel for AV1) of video streams
         // so we need to extract them from Invidious' manifest
         const response = await fetch(url)

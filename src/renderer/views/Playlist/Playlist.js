@@ -274,7 +274,7 @@ export default defineComponent({
         this.isLoading = false
       }).catch((err) => {
         console.error(err)
-        if (process.env.IS_ELECTRON && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           console.warn('Error getting data with Invidious, falling back to local backend')
           this.getPlaylistLocal()
         } else {

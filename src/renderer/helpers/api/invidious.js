@@ -324,7 +324,7 @@ export function filterInvidiousFormats(formats, allowAv1 = false) {
   // As we generate our own DASH manifest (using YouTube.js) for multiple audio track support in Electron,
   // we can allow AV1 in that situation. If we aren't in electron,
   // we still can't use them until Invidious fixes the issue on their side
-  if (process.env.IS_ELECTRON && allowAv1 && av1Formats.length > 0) {
+  if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && allowAv1 && av1Formats.length > 0) {
     return [...audioFormats, ...av1Formats]
   }
 
