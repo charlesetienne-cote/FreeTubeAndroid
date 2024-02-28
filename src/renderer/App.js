@@ -192,7 +192,7 @@ export default defineComponent({
           if (location.search.indexOf('?intent=') !== -1) {
             const intent = location.search.split('?intent=')[1]
             const uri = decodeURIComponent(intent)
-            this.handleYoutubeLink(uri)
+            await this.handleYoutubeLink(uri)
           }
           // hides the splash screen
           android.notifyReady()
@@ -409,7 +409,7 @@ export default defineComponent({
     },
 
     handleYoutubeLink: function (href, { doCreateNewWindow = false } = { }) {
-      this.getYoutubeUrlInfo(href).then((result) => {
+      return this.getYoutubeUrlInfo(href).then((result) => {
         switch (result.urlType) {
           case 'video': {
             const { videoId, timestamp, playlistId } = result
