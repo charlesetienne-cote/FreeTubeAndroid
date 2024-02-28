@@ -11,6 +11,8 @@ const ProcessLocalesPlugin = require('./ProcessLocalesPlugin')
 
 const isDevMode = process.env.NODE_ENV === 'development'
 
+const { version: swiperVersion } = JSON.parse(fs.readFileSync(path.join(__dirname, '../node_modules/swiper/package.json')))
+
 const config = {
   name: 'web',
   mode: process.env.NODE_ENV,
@@ -115,7 +117,7 @@ const config = {
       'process.env.IS_ELECTRON': false,
       'process.env.IS_ELECTRON_MAIN': false,
       'process.env.IS_ANDROID': true,
-
+      'process.env.SWIPER_VERSION': `'${swiperVersion}'`,
       // video.js' vhs-utils supports both atob() in web browsers and Buffer in node
       // As the FreeTube web build only runs in web browsers, we can override their check for atob() here: https://github.com/videojs/vhs-utils/blob/main/src/decode-b64-to-uint8-array.js#L3
       // overriding that check means we don't need to include a Buffer polyfill
