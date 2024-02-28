@@ -340,8 +340,10 @@ export default defineComponent({
     this.onMountedDependOnLocalStateLoading()
   },
   beforeDestroy() {
-    window.clearAllMediaSessionEventListeners()
-    android.cancelMediaNotification()
+    if (process.env.IS_ANDROID) {
+      window.clearAllMediaSessionEventListeners()
+      android.cancelMediaNotification()
+    }
   },
   methods: {
     onMountedDependOnLocalStateLoading() {

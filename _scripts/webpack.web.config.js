@@ -26,6 +26,7 @@ const config = {
   },
   externals: {
     electron: '{}',
+    android: '{}',
     'youtubei.js': '{}'
   },
   module: {
