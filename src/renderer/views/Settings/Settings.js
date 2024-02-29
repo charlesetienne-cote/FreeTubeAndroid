@@ -1,4 +1,5 @@
 import { defineComponent } from 'vue'
+import { mapActions } from 'vuex'
 import GeneralSettings from '../../components/general-settings/general-settings.vue'
 import ThemeSettings from '../../components/theme-settings/theme-settings.vue'
 import PlayerSettings from '../../components/player-settings/player-settings.vue'
@@ -14,7 +15,7 @@ import ParentControlSettings from '../../components/parental-control-settings/pa
 import ExperimentalSettings from '../../components/experimental-settings/experimental-settings.vue'
 import PasswordSettings from '../../components/password-settings/password-settings.vue'
 import PasswordDialog from '../../components/password-dialog/password-dialog.vue'
-import CordovaSettings from '../../components/cordova-settings/cordova-settings.vue'
+import FtToggleSwitch from '../../components/ft-toggle-switch/ft-toggle-switch.vue'
 
 export default defineComponent({
   name: 'Settings',
@@ -32,9 +33,9 @@ export default defineComponent({
     'download-settings': DownloadSettings,
     'parental-control-settings': ParentControlSettings,
     'experimental-settings': ExperimentalSettings,
-    'cordova-settings': CordovaSettings,
     'password-settings': PasswordSettings,
     'password-dialog': PasswordDialog,
+    'ft-toggle-switch': FtToggleSwitch
   },
   data: function () {
     return {
@@ -46,17 +47,22 @@ export default defineComponent({
       return process.env.IS_ELECTRON
     },
 
-    usingCordova: function () {
-      return process.env.IS_CORDOVA
-    },
-
     settingsPassword: function () {
       return this.$store.getters.getSettingsPassword
-    }
+    },
+
+    allSettingsSectionsExpandedByDefault: function () {
+      return this.$store.getters.getAllSettingsSectionsExpandedByDefault
+    },
   },
   created: function () {
     if (this.settingsPassword === '') {
       this.unlocked = true
     }
+  },
+  methods: {
+    ...mapActions([
+      'updateAllSettingsSectionsExpandedByDefault',
+    ])
   }
 })

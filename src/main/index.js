@@ -166,9 +166,15 @@ function runApp() {
   let mainWindow
   let startupUrl
 
-  app.commandLine.appendSwitch('enable-accelerated-video-decode')
-  app.commandLine.appendSwitch('enable-file-cookies')
-  app.commandLine.appendSwitch('ignore-gpu-blacklist')
+  if (process.platform === 'linux') {
+    // Enable hardware acceleration via VA-API
+    // https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/gpu/vaapi.md
+    app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecodeLinuxGL')
+  }
+
+  // Work around for context menus in the devtools being displayed behind the window
+  // https://github.com/electron/electron/issues/38790
+  app.commandLine.appendSwitch('disable-features', 'WidgetLayering')
 
   // command line switches need to be added before the app ready event first
   // that means we can't use the normal settings system as that is asynchronous,
@@ -359,88 +365,65 @@ function runApp() {
 
       const imageCache = new ImageCache()
 
-      protocol.registerBufferProtocol('imagecache', (request, callback) => {
-        // Remove `imagecache://` prefix
-        const url = decodeURIComponent(request.url.substring(13))
-        if (imageCache.has(url)) {
-          const cached = imageCache.get(url)
+      protocol.handle('imagecache', (request) => {
+        return new Promise((resolve, reject) => {
+          const url = decodeURIComponent(request.url.substring(13))
+          if (imageCache.has(url)) {
+            const cached = imageCache.get(url)
 
-          callback(cached)
-          return
-        }
-
-        const newRequest = net.request({
-          method: request.method,
-          url
-        })
-
-        // Electron doesn't allow certain headers to be set:
-        // https://www.electronjs.org/docs/latest/api/client-request#requestsetheadername-value
-        // also blacklist Origin and Referrer as we don't want to let YouTube know about them
-        const blacklistedHeaders = ['content-length', 'host', 'trailer', 'te', 'upgrade', 'cookie2', 'keep-alive', 'transfer-encoding', 'origin', 'referrer']
-
-        for (const header of Object.keys(request.headers)) {
-          if (!blacklistedHeaders.includes(header.toLowerCase())) {
-            newRequest.setHeader(header, request.headers[header])
+            resolve(new Response(cached.data, {
+              headers: { 'content-type': cached.mimeType }
+            }))
+            return
           }
-        }
 
-        newRequest.on('response', (response) => {
-          const chunks = []
-          response.on('data', (chunk) => {
-            chunks.push(chunk)
+          const newRequest = net.request({
+            method: request.method,
+            url
           })
 
-          response.on('end', () => {
-            const data = Buffer.concat(chunks)
+          // Electron doesn't allow certain headers to be set:
+          // https://www.electronjs.org/docs/latest/api/client-request#requestsetheadername-value
+          // also blacklist Origin and Referrer as we don't want to let YouTube know about them
+          const blacklistedHeaders = ['content-length', 'host', 'trailer', 'te', 'upgrade', 'cookie2', 'keep-alive', 'transfer-encoding', 'origin', 'referrer']
 
-            const expiryTimestamp = extractExpiryTimestamp(response.headers)
-            const mimeType = response.headers['content-type']
+          for (const header of Object.keys(request.headers)) {
+            if (!blacklistedHeaders.includes(header.toLowerCase())) {
+              newRequest.setHeader(header, request.headers[header])
+            }
+          }
 
-            imageCache.add(url, mimeType, data, expiryTimestamp)
+          newRequest.on('response', (response) => {
+            const chunks = []
+            response.on('data', (chunk) => {
+              chunks.push(chunk)
+            })
 
-            // eslint-disable-next-line n/no-callback-literal
-            callback({
-              mimeType,
-              data: data
+            response.on('end', () => {
+              const data = Buffer.concat(chunks)
+
+              const expiryTimestamp = extractExpiryTimestamp(response.headers)
+              const mimeType = response.headers['content-type']
+
+              imageCache.add(url, mimeType, data, expiryTimestamp)
+
+              resolve(new Response(data, {
+                headers: { 'content-type': mimeType }
+              }))
+            })
+
+            response.on('error', (error) => {
+              console.error('image cache error', error)
+              reject(error)
             })
           })
 
-          response.on('error', (error) => {
-            console.error('image cache error', error)
-
-            // error objects don't get serialised properly
-            // https://stackoverflow.com/a/53624454
-
-            const errorJson = JSON.stringify(error, (key, value) => {
-              if (value instanceof Error) {
-                return {
-                  // Pull all enumerable properties, supporting properties on custom Errors
-                  ...value,
-                  // Explicitly pull Error's non-enumerable properties
-                  name: value.name,
-                  message: value.message,
-                  stack: value.stack
-                }
-              }
-
-              return value
-            })
-
-            // eslint-disable-next-line n/no-callback-literal
-            callback({
-              statusCode: response.statusCode ?? 400,
-              mimeType: 'application/json',
-              data: Buffer.from(errorJson)
-            })
+          newRequest.on('error', (err) => {
+            console.error(err)
           })
+
+          newRequest.end()
         })
-
-        newRequest.on('error', (err) => {
-          console.error(err)
-        })
-
-        newRequest.end()
       })
 
       const imageRequestFilter = { urls: ['https://*/*', 'http://*/*'] }
@@ -510,6 +493,8 @@ function runApp() {
           return '#ffd1dc'
         case 'hot-pink':
           return '#de1c85'
+        case 'nordic':
+          return '#2b2f3a'
         case 'system':
         default:
           return nativeTheme.shouldUseDarkColors ? '#212121' : '#f1f1f1'
@@ -737,7 +722,8 @@ function runApp() {
   })
 
   ipcMain.handle(IpcChannels.GET_SYSTEM_LOCALE, () => {
-    return app.getLocale()
+    // we should switch to getPreferredSystemLanguages at some point and iterate through until we find a supported locale
+    return app.getSystemLocale()
   })
 
   ipcMain.handle(IpcChannels.GET_USER_DATA_PATH, () => {
@@ -866,7 +852,7 @@ function runApp() {
           return null
 
         case DBActions.HISTORY.UPDATE_PLAYLIST:
-          await baseHandlers.history.updateLastViewedPlaylist(data.videoId, data.lastViewedPlaylistId)
+          await baseHandlers.history.updateLastViewedPlaylist(data.videoId, data.lastViewedPlaylistId, data.lastViewedPlaylistType, data.lastViewedPlaylistItemId)
           syncOtherWindows(
             IpcChannels.SYNC_HISTORY,
             event,
@@ -967,15 +953,27 @@ function runApp() {
       switch (action) {
         case DBActions.GENERAL.CREATE:
           await baseHandlers.playlists.create(data)
-          // TODO: Syncing (implement only when it starts being used)
-          // syncOtherWindows(IpcChannels.SYNC_PLAYLISTS, event, { event: '_', data })
+          syncOtherWindows(
+            IpcChannels.SYNC_PLAYLISTS,
+            event,
+            { event: SyncEvents.GENERAL.CREATE, data }
+          )
           return null
 
         case DBActions.GENERAL.FIND:
           return await baseHandlers.playlists.find()
 
+        case DBActions.GENERAL.UPSERT:
+          await baseHandlers.playlists.upsert(data)
+          syncOtherWindows(
+            IpcChannels.SYNC_PLAYLISTS,
+            event,
+            { event: SyncEvents.GENERAL.UPSERT, data }
+          )
+          return null
+
         case DBActions.PLAYLISTS.UPSERT_VIDEO:
-          await baseHandlers.playlists.upsertVideoByPlaylistName(data.playlistName, data.videoData)
+          await baseHandlers.playlists.upsertVideoByPlaylistId(data._id, data.videoData)
           syncOtherWindows(
             IpcChannels.SYNC_PLAYLISTS,
             event,
@@ -983,20 +981,30 @@ function runApp() {
           )
           return null
 
-        case DBActions.PLAYLISTS.UPSERT_VIDEO_IDS:
-          await baseHandlers.playlists.upsertVideoIdsByPlaylistId(data._id, data.videoIds)
-          // TODO: Syncing (implement only when it starts being used)
-          // syncOtherWindows(IpcChannels.SYNC_PLAYLISTS, event, { event: '_', data })
+        case DBActions.PLAYLISTS.UPSERT_VIDEOS:
+          await baseHandlers.playlists.upsertVideosByPlaylistId(data._id, data.videos)
+          syncOtherWindows(
+            IpcChannels.SYNC_PLAYLISTS,
+            event,
+            { event: SyncEvents.PLAYLISTS.UPSERT_VIDEOS, data }
+          )
           return null
 
         case DBActions.GENERAL.DELETE:
           await baseHandlers.playlists.delete(data)
-          // TODO: Syncing (implement only when it starts being used)
-          // syncOtherWindows(IpcChannels.SYNC_PLAYLISTS, event, { event: '_', data })
+          syncOtherWindows(
+            IpcChannels.SYNC_PLAYLISTS,
+            event,
+            { event: SyncEvents.GENERAL.DELETE, data }
+          )
           return null
 
         case DBActions.PLAYLISTS.DELETE_VIDEO_ID:
-          await baseHandlers.playlists.deleteVideoIdByPlaylistName(data.playlistName, data.videoId)
+          await baseHandlers.playlists.deleteVideoIdByPlaylistId({
+            _id: data._id,
+            videoId: data.videoId,
+            playlistItemId: data.playlistItemId,
+          })
           syncOtherWindows(
             IpcChannels.SYNC_PLAYLISTS,
             event,
@@ -1005,13 +1013,13 @@ function runApp() {
           return null
 
         case DBActions.PLAYLISTS.DELETE_VIDEO_IDS:
-          await baseHandlers.playlists.deleteVideoIdsByPlaylistName(data.playlistName, data.videoIds)
+          await baseHandlers.playlists.deleteVideoIdsByPlaylistId(data._id, data.videoIds)
           // TODO: Syncing (implement only when it starts being used)
           // syncOtherWindows(IpcChannels.SYNC_PLAYLISTS, event, { event: '_', data })
           return null
 
         case DBActions.PLAYLISTS.DELETE_ALL_VIDEOS:
-          await baseHandlers.playlists.deleteAllVideosByPlaylistName(data)
+          await baseHandlers.playlists.deleteAllVideosByPlaylistId(data)
           // TODO: Syncing (implement only when it starts being used)
           // syncOtherWindows(IpcChannels.SYNC_PLAYLISTS, event, { event: '_', data })
           return null
@@ -1350,6 +1358,13 @@ function runApp() {
             accelerator: process.platform === 'darwin' ? 'Cmd+Y' : 'Ctrl+H',
             click: (_menuItem, browserWindow, _event) => {
               navigateTo('/history', browserWindow)
+            },
+            type: 'normal'
+          },
+          {
+            label: 'Profile Manager',
+            click: (_menuItem, browserWindow, _event) => {
+              navigateTo('/settings/profile/', browserWindow)
             },
             type: 'normal'
           },

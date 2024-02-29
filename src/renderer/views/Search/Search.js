@@ -239,7 +239,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if ((process.env.IS_ELECTRON || process.env.IS_CORDOVA) && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           this.performSearchLocal(payload)
         } else {

@@ -4,9 +4,7 @@ import { IpcChannels } from '../../constants'
 import FtToastEvents from '../components/ft-toast/ft-toast-events'
 import i18n from '../i18n/index'
 import router from '../router/index'
-import cordova from 'cordova'
-import { cordovaFetch } from './api/local'
-import store from '../store'
+import { readFile, requestOpenDialog, requestSaveDialog, writeFile } from './android'
 
 // allowed characters in channel handle: A-Z, a-z, 0-9, -, _, .
 // https://support.google.com/youtube/answer/11585688#change_handle
@@ -157,8 +155,7 @@ export function buildVTTFileLocally(storyboard, videoLengthSeconds) {
 }
 
 export async function getFormatsFromHLSManifest(manifestUrl) {
-  const ffetch = process.env.IS_CORDOVA ? cordovaFetch : fetch
-  const response = await ffetch(manifestUrl)
+  const response = await fetch(manifestUrl)
   const text = await response.text()
 
   const lines = text.split('\n').filter(line => line)
@@ -181,16 +178,10 @@ export async function getFormatsFromHLSManifest(manifestUrl) {
       currentHeight = parseInt(height)
       currentFPS = parseInt(fps)
     } else {
-      const proxyVideos = store.getters.getProxyVideos
-      const host = store.getters.getCurrentInvidiousInstance
-      let url = line.trim()
-      if (proxyVideos || !process.env.IS_ELECTRON) {
-        url = `${host}${new URL(url).pathname}`
-      }
       formats.push({
         height: currentHeight,
         fps: currentFPS,
-        url
+        url: line.trim()
       })
     }
   }
@@ -213,18 +204,13 @@ export function showToast(message, time = null, action = null) {
    * a toast with the error is shown. If the copy is successful and
    * there is a success message, a toast with that message is shown.
    * @param {string} content the content to be copied to the clipboard
-   * @param {string} messageOnSuccess the message to be displayed as a toast when the copy succeeds (optional)
-   * @param {string} messageOnError the message to be displayed as a toast when the copy fails (optional)
+   * @param {null|string} messageOnSuccess the message to be displayed as a toast when the copy succeeds (optional)
+   * @param {null|string} messageOnError the message to be displayed as a toast when the copy fails (optional)
    */
 export async function copyToClipboard(content, { messageOnSuccess = null, messageOnError = null } = {}) {
-  let clipboardAPI = navigator.clipboard.writeText.bind(navigator.clipboard)
-  if (process.env.IS_CORDOVA) {
-    // Convert the callbacks to promise notation
-    clipboardAPI = (content) => { return new Promise((resolve, reject) => { cordova.plugins.clipboard.copy(content, resolve, reject) }) }
-  }
-  if (clipboardAPI !== undefined && window.isSecureContext) {
+  if (navigator.clipboard !== undefined && window.isSecureContext) {
     try {
-      await clipboardAPI(content)
+      await navigator.clipboard.writeText(content)
       if (messageOnSuccess !== null) {
         showToast(messageOnSuccess)
       }
@@ -287,15 +273,15 @@ export async function showOpenDialog (options) {
   if (process.env.IS_ELECTRON) {
     const { ipcRenderer } = require('electron')
     return await ipcRenderer.invoke(IpcChannels.SHOW_OPEN_DIALOG, options)
+  } else if (process.env.IS_ANDROID) {
+    return await requestOpenDialog(options.filters[0].extensions)
   } else {
     return await new Promise((resolve) => {
       const fileInput = document.createElement('input')
       fileInput.setAttribute('type', 'file')
-      if (!process.env.IS_CORDOVA) {
-        if (options?.filters[0]?.extensions !== undefined) {
-          // this will map the given extensions from the options to the accept attribute of the input
-          fileInput.setAttribute('accept', options.filters[0].extensions.map((extension) => { return `.${extension}` }).join(', '))
-        }
+      if (options?.filters[0]?.extensions !== undefined) {
+        // this will map the given extensions from the options to the accept attribute of the input
+        fileInput.setAttribute('accept', options.filters[0].extensions.map((extension) => { return `.${extension}` }).join(', '))
       }
       fileInput.onchange = () => {
         const files = Array.from(fileInput.files)
@@ -333,6 +319,13 @@ export function readFileFromDialog(response, index = 0) {
           resolve(new TextDecoder('utf-8').decode(data))
         })
         .catch(reject)
+    } else if (process.env.IS_ANDROID) {
+      const { uri } = response
+      try {
+        resolve(readFile(uri))
+      } catch (err) {
+        reject(err)
+      }
     } else {
       // if this is web, use FileReader
       try {
@@ -352,14 +345,15 @@ export async function showSaveDialog (options) {
   if (process.env.IS_ELECTRON) {
     const { ipcRenderer } = require('electron')
     return await ipcRenderer.invoke(IpcChannels.SHOW_SAVE_DIALOG, options)
+  } else if (process.env.IS_ANDROID) {
+    return await requestSaveDialog(options.defaultPath.split('/').at(-1), 'application/octet-stream')
   } else {
     // If the native filesystem api is available
     if ('showSaveFilePicker' in window) {
-      const pathParts = options.defaultPath.split('/')
       return {
         canceled: false,
         handle: await window.showSaveFilePicker({
-          suggestedName: pathParts[pathParts.length - 1],
+          suggestedName: options.defaultPath.split('/').at(-1),
           types: options.filters[0]?.extensions?.map((extension) => {
             return {
               accept: {
@@ -381,23 +375,15 @@ export async function showSaveDialog (options) {
 * @param {string} content the content to be written to the file selected by the dialog
 */
 export async function writeFileFromDialog (response, content) {
-  if (process.env.IS_CORDOVA) {
-    if ('plugins' in cordova && 'saveDialog' in cordova.plugins) {
-      return new Promise((resolve, reject) => {
-        const { filePath } = response
-        const blob = new Blob([content], { type: 'application/octet-stream' })
-        cordova.plugins.saveDialog.saveFile(blob, filePath).then(() => {
-          resolve()
-        }).catch(reason => {
-          reject(reason)
-        })
-      })
-    } else {
-      console.error('Save dialog plugin failed to load.')
-    }
-  } else if (process.env.IS_ELECTRON) {
+  if (process.env.IS_ELECTRON) {
     const { filePath } = response
     return await fs.writeFile(filePath, content)
+  } else if (process.env.IS_ANDROID) {
+    /** @type {import('./android').SaveDialogResponse} */
+    const saveDialogResponse = response
+    if (!writeFile(saveDialogResponse.uri, content)) {
+      throw new Error(saveDialogResponse.uri)
+    }
   } else {
     if ('showOpenFilePicker' in window) {
       const { handle } = response
@@ -604,6 +590,7 @@ export function getVideoParamsFromUrl(url) {
     function () {
       if (urlObject.host === 'youtu.be' && /^\/[\w-]+$/.test(urlObject.pathname)) {
         extractParams(urlObject.pathname.slice(1))
+        paramsObject.playlistId = urlObject.searchParams.get('list')
         return paramsObject
       }
     },
@@ -647,9 +634,10 @@ export function getVideoParamsFromUrl(url) {
 
 /**
  * This will match sequences of upper case characters and convert them into title cased words.
+ * This will also match excessive strings of punctionation and convert them to one representative character
  * @param {string} title the title to process
  * @param {number} minUpperCase the minimum number of consecutive upper case characters to match
- * @returns {string} the title with upper case characters removed
+ * @returns {string} the title with upper case characters removed and punctuation normalized
  */
 export function toDistractionFreeTitle(title, minUpperCase = 3) {
   const firstValidCharIndex = (word) => {
@@ -665,7 +653,10 @@ export function toDistractionFreeTitle(title, minUpperCase = 3) {
   }
 
   const reg = RegExp(`[\\p{Lu}|']{${minUpperCase},}`, 'ug')
-  return title.replace(reg, x => capitalizedWord(x.toLowerCase()))
+  return title
+    .replaceAll(/!{2,}/g, '!')
+    .replaceAll(/[!?]{2,}/g, '?')
+    .replace(reg, x => capitalizedWord(x.toLowerCase()))
 }
 
 export function formatNumber(number, options = undefined) {
@@ -703,4 +694,36 @@ export function escapeHTML(untrusted) {
  */
 export function deepCopy(obj) {
   return JSON.parse(JSON.stringify(obj))
+}
+
+/**
+ * Check if the `name` of the error is `TimeoutError` to know if the error was caused by a timeout or something else.
+ * @param {number} timeoutMs
+ * @param {RequestInfo|URL} input
+ * @param {RequestInit=} init
+ */
+export async function fetchWithTimeout(timeoutMs, input, init) {
+  const timeoutSignal = AbortSignal.timeout(timeoutMs)
+
+  if (typeof init !== 'undefined') {
+    init.signal = timeoutSignal
+  } else {
+    init = {
+      signal: timeoutSignal
+    }
+  }
+
+  try {
+    return await fetch(input, init)
+  } catch (err) {
+    if (err.name === 'AbortError' && timeoutSignal.aborted) {
+      // According to the spec, fetch should use the original abort reason.
+      // Unfortunately chromium browsers always throw an AbortError, even when it was caused by a TimeoutError,
+      // so we need manually throw the original abort reason
+      // https://bugs.chromium.org/p/chromium/issues/detail?id=1431720
+      throw timeoutSignal.reason
+    } else {
+      throw err
+    }
+  }
 }

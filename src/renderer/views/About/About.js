@@ -14,13 +14,11 @@ export default defineComponent({
         {
           icon: ['fab', 'github'],
           title: this.$t('About.Source code'),
-          // For future reference, this is a change that is only for this repo.
           content: `<a href="https://github.com/MarmadileManteater/FreeTubeCordova">GitHub: FreeTubeCordova</a><br>${this.$t('About.Licensed under the AGPLv3')} <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">${this.$t('About.View License')}</a>.<br/> This is a fork of the official <a href="https://github.com/FreeTubeApp/FreeTube">FreeTube</a> repo with modifications to work better in a browser and on phones.`
         },
         {
           icon: ['fas', 'file-download'],
           title: this.$t('About.Downloads / Changelog'),
-          // This is never meant to be integrated back upstream, for obvious reasons.
           content: `<a href="https://github.com/MarmadileManteater/FreeTubeCordova/releases">${this.$t('About.GitHub releases')}</a>`
         },
         {
@@ -31,7 +29,6 @@ export default defineComponent({
         {
           icon: ['fas', 'exclamation-circle'],
           title: this.$t('About.Report a problem'),
-          // This is never meant to be integrated back upstream, for obvious reasons.
           content: `<a href="https://github.com/MarmadileManteater/FreeTubeCordova/issues">${this.$t('About.GitHub issues')}</a><br>${this.$t('About.Please check for duplicates before posting')}`
         },
         {

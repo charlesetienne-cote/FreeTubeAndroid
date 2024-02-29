@@ -3,7 +3,7 @@ import allLocales from '../../../../static/locales/activeLocales.json'
 import { MAIN_PROFILE_ID, IpcChannels, SyncEvents } from '../../../constants'
 import { DBSettingHandlers } from '../../../datastores/handlers/index'
 import { getSystemLocale, showToast } from '../../helpers/utils'
-import cordova from 'cordova'
+
 /*
  * Due to the complexity of the settings module in FreeTube, a more
  * in-depth explanation for adding new settings is required.
@@ -162,10 +162,11 @@ const defaultSideEffectsTriggerId = settingId =>
 /*****/
 
 const state = {
+  allSettingsSectionsExpandedByDefault: false,
   autoplayPlaylists: true,
   autoplayVideos: true,
-  backendFallback: process.env.IS_ELECTRON || process.env.IS_CORDOVA,
-  backendPreference: process.env.IS_ELECTRON || process.env.IS_CORDOVA ? 'local' : 'invidious',
+  backendFallback: (process.env.IS_ELECTRON || process.env.IS_ANDROID),
+  backendPreference: !(process.env.IS_ELECTRON || process.env.IS_ANDROID) ? 'invidious' : 'local',
   barColor: false,
   checkForBlogPosts: true,
   checkForUpdates: true,
@@ -183,12 +184,13 @@ const state = {
   disableSmoothScrolling: false,
   displayVideoPlayButton: true,
   enableSearchSuggestions: true,
-  enableSubtitles: true,
+  enableSubtitlesByDefault: false,
   enterFullscreenOnDisplayRotate: false,
   externalLinkHandling: '',
   externalPlayer: '',
   externalPlayerExecutable: '',
   externalPlayerIgnoreWarnings: false,
+  externalPlayerIgnoreDefaultArgs: false,
   externalPlayerCustomArgs: '',
   expandSideBar: false,
   forceLocalBackendForLegacy: false,
@@ -204,6 +206,7 @@ const state = {
   hideComments: false,
   hideFeaturedChannels: false,
   channelsHidden: '[]',
+  forbiddenTitles: '[]',
   hideVideoDescription: false,
   hideLiveChat: false,
   hideLiveStreams: false,
@@ -229,11 +232,12 @@ const state = {
   landingPage: 'subscriptions',
   listType: 'grid',
   maxVideoPlaybackRate: 3,
+  onlyShowLatestFromChannel: false,
   playNextVideo: false,
   proxyHostname: '127.0.0.1',
   proxyPort: '9050',
   proxyProtocol: 'socks5',
-  proxyVideos: !process.env.IS_ELECTRON,
+  proxyVideos: !(process.env.IS_ELECTRON || process.env.IS_ANDROID),
   region: 'US',
   rememberHistory: true,
   removeVideoMetaFiles: true,
@@ -285,7 +289,7 @@ const state = {
   videoPlaybackRateInterval: 0.25,
   downloadAskPath: true,
   downloadFolderPath: '',
-  downloadBehavior: 'download',
+  downloadBehavior: 'open',
   enableScreenshot: false,
   screenshotFormat: 'png',
   screenshotQuality: 95,
@@ -297,7 +301,11 @@ const state = {
   allowDashAv1Formats: false,
   commentAutoLoadEnabled: false,
   useDeArrowTitles: false,
-  showThumbnailInMediaControls: true
+  useDeArrowThumbnails: false,
+  deArrowThumbnailGeneratorUrl: 'https://dearrow-thumb.ajay.app',
+  // This makes the `favorites` playlist uses as quick bookmark target
+  // If the playlist is removed quick bookmark is disabled
+  quickBookmarkTargetPlaylistId: 'favorites',
 }
 
 const stateWithSideEffects = {
@@ -309,18 +317,20 @@ const stateWithSideEffects = {
       let targetLocale = value
       if (value === 'system') {
         const systemLocaleName = (await getSystemLocale()).replace('-', '_') // ex: en_US
-        const systemLocaleLang = systemLocaleName.split('_')[0] // ex: en
-        const targetLocaleOptions = allLocales.filter((locale) => { // filter out other languages
+        const systemLocaleSplit = systemLocaleName.split('_') // ex: en
+        const targetLocaleOptions = allLocales.filter((locale) => {
+          // filter out other languages
           const localeLang = locale.replace('-', '_').split('_')[0]
-          return localeLang.includes(systemLocaleLang)
+          return localeLang.includes(systemLocaleSplit[0])
         }).sort((a, b) => {
           const aLocaleName = a.replace('-', '_')
           const bLocaleName = b.replace('-', '_')
           const aLocale = aLocaleName.split('_') // ex: [en, US]
           const bLocale = bLocaleName.split('_')
-          if (aLocale.includes(systemLocaleName)) { // country & language match, prefer a
+
+          if (aLocaleName === systemLocaleName) { // country & language match, prefer a
             return -1
-          } else if (bLocale.includes(systemLocaleName)) { // country & language match, prefer b
+          } else if (bLocaleName === systemLocaleName) { // country & language match, prefer b
             return 1
           } else if (aLocale.length === 1) { // no country code for a, prefer a
             return -1
@@ -330,12 +340,11 @@ const stateWithSideEffects = {
             return aLocaleName.localeCompare(bLocaleName)
           }
         })
+
         if (targetLocaleOptions.length > 0) {
           targetLocale = targetLocaleOptions[0]
-        }
-
-        // Go back to default value if locale is unavailable
-        if (!targetLocale) {
+        } else {
+          // Go back to default value if locale is unavailable
           targetLocale = defaultLocale
           // Translating this string isn't necessary
           // because the user will always see it in the default locale
@@ -377,22 +386,6 @@ const stateWithSideEffects = {
       if (process.env.IS_ELECTRON) {
         const { webFrame } = require('electron')
         webFrame.setZoomFactor(value / 100)
-      }
-    }
-  },
-  disableBackgroundModeNotification: {
-    defaultValue: false,
-    sideEffectsHandler: (_, value) => {
-      if (process.env.IS_CORDOVA) {
-        if ('plugins' in cordova && 'backgroundMode' in cordova.plugins) {
-          const { backgroundMode } = cordova.plugins
-          backgroundMode.setDefaults({
-            title: 'FreeTube',
-            silent: value
-          })
-        } else {
-          console.error('Background mode plugin failed to load.')
-        }
       }
     }
   }
@@ -519,8 +512,24 @@ const customActions = {
 
     ipcRenderer.on(IpcChannels.SYNC_PLAYLISTS, (_, { event, data }) => {
       switch (event) {
+        case SyncEvents.GENERAL.CREATE:
+          commit('addPlaylists', data)
+          break
+
+        case SyncEvents.GENERAL.DELETE:
+          commit('removePlaylist', data)
+          break
+
+        case SyncEvents.GENERAL.UPSERT:
+          commit('upsertPlaylistToList', data)
+          break
+
         case SyncEvents.PLAYLISTS.UPSERT_VIDEO:
           commit('addVideo', data)
+          break
+
+        case SyncEvents.PLAYLISTS.UPSERT_VIDEOS:
+          commit('addVideos', data)
           break
 
         case SyncEvents.PLAYLISTS.DELETE_VIDEO:

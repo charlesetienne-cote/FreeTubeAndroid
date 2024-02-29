@@ -1,7 +1,6 @@
 import { ClientType, Endpoints, Innertube, Misc, Utils, YT } from 'youtubei.js'
 import Autolinker from 'autolinker'
 import { join } from 'path'
-import cordova from 'cordova'
 
 import { PlayerCache } from './PlayerCache'
 import {
@@ -19,61 +18,6 @@ const TRACKING_PARAM_NAMES = [
   'utm_term',
   'utm_content',
 ]
-export function cordovaFetch(input, init = {}) {
-  if ('http' in cordova.plugin) {
-    const { http } = cordova.plugin
-    return new Promise((resolve, reject) => {
-      if ('headers' in init) {
-        if (Object.keys(init.headers).length === 0) {
-          // you can't have an empty headers object in cordova advanced http
-          delete init.headers
-        }
-      }
-      let httpFunction
-      if (input instanceof URL) {
-        const url = input.toString()
-        httpFunction = (callbackSuccess, callbackError) => {
-          http.get(url, {}, init.headers, callbackSuccess, callbackError)
-        }
-      } else {
-        let data = input
-        if (typeof data === 'string') {
-          data = { url: data }
-        }
-        switch (data.method) {
-          case 'POST':
-            httpFunction = (callbackSuccess, callbackError) => {
-              http.setDataSerializer('json')
-              http.useBasicAuth(data.credentials)
-              http.post(data.url, JSON.parse(init.body), init, callbackSuccess, callbackError)
-            }
-            break
-          case 'GET':
-          default:
-            httpFunction = (callbackSuccess, callbackError) => {
-              http.get(data.url, {}, init.headers, callbackSuccess, callbackError)
-            }
-            break
-        }
-      }
-      httpFunction((response) => {
-        resolve(Object.assign(response, {
-          ok: response.status === 200,
-          text: () => {
-            return response.data
-          },
-          json: () => {
-            return JSON.parse(response.data)
-          }
-        }))
-      }, (response) => {
-        reject(response)
-      })
-    })
-  } else {
-    console.error('Advanced http plugin failed to load.')
-  }
-}
 
 /**
  * Creates a lightweight Innertube instance, which is faster to create or
@@ -109,14 +53,7 @@ async function createInnertube({ withPlayer = false, location = undefined, safet
     client_type: clientType,
 
     // use browser fetch
-    fetch: (input, init = {}) => {
-      if (process.env.IS_CORDOVA) {
-        return cordovaFetch(input, init)
-      }
-      if (process.env.IS_ELECTRON) {
-        return fetch(input, init)
-      }
-    },
+    fetch: (input, init) => fetch(input, init),
     cache,
     generate_session_locally: !!generateSessionLocally
   })
@@ -300,17 +237,24 @@ export async function getLocalChannelId(url) {
   try {
     const innertube = await createInnertube()
 
-    // resolveURL throws an error if the URL doesn't exist
-    const navigationEndpoint = await innertube.resolveURL(url)
+    // Resolve URL and allow 1 redirect, as YouTube should just do 1
+    // We want to avoid an endless loop
+    for (let i = 0; i < 2; i++) {
+      // resolveURL throws an error if the URL doesn't exist
+      const navigationEndpoint = await innertube.resolveURL(url)
 
-    if (navigationEndpoint.metadata.page_type === 'WEB_PAGE_TYPE_CHANNEL') {
-      return navigationEndpoint.payload.browseId
-    } else {
-      return null
+      if (navigationEndpoint.metadata.page_type === 'WEB_PAGE_TYPE_CHANNEL') {
+        return navigationEndpoint.payload.browseId
+      } else if (navigationEndpoint.metadata.page_type === 'WEB_PAGE_TYPE_UNKNOWN' && navigationEndpoint.payload.url?.startsWith('https://www.youtube.com/')) {
+        // handle redirects like https://www.youtube.com/@wanderbots, which resolves to https://www.youtube.com/Wanderbots, which we need to resolve again
+        url = navigationEndpoint.payload.url
+      } else {
+        return null
+      }
     }
-  } catch {
-    return null
-  }
+  } catch { }
+
+  return null
 }
 
 /**
@@ -599,7 +543,7 @@ export function parseLocalChannelShorts(shorts, channelId, channelName) {
       title: short.title.text,
       author: channelName,
       authorId: channelId,
-      viewCount: parseLocalSubscriberCount(short.views.text),
+      viewCount: short.views.isEmpty() ? null : parseLocalSubscriberCount(short.views.text),
       lengthSeconds: ''
     }
   })
@@ -667,7 +611,7 @@ function handleSearchResponse(response) {
 
   const results = response.results
     .filter((item) => {
-      return item.type === 'Video' || item.type === 'Channel' || item.type === 'Playlist' || item.type === 'HashtagTile'
+      return item.type === 'Video' || item.type === 'Channel' || item.type === 'Playlist' || item.type === 'HashtagTile' || item.type === 'Movie'
     })
     .map((item) => parseListItem(item))
 
@@ -747,22 +691,41 @@ export function parseLocalPlaylistVideo(video) {
 }
 
 /**
- * @param {import('youtubei.js').YTNodes.Video} video
+ * @param {import('youtubei.js').YTNodes.Video | import('youtubei.js').YTNodes.Movie} item
  */
-export function parseLocalListVideo(video) {
-  return {
-    type: 'video',
-    videoId: video.id,
-    title: video.title.text,
-    author: video.author.name,
-    authorId: video.author.id,
-    description: video.description,
-    viewCount: extractNumberFromString(video.view_count.text),
-    publishedText: video.published.isEmpty() ? null : video.published.text,
-    lengthSeconds: isNaN(video.duration.seconds) ? '' : video.duration.seconds,
-    liveNow: video.is_live,
-    isUpcoming: video.is_upcoming || video.is_premiere,
-    premiereDate: video.upcoming
+export function parseLocalListVideo(item) {
+  if (item.type === 'Movie') {
+    /** @type {import('youtubei.js').YTNodes.Movie} */
+    const movie = item
+
+    return {
+      type: 'video',
+      videoId: movie.id,
+      title: movie.title.text,
+      author: movie.author.name,
+      authorId: movie.author.id !== 'N/A' ? movie.author.id : null,
+      description: movie.description_snippet?.text,
+      lengthSeconds: isNaN(movie.duration.seconds) ? '' : movie.duration.seconds,
+      liveNow: false,
+      isUpcoming: false,
+    }
+  } else {
+    /** @type {import('youtubei.js').YTNodes.Video} */
+    const video = item
+    return {
+      type: 'video',
+      videoId: video.id,
+      title: video.title.text,
+      author: video.author.name,
+      authorId: video.author.id,
+      description: video.description,
+      viewCount: video.view_count == null ? null : extractNumberFromString(video.view_count.text),
+      publishedText: (video.published == null || video.published.isEmpty()) ? null : video.published.text,
+      lengthSeconds: isNaN(video.duration.seconds) ? '' : video.duration.seconds,
+      liveNow: video.is_live,
+      isUpcoming: video.is_upcoming || video.is_premiere,
+      premiereDate: video.upcoming
+    }
   }
 }
 
@@ -771,6 +734,7 @@ export function parseLocalListVideo(video) {
  */
 function parseListItem(item) {
   switch (item.type) {
+    case 'Movie':
     case 'Video':
       return parseLocalListVideo(item)
     case 'Channel': {
@@ -837,8 +801,8 @@ export function parseLocalWatchNextVideo(video) {
     title: video.title.text,
     author: video.author.name,
     authorId: video.author.id,
-    viewCount: extractNumberFromString(video.view_count.text),
-    publishedText: video.published.isEmpty() ? null : video.published.text,
+    viewCount: video.view_count == null ? null : extractNumberFromString(video.view_count.text),
+    publishedText: (video.published == null || video.published.isEmpty()) ? null : video.published.text,
     lengthSeconds: isNaN(video.duration.seconds) ? '' : video.duration.seconds,
     liveNow: video.is_live,
     isUpcoming: video.is_premiere
@@ -932,7 +896,7 @@ export function parseLocalTextRuns(runs, emojiSize = 16, options = { looseChanne
           case 'WEB_PAGE_TYPE_CHANNEL': {
             const trimmedText = text.trim()
             // In comments, mention can be `@Channel Name` (not handle, but name)
-            if (CHANNEL_HANDLE_REGEX.test(trimmedText) || (options.looseChannelNameDetection && trimmedText.startsWith('@'))) {
+            if (CHANNEL_HANDLE_REGEX.test(trimmedText) || options.looseChannelNameDetection) {
               // Note that in regex `\s` must be used since the text contain non-default space (the half-width space char when we press spacebar)
               const spacesBefore = (spacesBeforeRegex.exec(text) || [''])[0]
               const spacesAfter = (spacesAfterRegex.exec(text) || [''])[0]

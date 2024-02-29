@@ -4,7 +4,7 @@ import SubscriptionsTabUI from '../subscriptions-tab-ui/subscriptions-tab-ui.vue
 
 import { copyToClipboard, showToast } from '../../helpers/utils'
 import { invidiousAPICall } from '../../helpers/api/invidious'
-import { cordovaFetch, getLocalChannelLiveStreams } from '../../helpers/api/local'
+import { getLocalChannelLiveStreams } from '../../helpers/api/local'
 import { addPublishedDatesInvidious, addPublishedDatesLocal, parseYouTubeRSSFeed, updateVideoListAfterProcessing } from '../../helpers/subscriptions'
 
 export default defineComponent({
@@ -131,7 +131,7 @@ export default defineComponent({
       this.errorChannels = []
       const videoListFromRemote = (await Promise.all(channelsToLoadFromRemote.map(async (channel) => {
         let videos = []
-        if (!(process.env.IS_CORDOVA || process.env.IS_ELECTRON) || this.backendPreference === 'invidious') {
+        if (!(process.env.IS_ELECTRON || process.env.IS_ANDROID) || this.backendPreference === 'invidious') {
           if (useRss) {
             videos = await this.getChannelLiveInvidiousRSS(channel)
           } else {
@@ -213,7 +213,7 @@ export default defineComponent({
       const feedUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`
 
       try {
-        const response = await (process.env.IS_CORDOVA ? cordovaFetch : fetch)(feedUrl)
+        const response = await fetch(feedUrl)
 
         if (response.status === 404) {
           // playlists don't exist if the channel was terminated but also if it doesn't have the tab,
@@ -281,8 +281,8 @@ export default defineComponent({
               resolve(this.getChannelLiveInvidiousRSS(channel, failedAttempts + 1))
               break
             case 1:
-              if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendFallback) {
-                showToast(this.$t('Falling back to the local API'))
+              if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendFallback) {
+                showToast(this.$t('Falling back to Local API'))
                 resolve(this.getChannelLiveLocal(channel, failedAttempts + 1))
               } else {
                 resolve([])
@@ -303,10 +303,9 @@ export default defineComponent({
       const feedUrl = `${this.currentInvidiousInstance}/feed/playlist/${playlistId}`
 
       try {
-        const fetchF = process.env.IS_CORDOVA ? cordovaFetch : fetch
-        const response = await fetchF(feedUrl)
+        const response = await fetch(feedUrl)
 
-        if (response.status === 500) {
+        if (response.status === 500 || response.status === 404) {
           return []
         }
 
@@ -321,8 +320,8 @@ export default defineComponent({
           case 0:
             return this.getChannelLiveInvidious(channel, failedAttempts + 1)
           case 1:
-            if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendFallback) {
-              showToast(this.$t('Falling back to the local API'))
+            if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendFallback) {
+              showToast(this.$t('Falling back to Local API'))
               return this.getChannelLiveLocalRSS(channel, failedAttempts + 1)
             } else {
               return []

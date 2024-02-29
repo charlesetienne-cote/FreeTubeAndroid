@@ -33,7 +33,6 @@ import {
   parseLocalListVideo,
   parseLocalSubscriberCount
 } from '../../helpers/api/local'
-import { Injectables } from '../../../constants'
 
 export default defineComponent({
   name: 'Channel',
@@ -48,9 +47,6 @@ export default defineComponent({
     'ft-share-button': FtShareButton,
     'ft-subscribe-button': FtSubscribeButton,
     'channel-about': ChannelAbout
-  },
-  inject: {
-    showOutlines: Injectables.SHOW_OUTLINES
   },
   data: function () {
     return {
@@ -353,7 +349,7 @@ export default defineComponent({
       this.errorMessage = ''
 
       // Re-enable auto refresh on sort value change AFTER update done
-      if (!(process.env.IS_ELECTRON || process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
+      if (!(process.env.IS_ELECTRON || process.env.IS_ANDROID) || this.backendPreference === 'invidious') {
         this.getChannelInfoInvidious()
         this.autoRefreshOnSortByChangeEnabled = true
       } else {
@@ -451,7 +447,7 @@ export default defineComponent({
     }
 
     // Enable auto refresh on sort value change AFTER initial update done
-    if (!(process.env.IS_ELECTRON || process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
+    if (!(process.env.IS_ELECTRON || process.env.IS_ANDROID) || this.backendPreference === 'invidious') {
       this.getChannelInfoInvidious()
       this.autoRefreshOnSortByChangeEnabled = true
     } else {
@@ -464,7 +460,7 @@ export default defineComponent({
     resolveChannelUrl: async function (url, tab = undefined) {
       let id
 
-      if (!(process.env.IS_ELECTRON || process.env.IS_CORDOVA) || this.backendPreference === 'invidious') {
+      if (!(process.env.IS_ELECTRON || process.env.IS_ANDROID) || this.backendPreference === 'invidious') {
         id = await invidiousGetChannelId(url)
       } else {
         id = await getLocalChannelId(url)
@@ -500,6 +496,7 @@ export default defineComponent({
       const expectedId = this.id
 
       try {
+        /** @type {import('youtubei.js').YT.Channel|undefined} */
         let channel
         if (!this.channelInstance) {
           channel = await getLocalChannel(this.id)
@@ -582,19 +579,44 @@ export default defineComponent({
 
         this.updateSubscriptionDetails({ channelThumbnailUrl, channelName, channelId })
 
-        this.relatedChannels = channel.channels.map(({ author }) => {
-          let thumbnailUrl = author.best_thumbnail.url
+        let relatedChannels = channel.channels.map(({ author }) => ({
+          name: author.name,
+          id: author.id,
+          thumbnailUrl: author.best_thumbnail.url
+        }))
 
-          if (thumbnailUrl.startsWith('//')) {
-            thumbnailUrl = `https:${thumbnailUrl}`
-          }
+        if (channel.memo.has('GameDetails')) {
+          /** @type {import('youtubei.js').YTNodes.GameDetails[]} */
+          const games = channel.memo.get('GameDetails')
 
-          return {
-            name: author.name,
-            id: author.id,
-            thumbnailUrl
-          }
-        })
+          relatedChannels.push(...games.map(game => ({
+            id: game.endpoint.payload.browseId,
+            name: game.title.text,
+            thumbnailUrl: game.box_art[0].url
+          })))
+        }
+
+        if (relatedChannels.length > 0) {
+          /** @type {Set<string>} */
+          const knownChannelIds = new Set()
+
+          relatedChannels = relatedChannels.filter(channel => {
+            if (!knownChannelIds.has(channel.id)) {
+              knownChannelIds.add(channel.id)
+              return true
+            }
+
+            return false
+          })
+
+          relatedChannels.forEach(channel => {
+            if (channel.thumbnailUrl.startsWith('//')) {
+              channel.thumbnailUrl = `https:${channel.thumbnailUrl}`
+            }
+          })
+        }
+
+        this.relatedChannels = relatedChannels
 
         this.channelInstance = channel
 
@@ -701,7 +723,7 @@ export default defineComponent({
           const videoCount = extractNumberFromString(metadata.video_count)
           this.videoCount = isNaN(videoCount) ? null : videoCount
 
-          this.joined = metadata.joined_date.isEmpty() ? 0 : new Date(metadata.joined_date.text.replace('Joined').trim())
+          this.joined = metadata.joined_date && !metadata.joined_date.isEmpty() ? new Date(metadata.joined_date.text.replace('Joined').trim()) : 0
 
           this.location = metadata.country ?? null
         }
@@ -989,7 +1011,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if ((process.env.IS_ELECTRON || process.env.IS_CORDOVA) && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           this.getChannelLocal()
         } else {
@@ -1233,7 +1255,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if ((process.env.IS_ELECTRON || process.env.IS_CORDOVA) && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           if (!this.channelInstance) {
             this.channelInstance = await getLocalChannel(this.id)
@@ -1274,7 +1296,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if ((process.env.IS_ELECTRON || process.env.IS_CORDOVA) && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           this.getChannelLocal()
         } else {
@@ -1353,7 +1375,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           if (!this.channelInstance) {
             this.channelInstance = await getLocalChannel(this.id)
@@ -1387,7 +1409,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           this.getChannelLocal()
         } else {
@@ -1466,7 +1488,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           if (!this.channelInstance) {
             this.channelInstance = await getLocalChannel(this.id)
@@ -1500,7 +1522,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           this.getChannelLocal()
         } else {
@@ -1594,7 +1616,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if ((process.env.IS_ELECTRON || process.env.IS_CORDOVA) && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           if (!this.channelInstance) {
             this.channelInstance = await getLocalChannel(this.id)
@@ -1757,7 +1779,7 @@ export default defineComponent({
         const results = contents
           .filter(node => node.type === 'ItemSection')
           .flatMap(itemSection => itemSection.contents)
-          .filter(item => item.type === 'Video' || item.type === 'Playlist')
+          .filter(item => item.type === 'Video' || (!this.hideChannelPlaylists && item.type === 'Playlist'))
           .map(item => {
             if (item.type === 'Video') {
               return parseLocalListVideo(item)
@@ -1803,7 +1825,11 @@ export default defineComponent({
       }
 
       invidiousAPICall(payload).then((response) => {
-        this.searchResults = this.searchResults.concat(response)
+        if (this.hideChannelPlaylists) {
+          this.searchResults = this.searchResults.concat(response.filter(item => item.type !== 'playlist'))
+        } else {
+          this.searchResults = this.searchResults.concat(response)
+        }
         this.isElementListLoading = false
         this.searchPage++
       }).catch((err) => {
@@ -1812,7 +1838,7 @@ export default defineComponent({
         showToast(`${errorMessage}: ${err}`, 10000, () => {
           copyToClipboard(err)
         })
-        if ((process.env.IS_ELECTRON || process.env.IS_CORDOVA) && this.backendPreference === 'invidious' && this.backendFallback) {
+        if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
           showToast(this.$t('Falling back to Local API'))
           this.searchChannelLocal()
         } else {
@@ -1822,6 +1848,7 @@ export default defineComponent({
     },
 
     ...mapActions([
+      'showOutlines',
       'updateSubscriptionDetails'
     ])
   }
