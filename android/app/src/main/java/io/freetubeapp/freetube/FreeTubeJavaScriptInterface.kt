@@ -184,7 +184,7 @@ class FreeTubeJavaScriptInterface {
     }
     session.setPlaybackState(
       PlaybackState.Builder()
-        .setState(state, statePosition, 1.0f)
+        .setState(state, statePosition, 0.0f)
         .setActions(PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS or
         PlaybackState.ACTION_PLAY_FROM_MEDIA_ID or
         PlaybackState.ACTION_PLAY_FROM_SEARCH or PlaybackState.ACTION_SEEK_TO)
