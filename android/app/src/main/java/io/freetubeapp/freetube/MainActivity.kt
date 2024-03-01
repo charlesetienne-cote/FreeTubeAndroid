@@ -35,7 +35,9 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   lateinit var webView: BackgroundPlayWebView
   lateinit var jsInterface: FreeTubeJavaScriptInterface
   lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
-  var isReady: Boolean = false
+  companion object {
+    var isReady: Boolean = false
+  }
   @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -56,7 +58,6 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
         }
       }
     )
-
 
     activityResultListeners = mutableListOf()
 
