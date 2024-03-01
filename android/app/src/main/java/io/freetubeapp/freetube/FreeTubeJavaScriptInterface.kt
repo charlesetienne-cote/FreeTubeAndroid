@@ -137,6 +137,9 @@ class FreeTubeJavaScriptInterface {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
           )
         )
+        .setDeleteIntent(
+          PendingIntent.getBroadcast(context, 1, Intent(context, MediaControlsReceiver::class.java).setAction("pause"), PendingIntent.FLAG_IMMUTABLE)
+        )
         .setVisibility(Notification.VISIBILITY_PUBLIC)
         .build()
     } else {
