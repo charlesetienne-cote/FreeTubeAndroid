@@ -454,7 +454,7 @@ class FreeTubeJavaScriptInterface {
    */
   @JavascriptInterface
   fun notifyReady() {
-    MainActivity.isReady = true
+    context.isReady = true
   }
 
   /**
