@@ -37,8 +37,6 @@
       <sponsor-block-settings />
       <hr v-if="usingElectron">
       <experimental-settings v-if="usingElectron" />
-      <hr v-if="usingCordova">
-      <cordova-settings v-if="usingCordova" />
       <hr>
       <password-settings />
     </template>

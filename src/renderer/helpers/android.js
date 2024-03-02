@@ -59,7 +59,7 @@ async function handleDialogResponse(promiseId) {
   } else {
     response = JSON.parse(response)
     let typedUri = response?.uri
-    if (response?.type in FILE_TYPES && typedUri.indexOf('.') === -1) {
+    if (response?.type in FILE_TYPES) {
       typedUri = `${typedUri}.${FILE_TYPES[response?.type]}`
     }
     return {
@@ -152,7 +152,7 @@ export function detectAmbiguousContent(content, filePath) {
   const startsLikeJson = trimmedContent[0] === '{'
   const startsLikeXml = trimmedContent[0] === '<'
   const fileType = filePath.slice(filePath.lastIndexOf('.'), filePath.length)
-  const reportsOpml = fileType === 'opml'
+  const reportsOpml = fileType.endsWith('opml')
   const type = startsLikeJson && reportsOpml
     ? 'db'
     : startsLikeXml && reportsOpml
