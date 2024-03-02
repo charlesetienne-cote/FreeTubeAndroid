@@ -37,7 +37,9 @@ import {
   youtubeImageUrlToInvidious
 } from '../../helpers/api/invidious'
 import {
-  createMediaSession
+  createMediaSession,
+  updateMediaSessionState,
+  STATE_PAUSED
 } from '../../helpers/android'
 import android from 'android'
 
@@ -278,6 +280,13 @@ export default defineComponent({
     },
     async thumbnail() {
       if (process.env.IS_ANDROID) {
+        try {
+          // always try to pause the current notification before updating
+          updateMediaSessionState(STATE_PAUSED)
+          // this should resolve issues with old notifications being displayed in some launchers
+        } catch {
+
+        }
         createMediaSession(this.videoTitle, this.channelName, this.videoLengthSeconds * 1000, this.thumbnail)
       }
     },
