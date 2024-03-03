@@ -1,8 +1,11 @@
 package io.freetubeapp.freetube
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.PowerManager
+import android.os.PowerManager.WakeLock
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -22,6 +25,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import io.freetubeapp.freetube.databinding.ActivityMainBinding
 import java.net.URLEncoder
+import java.util.UUID.randomUUID
 
 
 class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
@@ -35,13 +39,16 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   lateinit var webView: BackgroundPlayWebView
   lateinit var jsInterface: FreeTubeJavaScriptInterface
   lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
+  lateinit var wakeLock: WakeLock
   companion object {
+    val POWER_MANAGER_TAG: String = "${randomUUID()}"
     var showSplashScreen: Boolean = true
   }
   @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
+    val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+    wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, POWER_MANAGER_TAG)
     val content: View = findViewById(android.R.id.content)
     content.viewTreeObserver.addOnPreDrawListener(
       object : ViewTreeObserver.OnPreDrawListener {

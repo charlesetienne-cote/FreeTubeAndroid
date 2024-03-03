@@ -461,6 +461,16 @@ class FreeTubeJavaScriptInterface {
     MainActivity.showSplashScreen = false
   }
 
+  @JavascriptInterface
+  fun acquireWakelock() {
+    context.wakeLock.acquire()
+  }
+
+  @JavascriptInterface
+  fun releaseWakelock() {
+    context.wakeLock.release()
+  }
+
   /**
    * @return the id of a promise on the window
    */

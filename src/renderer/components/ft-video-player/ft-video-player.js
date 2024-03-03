@@ -25,6 +25,7 @@ import {
 import { getProxyUrl } from '../../helpers/api/invidious'
 import store from '../../store'
 import { STATE_PAUSED, STATE_PLAYING, updateMediaSessionState } from '../../helpers/android'
+import android from 'android'
 
 const EXPECTED_PLAY_RELATED_ERROR_MESSAGES = [
   // This is thrown when `play()` called but user already viewing another page
@@ -688,6 +689,7 @@ export default defineComponent({
         this.player.on('play', async () => {
           if (process.env.IS_ANDROID) {
             updateMediaSessionState(STATE_PLAYING.toString())
+            android.acquireWakelock()
           }
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'playing'
@@ -703,6 +705,7 @@ export default defineComponent({
         this.player.on('pause', () => {
           if (process.env.IS_ANDROID) {
             updateMediaSessionState(STATE_PAUSED)
+            android.releaseWakelock()
           }
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'paused'
