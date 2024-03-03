@@ -11,6 +11,7 @@ import android.graphics.BitmapFactory
 import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
+import android.media.session.PlaybackState.STATE_PAUSED
 import android.net.Uri
 import android.os.Build
 import android.webkit.JavascriptInterface
@@ -118,8 +119,7 @@ class FreeTubeJavaScriptInterface {
         lastNotification!!.actions = actions
         return lastNotification
       }
-
-      return Notification.Builder(context, CHANNEL_ID)
+      lastNotification = Notification.Builder(context, CHANNEL_ID)
         .setStyle(getMediaStyle())
         .setSmallIcon(R.drawable.ic_media_notification_icon)
         .addAction(
@@ -142,6 +142,7 @@ class FreeTubeJavaScriptInterface {
         )
         .setVisibility(Notification.VISIBILITY_PUBLIC)
         .build()
+      return lastNotification
     } else {
       return null
     }
@@ -153,9 +154,12 @@ class FreeTubeJavaScriptInterface {
    */
   @SuppressLint("MissingPermission")
   private fun pushNotification(notification: Notification) {
+    if (lastNotification !== null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      // always set notifications to pause before sending another on android 13+
+      setState(mediaSession!!, STATE_PAUSED)
+    }
     val manager = NotificationManagerCompat.from(context)
     manager.notify(NOTIFICATION_TAG, NOTIFICATION_ID, notification)
-    lastNotification = notification
   }
 
   /**
@@ -168,7 +172,7 @@ class FreeTubeJavaScriptInterface {
   private fun setState(session: MediaSession, state: Int, position: Long? = null) {
 
     if (state != lastState) {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
         // need to reissue a notification if we want to update the actions
         var actions = getActions(state)
         val notification = getMediaControlsNotification(actions)
