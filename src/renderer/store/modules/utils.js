@@ -49,7 +49,8 @@ const state = {
   externalPlayerNames: [],
   externalPlayerNameTranslationKeys: [],
   externalPlayerValues: [],
-  externalPlayerCmdArguments: {}
+  externalPlayerCmdArguments: {},
+  usingTouch: false
 }
 
 const getters = {
@@ -143,6 +144,10 @@ const getters = {
 
   getExternalPlayerCmdArguments () {
     return state.externalPlayerCmdArguments
+  },
+
+  getUsingTouch () {
+    return state.usingTouch
   }
 }
 
@@ -884,6 +889,10 @@ const mutations = {
 
   setExternalPlayerCmdArguments (state, value) {
     state.externalPlayerCmdArguments = value
+  },
+
+  setUsingTouch(state, value) {
+    state.usingTouch = value
   }
 }
 

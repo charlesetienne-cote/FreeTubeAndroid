@@ -217,6 +217,7 @@ export default defineComponent({
       })
     })
   },
+
   methods: {
     checkThemeSettings: function () {
       const theme = {
@@ -551,7 +552,8 @@ export default defineComponent({
     },
 
     ...mapMutations([
-      'setInvidiousInstancesList'
+      'setInvidiousInstancesList',
+      'setUsingTouch'
     ]),
 
     ...mapActions([

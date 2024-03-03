@@ -1,5 +1,5 @@
 import { defineComponent } from 'vue'
-import { mapActions } from 'vuex'
+import { mapActions, mapMutations } from 'vuex'
 
 import videojs from 'video.js'
 import qualitySelector from '@silvermine/videojs-quality-selector'
@@ -146,7 +146,6 @@ export default defineComponent({
       statsModal: null,
       showStatsModal: false,
       statsModalEventName: 'updateStats',
-      usingTouch: false,
       // whether or not sponsor segments should be skipped
       skipSponsors: true,
       // countdown before actually skipping sponsor segments
@@ -185,6 +184,9 @@ export default defineComponent({
     }
   },
   computed: {
+    usingTouch: function () {
+      return this.$store.getters.getUsingTouch
+    },
     currentLocale: function () {
       return this.$i18n.locale.replace('_', '-')
     },
@@ -1984,13 +1986,13 @@ export default defineComponent({
     },
 
     handleTouchStart: function () {
-      this.usingTouch = true
+      this.setUsingTouch(true)
     },
 
     handleMouseOver: function () {
       // This addresses a discrepancy that only seems to occur in the mobile version of firefox
       if (navigator.userAgent.search('Firefox') !== -1 && (videojs.browser.IS_ANDROID || videojs.browser.IS_IOS)) { return }
-      this.usingTouch = false
+      this.setUsingTouch(false)
     },
 
     toggleShowStatsModal: function () {
@@ -2281,7 +2283,9 @@ export default defineComponent({
         this.powerSaveBlocker = null
       }
     },
-
+    ...mapMutations([
+      'setUsingTouch'
+    ]),
     ...mapActions([
       'updateDefaultCaptionSettings',
       'parseScreenshotCustomFileName',
