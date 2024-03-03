@@ -450,11 +450,11 @@ class FreeTubeJavaScriptInterface {
   }
 
   /**
-   * notifies the context that the js is loaded && ready
+   * hides the splashscreen
    */
   @JavascriptInterface
-  fun notifyReady() {
-    context.isReady = true
+  fun hideSplashScreen() {
+    MainActivity.showSplashScreen = false
   }
 
   /**

@@ -35,7 +35,9 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   lateinit var webView: BackgroundPlayWebView
   lateinit var jsInterface: FreeTubeJavaScriptInterface
   lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
-  var isReady: Boolean = false
+  companion object {
+    var showSplashScreen: Boolean = true
+  }
   @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -45,7 +47,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
       object : ViewTreeObserver.OnPreDrawListener {
         override fun onPreDraw(): Boolean {
           // Check whether the initial data is ready.
-          return if (isReady) {
+          return if (!showSplashScreen) {
             // The content is ready. Start drawing.
             content.viewTreeObserver.removeOnPreDrawListener(this)
             true
@@ -242,9 +244,15 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   }
 
   override fun onDestroy() {
-    super.onDestroy()
+    // reset the splashscreen
+    showSplashScreen = true
+    // stop the keep alive service
     stopService(keepAliveIntent)
+    // cancel media notification (if there is one)
     jsInterface.cancelMediaNotification()
+    // clean up the web view
     webView.destroy()
+    // call `super`
+    super.onDestroy()
   }
 }

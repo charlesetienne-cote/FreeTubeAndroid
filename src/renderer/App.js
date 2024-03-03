@@ -195,7 +195,7 @@ export default defineComponent({
             await this.handleYoutubeLink(uri)
           }
           // hides the splash screen
-          android.notifyReady()
+          android.hideSplashScreen()
         }
 
         this.dataReady = true
