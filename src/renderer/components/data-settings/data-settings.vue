@@ -15,6 +15,13 @@
           :label="$t('Data Settings.Reset Data Directory')"
           @click="resetDataDirectory"
         />
+        <ft-toggle-switch
+          :label="$t('Data Settings.Copy Data Files When Moving')"
+          :compact="true"
+          :default-value="shouldCopyDataFilesWhenMoving"
+          :tooltip="$t('Data Settings.Copy Data Files When Moving Tooltip')"
+          @change="shouldCopyDataFilesWhenMoving = !shouldCopyDataFilesWhenMoving"
+        />
       </ft-flex-box>
     </template>
     <h4 class="groupTitle">

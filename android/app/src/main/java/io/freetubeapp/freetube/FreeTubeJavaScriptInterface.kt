@@ -512,6 +512,14 @@ class FreeTubeJavaScriptInterface {
     context.wakeLock.release()
   }
 
+  @JavascriptInterface
+  fun restart() {
+    context.finish()
+    context.startActivity(Intent(Intent.ACTION_MAIN)
+      .addCategory(Intent.CATEGORY_LAUNCHER)
+      .setClass(context,  MainActivity::class.java))
+  }
+
   /**
    * @return the id of a promise on the window
    */

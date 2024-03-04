@@ -22,6 +22,7 @@ import {
 import { invidiousAPICall } from '../../helpers/api/invidious'
 import { getLocalChannel } from '../../helpers/api/local'
 import { handleAmbigiousContent, initalizeDatabasesInDirectory, readFile, requestDirectory, writeFile } from '../../helpers/android'
+import android from 'android'
 
 export default defineComponent({
   name: 'DataSettings',
@@ -44,6 +45,7 @@ export default defineComponent({
       ],
 
       shouldExportPlaylistForOlderVersions: false,
+      shouldCopyDataFilesWhenMoving: true
     }
   },
   computed: {
@@ -98,12 +100,18 @@ export default defineComponent({
           locationMap = locationInfo.files.map((file) => { return [file.fileName, file.uri] })
         }
         if (locationMap.length !== 0) {
-          for (const [key, value] of locationMap) {
-            writeFile('data://', key, readFile(value))
+          if (this.shouldCopyDataFilesWhenMoving) {
+            for (const [key, value] of locationMap) {
+              writeFile('data://', key, readFile(value))
+            }
           }
           // clear out data-location.json
           writeFile('data://', 'data-location.json', '')
           showToast(this.$t('Data Settings.Your data directory has been moved successfully'))
+          if (!this.shouldCopyDataFilesWhenMoving) {
+            // the application must restart in order to refresh the dbs
+            android.restart()
+          }
         } else {
           showToast(this.$t('Data Settings.Nothing to change'))
         }
@@ -117,18 +125,20 @@ export default defineComponent({
         const directory = await requestDirectory()
         const files = await initalizeDatabasesInDirectory(directory)
         if (files.length > 0) {
-          const locationData = readFile('data://', 'data-location.json')
-          let locationInfo = { directory: 'data://', files: [] }
-          let locationMap = {}
-          if (locationData !== '') {
-            locationInfo = JSON.parse(locationData)
-            locationMap = Object.fromEntries(locationInfo.files.map((file) => { return [file.fileName, file.uri] }))
-          }
-          for (let i = 0; i < files.length; i++) {
-            const data = locationInfo.files.length === 0
-              ? readFile('data://', files[i].fileName)
-              : readFile(locationMap[files[i].fileName], '')
-            writeFile(files[i].uri, '', data)
+          if (this.shouldCopyDataFilesWhenMoving) {
+            const locationData = readFile('data://', 'data-location.json')
+            let locationInfo = { directory: 'data://', files: [] }
+            let locationMap = {}
+            if (locationData !== '') {
+              locationInfo = JSON.parse(locationData)
+              locationMap = Object.fromEntries(locationInfo.files.map((file) => { return [file.fileName, file.uri] }))
+            }
+            for (let i = 0; i < files.length; i++) {
+              const data = locationInfo.files.length === 0
+                ? readFile('data://', files[i].fileName)
+                : readFile(locationMap[files[i].fileName], '')
+              writeFile(files[i].uri, '', data)
+            }
           }
           // update the data files
           writeFile('data://', 'data-location.json', JSON.stringify({
@@ -136,9 +146,14 @@ export default defineComponent({
             files
           }))
           showToast(this.$t('Data Settings.Your data directory has been moved successfully'))
+          if (!this.shouldCopyDataFilesWhenMoving) {
+            // the application must restart in order to refresh the dbs
+            android.restart()
+          }
         }
       } catch (exception) {
         showToast(this.$t('Data Settings.Error moving data directory'))
+        console.error(exception)
       }
     },
 
