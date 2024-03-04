@@ -4,3 +4,10 @@ Player Settings:
   Use Old Layout For Info: Use old layout for watch video info
 Distraction Free Settings:
   Hide Thumbnail In Media Controls: Hide thumbnail in media controls notification
+Data Settings:
+  Data Directory: Data Directory
+  Select Data Directory: Select Data Directory
+  Reset Data Directory: Reset Data Directory
+  Your data directory has been moved successfully: Your data directory has been moved successfully
+  Error moving data directory: Error occured while moving data directory
+  Nothing to change: Nothing to change

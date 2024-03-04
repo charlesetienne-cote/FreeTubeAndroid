@@ -2,6 +2,21 @@
   <ft-settings-section
     :title="$t('Settings.Data Settings.Data Settings')"
   >
+    <template v-if="usingAndroid">
+      <h4 class="groupTitle">
+        {{ $t('Data Settings.Data Directory') }}
+      </h4>
+      <ft-flex-box class="dataSettingsBox">
+        <ft-button
+          :label="$t('Data Settings.Select Data Directory')"
+          @click="selectDataDirectory"
+        />
+        <ft-button
+          :label="$t('Data Settings.Reset Data Directory')"
+          @click="resetDataDirectory"
+        />
+      </ft-flex-box>
+    </template>
     <h4 class="groupTitle">
       {{ $t('Subscriptions.Subscriptions') }}
     </h4>

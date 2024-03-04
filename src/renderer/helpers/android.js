@@ -192,3 +192,74 @@ export function handleAmbigiousContent(content, filePath) {
   }
   return filePath
 }
+
+/**
+ * @typedef AndroidFile
+ * @property {string} uri
+ * @property {string} fileName
+ */
+
+/**
+ * @callback ListFiles
+ * @returns {Array<AndroidFile>}
+ */
+
+/**
+ * @typedef DirectoryHandle
+ * @property {boolean} canceled
+ * @property {string?} uri
+ * @property {Function} createFile
+ * @property {ListFiles} listFiles
+ */
+
+/**
+ *
+ * @returns {Promise<DirectoryHandle>}
+ */
+export async function requestDirectory() {
+  const uri = await window.awaitAsyncResult(android.requestDirectoryAccessDialog())
+  if (uri === 'USER_CANCELED') {
+    return {
+      canceled: true
+    }
+  } else {
+    return {
+      uri,
+      canceled: false,
+      createFile(fileName) {
+        return android.createFileInTree(uri, fileName)
+      },
+      listFiles() {
+        return JSON.parse(android.listFilesInTree(uri))
+      }
+    }
+  }
+}
+
+export const EXPECTED_FILES = ['profiles.db', 'settings.db', 'history.db', 'playlists.db']
+
+/**
+ *
+ * @param {DirectoryHandle} directoryHandle
+ */
+export async function initalizeDatabasesInDirectory(directoryHandle) {
+  if (directoryHandle.canceled) {
+    return []
+  }
+  const files = directoryHandle.listFiles()
+  const filteredFiles = files.filter(({ fileName }) => EXPECTED_FILES.indexOf(fileName) !== -1)
+  const filteredFileNames = filteredFiles.map((item) => item.fileName)
+  if (filteredFiles.length === EXPECTED_FILES.length) {
+    // no changes necessary
+  } else {
+    const neededFiles = EXPECTED_FILES.filter((fileName) => filteredFileNames.indexOf(fileName) === -1)
+    for (const file of neededFiles) {
+      const fileData = {
+        uri: directoryHandle.createFile(file),
+        fileName: file
+      }
+      filteredFiles.push(fileData)
+    }
+  }
+  return filteredFiles
+}

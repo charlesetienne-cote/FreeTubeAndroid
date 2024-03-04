@@ -18,11 +18,13 @@ import android.webkit.JavascriptInterface
 import androidx.activity.result.ActivityResult
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
+import androidx.documentfile.provider.DocumentFile
 import java.io.File
 import java.io.FileInputStream
 import java.net.URL
 import java.net.URLEncoder
 import java.util.UUID.*
+
 
 class FreeTubeJavaScriptInterface {
   private var context: MainActivity
@@ -451,6 +453,45 @@ class FreeTubeJavaScriptInterface {
     }
     context.activityResultLauncher.launch(openDialogIntent)
     return promise
+  }
+
+  @JavascriptInterface
+  fun requestDirectoryAccessDialog(): String {
+    val promise = jsPromise()
+    val openDialogIntent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+    context.listenForActivityResults {
+        result: ActivityResult? ->
+      if (result!!.resultCode == Activity.RESULT_CANCELED) {
+        resolve(promise, "USER_CANCELED")
+      }
+      try {
+        val uri = result!!.data!!.data!!
+        context.contentResolver.takePersistableUriPermission(
+          uri,
+          Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        )
+        resolve(promise, URLEncoder.encode(uri.toString(), "utf-8"))
+      } catch (ex: Exception) {
+        reject(promise, ex.toString())
+      }
+    }
+    context.activityResultLauncher.launch(openDialogIntent)
+    return promise
+  }
+
+  @JavascriptInterface
+  fun listFilesInTree(tree: String): String {
+    val directory = DocumentFile.fromTreeUri(context, Uri.parse(tree))
+    val files = directory!!.listFiles().joinToString(",") { file ->
+      "{ \"uri\": \"${file.uri}\", \"fileName\": \"${file.name}\" }"
+    }
+    return "[$files]"
+  }
+
+  @JavascriptInterface
+  fun createFileInTree(tree: String, fileName: String): String {
+    val directory = DocumentFile.fromTreeUri(context, Uri.parse(tree))
+    return directory!!.createFile("*/*", fileName)!!.uri.toString()
   }
 
   /**
