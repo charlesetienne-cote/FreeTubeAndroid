@@ -713,6 +713,7 @@ export default defineComponent({
 
           this.stopPowerSaveBlocker()
         })
+
         this.player.on(this.statsModalEventName, () => {
           if (this.showStatsModal) {
             this.statsModal.open()
@@ -990,11 +991,10 @@ export default defineComponent({
       this.player.one('canplay', () => {
         this.player.currentTime(currentTime)
         this.player.playbackRate(playbackRate)
-        this.$refs.video.addEventListener('loadeddata', () => {
-          // need to call play to restore the player state, even if we want to pause afterwards
-          this.playVideo(() => {
-            if (isPaused) { this.player.pause() }
-          })
+
+        // need to call play to restore the player state, even if we want to pause afterwards
+        this.playVideo(() => {
+          if (isPaused) { this.player.pause() }
         })
       })
 
