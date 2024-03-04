@@ -3,7 +3,7 @@
     :title="$t('Settings.Data Settings.Data Settings')"
   >
     <template v-if="usingAndroid">
-      <h4 class="groupTitle">
+      <h4 class="groupTitle data-directory-heading">
         {{ $t('Data Settings.Data Directory') }}
       </h4>
       <ft-flex-box class="dataSettingsBox">
@@ -22,6 +22,14 @@
           :tooltip="$t('Data Settings.Copy Data Files When Moving Tooltip')"
           @change="shouldCopyDataFilesWhenMoving = !shouldCopyDataFilesWhenMoving"
         />
+      </ft-flex-box>
+      <ft-flex-box>
+        <p>
+          {{ $t("Data Settings.Data Is Currently Stored In") }}:
+        </p>
+        <p class="data-directory">
+          {{ dataDirectory }}
+        </p>
       </ft-flex-box>
     </template>
     <h4 class="groupTitle">
@@ -96,3 +104,4 @@
 </template>
 
 <script src="./data-settings.js" />
+<style scoped src="./data-settings.css" />

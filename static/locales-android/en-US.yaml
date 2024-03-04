@@ -13,3 +13,4 @@ Data Settings:
   Nothing to change: Nothing to change
   Copy Data Files When Moving: Copy data files when moving directories
   Copy Data Files When Moving Tooltip: This option overwrites the db files present in the directory you have selected with the current db files. Disabling this option will force the app to restart immediately after the directory has been moved.
+  Data Is Currently Stored In: Data is currently stored in

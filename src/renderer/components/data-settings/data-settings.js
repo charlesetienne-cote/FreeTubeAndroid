@@ -23,6 +23,7 @@ import { invidiousAPICall } from '../../helpers/api/invidious'
 import { getLocalChannel } from '../../helpers/api/local'
 import { handleAmbigiousContent, initalizeDatabasesInDirectory, readFile, requestDirectory, writeFile } from '../../helpers/android'
 import android from 'android'
+import pkg from '../../../../package.json'
 
 export default defineComponent({
   name: 'DataSettings',
@@ -34,6 +35,14 @@ export default defineComponent({
     'ft-toggle-switch': FtToggleSwitch,
   },
   data: function () {
+    let dataDirectory = `Android/data/io.freetubeapp.${pkg.name}/`
+    if (process.env.IS_ANDROID) {
+      const dataLocation = readFile('data://', 'data-location.json')
+      if (dataLocation !== '') {
+        const { directory } = JSON.parse(dataLocation)
+        dataDirectory = directory
+      }
+    }
     return {
       showExportSubscriptionsPrompt: false,
       subscriptionsPromptValues: [
@@ -45,7 +54,8 @@ export default defineComponent({
       ],
 
       shouldExportPlaylistForOlderVersions: false,
-      shouldCopyDataFilesWhenMoving: true
+      shouldCopyDataFilesWhenMoving: true,
+      dataDirectory
     }
   },
   computed: {
@@ -107,6 +117,7 @@ export default defineComponent({
           }
           // clear out data-location.json
           writeFile('data://', 'data-location.json', '')
+          this.dataDirectory = `Android/data/io.freetubeapp.${pkg.name}/`
           showToast(this.$t('Data Settings.Your data directory has been moved successfully'))
           if (!this.shouldCopyDataFilesWhenMoving) {
             // the application must restart in order to refresh the dbs
@@ -145,6 +156,7 @@ export default defineComponent({
             directory: directory.uri,
             files
           }))
+          this.dataDirectory = directory.uri
           showToast(this.$t('Data Settings.Your data directory has been moved successfully'))
           if (!this.shouldCopyDataFilesWhenMoving) {
             // the application must restart in order to refresh the dbs
