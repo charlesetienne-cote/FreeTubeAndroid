@@ -514,9 +514,13 @@ class FreeTubeJavaScriptInterface {
 
   @JavascriptInterface
   fun releaseWakelock() {
-    context.wakeLock.release()
-    // prevent wakelock from coming back if the app is resumed after this is called
-    context.releasedWakeLock = false
+    try {
+      context.wakeLock.release()
+      // prevent wakelock from coming back if the app is resumed after this is called
+      context.releasedWakeLock = false
+    } catch (exception: Exception) {
+      context.consoleWarn(exception.toString())
+    }
   }
 
   @JavascriptInterface

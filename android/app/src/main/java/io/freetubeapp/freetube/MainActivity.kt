@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
   lateinit var wakeLock: WakeLock
   var releasedWakeLock: Boolean = false
+  var paused: Boolean = false
   companion object {
     val POWER_MANAGER_TAG: String = "${randomUUID()}"
     var showSplashScreen: Boolean = true
@@ -222,6 +223,16 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     activityResultListeners.add(listener)
   }
 
+  fun consoleError(message: String) {
+    val messageEncoded = URLEncoder.encode(message, "utf-8")
+    webView.loadUrl("javascript: console.error(decodeURIComponent(\"${messageEncoded}\"))")
+  }
+
+  fun consoleWarn(message: String) {
+    val messageEncoded = URLEncoder.encode(message, "utf-8")
+    webView.loadUrl("javascript: console.warn(decodeURIComponent(\"${messageEncoded}\"))")
+  }
+
   override fun onRequestPermissionsResult(
     requestCode: Int, permissions: Array<String?>,
     grantResults: IntArray
@@ -252,15 +263,21 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   }
 
   override fun onPause() {
-    super.onPause()
-    if (wakeLock.isHeld) {
-      wakeLock.release()
-      releasedWakeLock = true
+    try {
+      super.onPause()
+      paused = true
+      if (wakeLock.isHeld) {
+        wakeLock.release()
+        releasedWakeLock = true
+      }
+    } catch (exception: Exception) {
+      consoleWarn(exception.toString())
     }
   }
 
   override fun onResume() {
     super.onResume()
+    paused = false
     if (releasedWakeLock) {
       wakeLock.acquire()
       releasedWakeLock = false
