@@ -504,7 +504,12 @@ class FreeTubeJavaScriptInterface {
 
   @JavascriptInterface
   fun acquireWakelock() {
-    context.wakeLock.acquire()
+    if (context.paused) {
+      // tell the app to reacquire the released wake lock when it resumes
+      context.releasedWakeLock = true
+    } else {
+      context.wakeLock.acquire()
+    }
   }
 
   @JavascriptInterface
