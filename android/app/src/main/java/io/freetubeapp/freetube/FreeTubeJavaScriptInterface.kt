@@ -353,7 +353,7 @@ class FreeTubeJavaScriptInterface {
   @JavascriptInterface
   fun cancelMediaNotification() {
     val manager = NotificationManagerCompat.from(context)
-    manager.cancel(NOTIFICATION_TAG, NOTIFICATION_ID)
+    manager.cancelAll()
   }
 
   /**
