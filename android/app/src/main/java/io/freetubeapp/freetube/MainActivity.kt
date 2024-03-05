@@ -230,7 +230,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
 
   fun consoleWarn(message: String) {
     val messageEncoded = URLEncoder.encode(message, "utf-8")
-    webView.loadUrl("javascript: console.warn(decodeURIComponent(\"${messageEncoded}\"))")
+    webView.loadUrl("javascript: console.warn(decodeURIComponent(\"$messageEncoded\"))")
   }
 
   override fun onRequestPermissionsResult(
@@ -277,6 +277,14 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
 
   override fun onResume() {
     super.onResume()
+    if (paused !== false) {
+      // if paused state is false, but we are resuming, the app is starting
+      try {
+        showSplashScreen = false
+      } catch (ex: Exception) {
+        consoleWarn(ex.toString())
+      }
+    }
     paused = false
     if (releasedWakeLock) {
       wakeLock.acquire()
