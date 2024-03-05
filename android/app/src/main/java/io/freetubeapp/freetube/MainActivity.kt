@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   lateinit var jsInterface: FreeTubeJavaScriptInterface
   lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
   lateinit var wakeLock: WakeLock
+  var releasedWakeLock: Boolean = false
   companion object {
     val POWER_MANAGER_TAG: String = "${randomUUID()}"
     var showSplashScreen: Boolean = true
@@ -247,6 +248,22 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
         uri
       }
       webView.loadUrl("javascript: window.notifyYoutubeLinkHandlers(\"${url}\")")
+    }
+  }
+
+  override fun onPause() {
+    super.onPause()
+    if (wakeLock.isHeld) {
+      wakeLock.release()
+      releasedWakeLock = true
+    }
+  }
+
+  override fun onResume() {
+    super.onResume()
+    if (releasedWakeLock) {
+      wakeLock.acquire()
+      releasedWakeLock = false
     }
   }
 
