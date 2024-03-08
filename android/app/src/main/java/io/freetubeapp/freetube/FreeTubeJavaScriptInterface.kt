@@ -499,7 +499,7 @@ class FreeTubeJavaScriptInterface {
    */
   @JavascriptInterface
   fun hideSplashScreen() {
-    MainActivity.showSplashScreen = false
+    context.showSplashScreen = false
   }
 
   @JavascriptInterface
