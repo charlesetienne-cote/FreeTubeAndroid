@@ -257,14 +257,13 @@ class FreeTubeJavaScriptInterface {
     val notificationManager = NotificationManagerCompat.from(context)
     val channel = notificationManager.getNotificationChannel(CHANNEL_ID, "Media Controls")
       ?: NotificationChannel(CHANNEL_ID, "Media Controls", NotificationManager.IMPORTANCE_MIN)
-    
+
     channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
-    notificationManager.createNotificationChannel(channel)
     var session: MediaSession
 
-    // don't create multiple sessions for one channel
-    // it messes with custom actions
+    // don't create multiple sessions or multiple channels
     if (mediaSession == null) {
+      notificationManager.createNotificationChannel(channel)
       // add the callbacks && listeners
 
       session = MediaSession(context, CHANNEL_ID)
