@@ -255,7 +255,9 @@ class FreeTubeJavaScriptInterface {
   @JavascriptInterface
   fun createMediaSession(title: String, artist: String, duration: Long = 0, thumbnail: String? = null) {
     val notificationManager = NotificationManagerCompat.from(context)
-    val channel = NotificationChannel(CHANNEL_ID, "Media Controls", NotificationManager.IMPORTANCE_MIN)
+    val channel = notificationManager.getNotificationChannel(CHANNEL_ID, "Media Controls")
+      ?: NotificationChannel(CHANNEL_ID, "Media Controls", NotificationManager.IMPORTANCE_MIN)
+    
     channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
     notificationManager.createNotificationChannel(channel)
     var session: MediaSession
@@ -282,11 +284,17 @@ class FreeTubeJavaScriptInterface {
             context.webView.loadUrl("javascript: window.notifyMediaSessionListeners('previous')")
           }
         }
+
         override fun onSeekTo(pos: Long) {
           super.onSeekTo(pos)
           lastPosition = pos
           context.runOnUiThread {
-            context.webView.loadUrl(String.format("javascript: window.notifyMediaSessionListeners('seek', %s)", pos))
+            context.webView.loadUrl(
+              String.format(
+                "javascript: window.notifyMediaSessionListeners('seek', %s)",
+                pos
+              )
+            )
           }
         }
 
