@@ -300,8 +300,6 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   }
 
   override fun onDestroy() {
-    // reset the splashscreen
-    showSplashScreen = true
     // stop the keep alive service
     stopService(keepAliveIntent)
     // cancel media notification (if there is one)
