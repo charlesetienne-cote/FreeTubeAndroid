@@ -3,12 +3,12 @@ package io.freetubeapp.freetube
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -44,6 +44,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   lateinit var jsInterface: FreeTubeJavaScriptInterface
   lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
   lateinit var wakeLock: WakeLock
+  lateinit var content: View
   var releasedWakeLock: Boolean = false
   var paused: Boolean = false
   var showSplashScreen: Boolean = true
@@ -56,7 +57,10 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     if (isColdStart) {
       val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
       wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, POWER_MANAGER_TAG)
-      val content: View = findViewById(android.R.id.content)
+      /*
+      commenting this out until issues with the splash screen making the app invisible can be addressed
+
+      content = findViewById(android.R.id.content)
       content.viewTreeObserver.addOnPreDrawListener(
         object : ViewTreeObserver.OnPreDrawListener {
           override fun onPreDraw(): Boolean {
@@ -71,7 +75,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
             }
           }
         }
-      )
+      )*/
       activityResultListeners = mutableListOf()
 
       activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -104,6 +108,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
       binding = ActivityMainBinding.inflate(layoutInflater)
       setContentView(binding.root)
       webView = binding.webView
+      webView.setBackgroundColor(Color.TRANSPARENT)
 
       // bind the back button to the web-view history
       onBackPressedDispatcher.addCallback {
