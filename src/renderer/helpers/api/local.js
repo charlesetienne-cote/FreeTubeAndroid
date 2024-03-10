@@ -278,6 +278,9 @@ export async function getLocalChannel(id) {
   return result
 }
 
+/**
+ * @param {string} id
+ */
 export async function getLocalChannelVideos(id) {
   const innertube = await createInnertube()
 
@@ -290,15 +293,22 @@ export async function getLocalChannelVideos(id) {
     }))
 
     const videosTab = new YT.Channel(null, response)
+    const { id: channelId = id, name, thumbnailUrl } = parseLocalChannelHeader(videosTab)
+
+    let videos
 
     // if the channel doesn't have a videos tab, YouTube returns the home tab instead
     // so we need to check that we got the right tab
     if (videosTab.current_tab?.endpoint.metadata.url?.endsWith('/videos')) {
-      const { id: channelId = id, name } = parseLocalChannelHeader(videosTab)
-
-      return parseLocalChannelVideos(videosTab.videos, channelId, name)
+      videos = parseLocalChannelVideos(videosTab.videos, channelId, name)
     } else {
-      return []
+      videos = []
+    }
+
+    return {
+      name,
+      thumbnailUrl,
+      videos
     }
   } catch (error) {
     console.error(error)
@@ -310,6 +320,9 @@ export async function getLocalChannelVideos(id) {
   }
 }
 
+/**
+ * @param {string} id
+ */
 export async function getLocalChannelLiveStreams(id) {
   const innertube = await createInnertube()
 
@@ -322,15 +335,22 @@ export async function getLocalChannelLiveStreams(id) {
     }))
 
     const liveStreamsTab = new YT.Channel(null, response)
+    const { id: channelId = id, name, thumbnailUrl } = parseLocalChannelHeader(liveStreamsTab)
+
+    let videos
 
     // if the channel doesn't have a live tab, YouTube returns the home tab instead
     // so we need to check that we got the right tab
     if (liveStreamsTab.current_tab?.endpoint.metadata.url?.endsWith('/streams')) {
-      const { id: channelId = id, name } = parseLocalChannelHeader(liveStreamsTab)
-
-      return parseLocalChannelVideos(liveStreamsTab.videos, channelId, name)
+      videos = parseLocalChannelVideos(liveStreamsTab.videos, channelId, name)
     } else {
-      return []
+      videos = []
+    }
+
+    return {
+      name,
+      thumbnailUrl,
+      videos
     }
   } catch (error) {
     console.error(error)
