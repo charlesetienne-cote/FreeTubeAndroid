@@ -34,8 +34,9 @@ export default defineComponent({
     'ft-toggle-switch': FtToggleSwitch,
   },
   data: function () {
-    let dataDirectory = android.getDirectory('data://')
+    let dataDirectory = ''
     if (process.env.IS_ANDROID) {
+      dataDirectory = android.getDirectory('data://')
       const dataLocation = readFile('data://', 'data-location.json')
       if (dataLocation !== '') {
         const { directory } = JSON.parse(dataLocation)
