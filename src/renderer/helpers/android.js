@@ -200,6 +200,12 @@ export function handleAmbigiousContent(content, filePath) {
  */
 
 /**
+ * @callback CreateFile
+ * @param {string} file name
+ * @returns {string} content uri to file
+ */
+
+/**
  * @callback ListFiles
  * @returns {Array<AndroidFile>}
  */
@@ -208,7 +214,7 @@ export function handleAmbigiousContent(content, filePath) {
  * @typedef DirectoryHandle
  * @property {boolean} canceled
  * @property {string?} uri
- * @property {Function} createFile
+ * @property {CreateFile} createFile
  * @property {ListFiles} listFiles
  */
 

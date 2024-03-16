@@ -23,7 +23,6 @@ import { invidiousAPICall } from '../../helpers/api/invidious'
 import { getLocalChannel } from '../../helpers/api/local'
 import { handleAmbigiousContent, initalizeDatabasesInDirectory, readFile, requestDirectory, writeFile } from '../../helpers/android'
 import android from 'android'
-import pkg from '../../../../package.json'
 
 export default defineComponent({
   name: 'DataSettings',
@@ -35,7 +34,7 @@ export default defineComponent({
     'ft-toggle-switch': FtToggleSwitch,
   },
   data: function () {
-    let dataDirectory = `Android/data/io.freetubeapp.${pkg.name}/`
+    let dataDirectory = android.getDirectory('data://')
     if (process.env.IS_ANDROID) {
       const dataLocation = readFile('data://', 'data-location.json')
       if (dataLocation !== '') {
@@ -115,9 +114,13 @@ export default defineComponent({
               writeFile('data://', key, readFile(value))
             }
           }
+          if (locationInfo.files.length !== 0) {
+            // 🚫 revoke permission for the old location upon completing the reset
+            android.revokePermissionForTree(locationInfo.directory)
+          }
           // clear out data-location.json
           writeFile('data://', 'data-location.json', '')
-          this.dataDirectory = `Android/data/io.freetubeapp.${pkg.name}/`
+          this.dataDirectory = android.getDirectory('data://')
           showToast(this.$t('Data Settings.Your data directory has been moved successfully'))
           if (!this.shouldCopyDataFilesWhenMoving) {
             // the application must restart in order to refresh the dbs
@@ -136,20 +139,26 @@ export default defineComponent({
         const directory = await requestDirectory()
         const files = await initalizeDatabasesInDirectory(directory)
         if (files.length > 0) {
+          const locationData = readFile('data://', 'data-location.json')
+          let locationInfo = { directory: 'data://', files: [] }
+          let hasOldLocation = false
+          let locationMap = {}
+          if (locationData !== '') {
+            locationInfo = JSON.parse(locationData)
+            locationMap = Object.fromEntries(locationInfo.files.map((file) => { return [file.fileName, file.uri] }))
+            hasOldLocation = locationInfo.files.length !== 0
+          }
           if (this.shouldCopyDataFilesWhenMoving) {
-            const locationData = readFile('data://', 'data-location.json')
-            let locationInfo = { directory: 'data://', files: [] }
-            let locationMap = {}
-            if (locationData !== '') {
-              locationInfo = JSON.parse(locationData)
-              locationMap = Object.fromEntries(locationInfo.files.map((file) => { return [file.fileName, file.uri] }))
-            }
             for (let i = 0; i < files.length; i++) {
-              const data = locationInfo.files.length === 0
-                ? readFile('data://', files[i].fileName)
-                : readFile(locationMap[files[i].fileName], '')
+              const data = hasOldLocation
+                ? readFile(locationMap[files[i].fileName], '')
+                : readFile('data://', files[i].fileName)
               writeFile(files[i].uri, '', data)
             }
+          }
+          if (hasOldLocation) {
+            // 🚫 revoke permission for the old location upon move completion
+            android.revokePermissionForTree(locationInfo.directory)
           }
           // update the data files
           writeFile('data://', 'data-location.json', JSON.stringify({

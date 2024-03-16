@@ -51,7 +51,8 @@ class FreeTubeJavaScriptInterface {
    * @param directory a shortened directory uri
    * @return a full directory uri
    */
-  private fun getDirectory(directory: String): String {
+  @JavascriptInterface
+  fun getDirectory(directory: String): String {
     val path =  if (directory == DATA_DIRECTORY) {
       // this is the directory cordova gave us access to before
       context.getExternalFilesDir(null)!!.parent
@@ -484,6 +485,11 @@ class FreeTubeJavaScriptInterface {
     }
     context.activityResultLauncher.launch(openDialogIntent)
     return promise
+  }
+
+  @JavascriptInterface
+  fun revokePermissionForTree(treeUri: String) {
+    context.revokeUriPermission(Uri.parse(treeUri), Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
   }
 
   @JavascriptInterface
