@@ -40,7 +40,12 @@ export async function loadLocale(locale) {
     const url = createWebURL(`/static/locales/${locale}.json`)
     const response = await fetch(url)
     const data = await response.json()
-
+    if (process.env.IS_ANDROID) {
+      const androidUrl = createWebURL(`/static/locales-android/${locale}.json`)
+      const response = await fetch(androidUrl)
+      const androidSpecificData = await response.json()
+      Object.assign(data, androidSpecificData)
+    }
     i18n.setLocaleMessage(locale, data)
   }
 }
