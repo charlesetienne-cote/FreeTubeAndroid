@@ -7,7 +7,7 @@
       <script>
         window.ofetch = window.fetch
         window.fetch = async (...args) => {
-          if (typeof args[0] === 'string' && 'startsWith' in args[0] && args[0].startsWith('file://')) {
+          if (typeof args[0] === 'string' && args[0].startsWith('file://')) {
             // forward to xml http request
             /** @type {Response} */
             const response = await new Promise((resolve, reject) => {
