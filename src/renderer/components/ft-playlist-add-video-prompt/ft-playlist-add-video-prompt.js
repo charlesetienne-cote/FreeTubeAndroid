@@ -189,8 +189,10 @@ export default defineComponent({
     this.lastActiveElement = document.activeElement
 
     this.updateQueryDebounce = debounce(this.updateQuery, 500)
-    // User might want to search first if they have many playlists
-    this.$refs.searchBar.focus()
+    if (!process.env.IS_ANDROID) {
+      // User might want to search first if they have many playlists
+      this.$refs.searchBar.focus()
+    }
   },
   beforeDestroy() {
     this.lastActiveElement?.focus()
