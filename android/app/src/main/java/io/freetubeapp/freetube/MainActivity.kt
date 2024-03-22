@@ -88,6 +88,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     if (isColdStart) {
       val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
       wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, POWER_MANAGER_TAG)
+      wakeLock.acquire()
       /*
       commenting this out until issues with the splash screen making the app invisible can be addressed
 
@@ -285,11 +286,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   override fun onPause() {
     try {
       super.onPause()
-      paused = true
-      if (wakeLock.isHeld) {
-        wakeLock.release()
-        releasedWakeLock = true
-      }
+      wakeLock.release()
     } catch (exception: Exception) {
       consoleWarn(exception.toString())
     }
@@ -297,18 +294,9 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
 
   override fun onResume() {
     super.onResume()
-    if (paused !== false) {
-      // if paused state is false, but we are resuming, the app is starting
-      try {
-        showSplashScreen = false
-      } catch (ex: Exception) {
-        consoleWarn(ex.toString())
-      }
-    }
     paused = false
-    if (releasedWakeLock) {
+    if (wakeLock != null) {
       wakeLock.acquire()
-      releasedWakeLock = false
     }
   }
 

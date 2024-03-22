@@ -689,7 +689,6 @@ export default defineComponent({
         this.player.on('play', async () => {
           if (process.env.IS_ANDROID) {
             updateMediaSessionState(STATE_PLAYING.toString())
-            android.acquireWakelock()
           }
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'playing'
@@ -705,7 +704,6 @@ export default defineComponent({
         this.player.on('pause', () => {
           if (process.env.IS_ANDROID) {
             updateMediaSessionState(STATE_PAUSED)
-            android.releaseWakelock()
           }
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'paused'
