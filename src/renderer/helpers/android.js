@@ -100,9 +100,9 @@ export function requestOpenDialog(fileTypes) {
  * @param {string} arg1 base uri or path
  * @param {string} arg2 path or content
  * @param {string?} arg3 content or undefined
- * @returns {boolean} was able to successfully write?
+ * @returns {Promise<boolean>} was able to successfully write?
  */
-export function writeFile(arg1, arg2, arg3 = undefined) {
+export async function writeFile(arg1, arg2, arg3 = undefined) {
   let baseUri, path, content
   if (arg3 === undefined) {
     baseUri = arg1
@@ -113,17 +113,28 @@ export function writeFile(arg1, arg2, arg3 = undefined) {
     path = arg2
     content = arg3
   }
-  return android.writeFile(baseUri, path, content)
+  try {
+    await window.awaitAsyncResult(android.writeFile(baseUri, path, content))
+    return true
+  } catch (exception) {
+    console.error(exception)
+    return false
+  }
 }
 
 /**
  * a soft file read which returns '' if the file doesn't exist yet
  * @param {string} baseUri base of the uri
  * @param {string?} path (optional) path on top of base
- * @returns {string} file contents or '' if no file was found
+ * @returns {Promise<string>} file contents or '' if no file was found
  */
-export function readFile(baseUri, path = '') {
-  return android.readFile(baseUri, path)
+export async function readFile(baseUri, path = '') {
+  try {
+    return await window.awaitAsyncResult(android.readFile(baseUri, path))
+  } catch (exception) {
+    console.warn(exception)
+    return ''
+  }
 }
 
 /**

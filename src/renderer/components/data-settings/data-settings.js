@@ -37,11 +37,12 @@ export default defineComponent({
     let dataDirectory = ''
     if (process.env.IS_ANDROID) {
       dataDirectory = android.getDirectory('data://')
-      const dataLocation = readFile('data://', 'data-location.json')
-      if (dataLocation !== '') {
-        const { directory } = JSON.parse(dataLocation)
-        dataDirectory = directory
-      }
+      readFile('data://', 'data-location.json').then((dataLocation) => {
+        if (dataLocation !== '') {
+          const { directory } = JSON.parse(dataLocation)
+          this.dataDirectory = directory
+        }
+      })
     }
     return {
       showExportSubscriptionsPrompt: false,
@@ -102,7 +103,7 @@ export default defineComponent({
 
     resetDataDirectory: async function () {
       try {
-        const locationData = readFile('data://', 'data-location.json')
+        const locationData = await readFile('data://', 'data-location.json')
         let locationInfo = { directory: 'data://', files: [] }
         let locationMap = []
         if (locationData !== '') {
@@ -112,7 +113,7 @@ export default defineComponent({
         if (locationMap.length !== 0) {
           if (this.shouldCopyDataFilesWhenMoving) {
             for (const [key, value] of locationMap) {
-              writeFile('data://', key, readFile(value))
+              await writeFile('data://', key, await readFile(value))
             }
           }
           if (locationInfo.files.length !== 0) {
@@ -120,7 +121,7 @@ export default defineComponent({
             android.revokePermissionForTree(locationInfo.directory)
           }
           // clear out data-location.json
-          writeFile('data://', 'data-location.json', '')
+          await writeFile('data://', 'data-location.json', '')
           this.dataDirectory = android.getDirectory('data://')
           showToast(this.$t('Data Settings.Your data directory has been moved successfully'))
           if (!this.shouldCopyDataFilesWhenMoving) {
@@ -140,7 +141,7 @@ export default defineComponent({
         const directory = await requestDirectory()
         const files = await initalizeDatabasesInDirectory(directory)
         if (files.length > 0) {
-          const locationData = readFile('data://', 'data-location.json')
+          const locationData = await readFile('data://', 'data-location.json')
           let locationInfo = { directory: 'data://', files: [] }
           let hasOldLocation = false
           let locationMap = {}
@@ -152,9 +153,9 @@ export default defineComponent({
           if (this.shouldCopyDataFilesWhenMoving) {
             for (let i = 0; i < files.length; i++) {
               const data = hasOldLocation
-                ? readFile(locationMap[files[i].fileName], '')
-                : readFile('data://', files[i].fileName)
-              writeFile(files[i].uri, '', data)
+                ? await readFile(locationMap[files[i].fileName], '')
+                : await readFile('data://', files[i].fileName)
+              await writeFile(files[i].uri, '', data)
             }
           }
           if (hasOldLocation) {
@@ -162,7 +163,7 @@ export default defineComponent({
             android.revokePermissionForTree(locationInfo.directory)
           }
           // update the data files
-          writeFile('data://', 'data-location.json', JSON.stringify({
+          await writeFile('data://', 'data-location.json', JSON.stringify({
             directory: directory.uri,
             files
           }))

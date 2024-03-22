@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
@@ -25,7 +26,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import io.freetubeapp.freetube.databinding.ActivityMainBinding
 import java.net.URLEncoder
+import java.util.Base64
 import java.util.UUID.randomUUID
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
@@ -51,6 +57,31 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   companion object {
     val POWER_MANAGER_TAG: String = "${randomUUID()}"
   }
+
+  /*
+   * Gets the number of available cores
+   * (not always the same as the maximum number of cores)
+   */
+  private val NUMBER_OF_CORES = Runtime.getRuntime().availableProcessors()
+
+  // Instantiates the queue of Runnables as a LinkedBlockingQueue
+  private val workQueue: BlockingQueue<Runnable> = LinkedBlockingQueue()
+
+  // Sets the amount of time an idle thread waits before terminating
+  private val KEEP_ALIVE_TIME = 1
+
+  // Sets the Time Unit to seconds
+  private val KEEP_ALIVE_TIME_UNIT: TimeUnit = TimeUnit.SECONDS
+
+  // Creates a thread pool manager
+  var threadPoolExecutor = ThreadPoolExecutor(
+    NUMBER_OF_CORES,  // Initial pool size
+    NUMBER_OF_CORES,  // Max pool size
+    KEEP_ALIVE_TIME.toLong(),
+    KEEP_ALIVE_TIME_UNIT,
+    workQueue
+  )
+
   @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -165,50 +196,6 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
           this@MainActivity.startActivity(intent)
           return true
         }
-        override fun onPageFinished(view: WebView?, url: String?) {
-          webView.loadUrl(
-            "javascript: window.mediaSessionListeners = window.mediaSessionListeners || {};" +
-              "window.addMediaSessionEventListener = function (eventName, listener) {" +
-              "  if (!(eventName in window.mediaSessionListeners)) {" +
-              "    window.mediaSessionListeners[eventName] = [];" +
-              "  }" +
-              "  window.mediaSessionListeners[eventName].push(listener);" +
-              "};" +
-              "window.notifyMediaSessionListeners = function (eventName, ...message) {" +
-              "if ((eventName in window.mediaSessionListeners)) {" +
-              "    window.mediaSessionListeners[eventName].forEach(listener => listener(...message));" +
-              "  }" +
-              "};" +
-              "window.clearAllMediaSessionEventListeners = function () {" +
-              "    window.mediaSessionListeners = {}" +
-              "};" +
-              "window.awaitAsyncResult = function (id) {" +
-              "    return new Promise((resolve, reject) => {" +
-              "        const interval = setInterval(async () => {" +
-              "            if (id in window) {" +
-              "                clearInterval(interval);" +
-              "                try {" +
-              "                    const result = await window[id].promise;" +
-              "                    resolve(result)" +
-              "                } catch (ex) {" +
-              "                    reject(ex)" +
-              "                }" +
-              "            }" +
-              "        }, 1)" +
-              "    }) " +
-              "};" +
-              "window.youtubeLinkHandlers = window.youtubeLinkHandlers || [];" +
-              "window.addYoutubeLinkHandler = function (handler) {" +
-              "  const i = window.youtubeLinkHandlers.length;" +
-              "  window.youtubeLinkHandlers.push(handler);" +
-              "  return i" +
-              "};" +
-              "window.notifyYoutubeLinkHandlers = function (message) {" +
-              "  window.youtubeLinkHandlers.forEach((handler) => handler(message))" +
-              "}"
-          )
-          super.onPageFinished(view, url)
-        }
       }
       if (intent!!.data !== null) {
         val url = intent!!.data.toString()
@@ -236,13 +223,34 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   }
 
   fun consoleError(message: String) {
-    val messageEncoded = URLEncoder.encode(message, "utf-8")
-    webView.loadUrl("javascript: console.error(decodeURIComponent(\"${messageEncoded}\"))")
+    consoleLog(message, "error")
   }
 
   fun consoleWarn(message: String) {
-    val messageEncoded = URLEncoder.encode(message, "utf-8")
-    webView.loadUrl("javascript: console.warn(decodeURIComponent(\"$messageEncoded\"))")
+    consoleLog(message, "warn")
+  }
+
+  /**
+   * @param message the message to log
+   * @param level used in js as "console.$level" (ex: log, warn, error)
+   */
+  fun consoleLog(message: String, level: String = "log") {
+    webView.post {
+      webView.loadUrl("javascript: console.$level(${btoa(message)})")
+    }
+  }
+
+  /**
+   * encodes a string message for transport across the java bridge
+   * @param message the message to be encoded
+   */
+  fun btoa(message: String): String {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      val encoder = Base64.getEncoder()
+      "atob(\"${encoder.encodeToString(message.encodeToByteArray())}\")"
+    } else {
+      "`${message}`"
+    }
   }
 
   override fun onRequestPermissionsResult(

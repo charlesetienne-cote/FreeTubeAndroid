@@ -22,7 +22,6 @@ import androidx.documentfile.provider.DocumentFile
 import java.io.File
 import java.io.FileInputStream
 import java.net.URL
-import java.net.URLEncoder
 import java.util.UUID.*
 
 
@@ -32,6 +31,7 @@ class FreeTubeJavaScriptInterface {
   private var lastPosition: Long
   private var lastState: Int
   private var lastNotification: Notification? = null
+  var syncMessages: MutableMap<String, String> = HashMap()
 
   companion object {
     private const val DATA_DIRECTORY = "data://"
@@ -369,45 +369,55 @@ class FreeTubeJavaScriptInterface {
    */
   @JavascriptInterface
   fun readFile(basedir: String, filename: String): String {
-    try {
-      if (basedir.startsWith("content://")) {
-        val stream = context.contentResolver.openInputStream(Uri.parse(basedir))
-        val content = String(stream!!.readBytes())
-        stream!!.close()
-        return content
+    val promise = jsPromise()
+    context.threadPoolExecutor.execute {
+      try {
+        if (basedir.startsWith("content://")) {
+          val stream = context.contentResolver.openInputStream(Uri.parse(basedir))
+          val content = String(stream!!.readBytes())
+          stream!!.close()
+          resolve(promise, content)
+        } else {
+          val path = getDirectory(basedir)
+          val file = File(path, filename)
+          resolve(promise, FileInputStream(file).bufferedReader().use { it.readText() })
+        }
+      } catch (ex: Exception) {
+        reject(promise, ex.stackTraceToString())
       }
-      val path = getDirectory(basedir)
-      val file = File(path, filename)
-      return FileInputStream(file).bufferedReader().use { it.readText() }
-    } catch (ex: Exception) {
-      return ""
     }
+    return promise
   }
 
   /**
    * writes a file to storage
    */
   @JavascriptInterface
-  fun writeFile(basedir: String, filename: String, content: String): Boolean {
-    try {
-      if (basedir.startsWith("content://")) {
-        // urls created by save dialog
-        val stream = context.contentResolver.openOutputStream(Uri.parse(basedir), "wt")
-        stream!!.write(content.toByteArray())
-        stream!!.flush()
-        stream!!.close()
-        return true
+  fun writeFile(basedir: String, filename: String, content: String): String {
+    val promise = jsPromise()
+    context.threadPoolExecutor.execute {
+      try {
+        if (basedir.startsWith("content://")) {
+          // urls created by save dialog
+          val stream = context.contentResolver.openOutputStream(Uri.parse(basedir), "wt")
+          stream!!.write(content.toByteArray())
+          stream!!.flush()
+          stream!!.close()
+          resolve(promise, "true")
+        } else {
+          val path = getDirectory(basedir)
+          var file = File(path, filename)
+          if (!file.exists()) {
+            file.createNewFile()
+          }
+          file.writeText(content)
+          resolve(promise, "true")
+        }
+      } catch (ex: Exception) {
+        reject(promise, ex.stackTraceToString())
       }
-      val path = getDirectory(basedir)
-      var file = File(path, filename)
-      if (!file.exists()) {
-        file.createNewFile()
-      }
-      file.writeText(content)
-      return true
-    } catch (ex: Exception) {
-      return false
     }
+    return promise
   }
 
   /**
@@ -430,7 +440,7 @@ class FreeTubeJavaScriptInterface {
         val uri = result!!.data!!.data
         var stringUri =  uri.toString()
         // something about the java bridge url decodes all strings, so I am going to double encode this one
-        resolve(promise, "{ \"uri\": \"${URLEncoder.encode(stringUri, "utf-8")}\" }")
+        resolve(promise, "{ \"uri\": \"${stringUri}\" }")
       } catch (ex: Exception) {
         reject(promise, ex.toString())
       }
@@ -454,7 +464,7 @@ class FreeTubeJavaScriptInterface {
         val uri = result!!.data!!.data
         var mimeType = context.contentResolver.getType(uri!!)
 
-        resolve(promise, "{ \"uri\": \"${URLEncoder.encode(uri.toString(), "utf-8")}\", \"type\": \"${mimeType}\" }")
+        resolve(promise, "{ \"uri\": \"${uri}\", \"type\": \"${mimeType}\" }")
       } catch (ex: Exception) {
         reject(promise, ex.toString())
       }
@@ -478,7 +488,7 @@ class FreeTubeJavaScriptInterface {
           uri,
           Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         )
-        resolve(promise, URLEncoder.encode(uri.toString(), "utf-8"))
+        resolve(promise, uri.toString())
       } catch (ex: Exception) {
         reject(promise, ex.toString())
       }
@@ -532,9 +542,7 @@ class FreeTubeJavaScriptInterface {
       // prevent wakelock from coming back if the app is resumed after this is called
       context.releasedWakeLock = false
     } catch (exception: Exception) {
-      context.runOnUiThread {
-        context.consoleWarn(exception.toString())
-      }
+      context.consoleWarn(exception.stackTraceToString())
     }
   }
 
@@ -546,12 +554,19 @@ class FreeTubeJavaScriptInterface {
       .setClass(context,  MainActivity::class.java))
   }
 
+  @JavascriptInterface
+  fun getSyncMessage(promise: String): String {
+    val value = syncMessages[promise]
+    syncMessages.remove(promise)
+    return value!!
+  }
+
   /**
    * @return the id of a promise on the window
    */
   private fun jsPromise(): String {
     val id = "${randomUUID()}"
-    context.runOnUiThread {
+    context.webView.post {
       context.webView.loadUrl("javascript: window['${id}'] = {}; window['${id}'].promise = new Promise((resolve, reject) => { window['${id}'].resolve = resolve; window['${id}'].reject = reject })")
     }
     return id
@@ -561,13 +576,19 @@ class FreeTubeJavaScriptInterface {
    * resolves a js promise given the id
    */
   private fun resolve(id: String, message: String) {
-    context.webView.loadUrl("javascript: window['${id}'].resolve(`${message}`)")
+    context.webView.post {
+      syncMessages[id] = message
+      context.webView.loadUrl("javascript: window['${id}'].resolve()")
+    }
   }
 
   /**
    * rejects a js promise given the id
    */
   private fun reject(id: String, message: String) {
-    context.webView.loadUrl("javascript: window['${id}'].reject(new Error(\"${message}\"))")
+    context.webView.post {
+      syncMessages[id] = message
+      context.webView.loadUrl("javascript: window['${id}'].reject(new Error())")
+    }
   }
 }
