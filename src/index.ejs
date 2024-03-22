@@ -41,12 +41,15 @@
         window.clearAllMediaSessionEventListeners = function () {
           window.mediaSessionListeners = {}
         }
-        window.awaitAsyncResult = function (id) {
+        window.awaitAsyncResult = function (id, callbacks = {}) {
           return new Promise((resolve, reject) => {
             const interval = setInterval(async () => {
               if (id in window) {
                 clearInterval(interval)
                 try {
+                  if ('callbacks' in window[id]) {
+                    Object.assign(window[id].callbacks, callbacks)
+                  }
                   const result = await window[id].promise
                   resolve(Android.getSyncMessage(id))
                 } catch (ex) {

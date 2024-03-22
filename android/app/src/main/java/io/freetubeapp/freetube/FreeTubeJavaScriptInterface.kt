@@ -578,6 +578,15 @@ class FreeTubeJavaScriptInterface {
     syncMessages.remove(promise)
     return value!!
   }
+  private fun addNamedCallbackToPromise(promise: String, name: String) {
+    context.runOnUiThread {
+      context.webView.loadUrl("javascript: window['${promise}'].callbacks = window['${promise}'].callbacks || {};  window['${promise}'].callbacks.notify = (key, message) => window['${promise}'].callbacks[key].forEach(callback => callback(message)); window['${promise}'].callbacks['${name}'] = window['${promise}'].callbacks['${name}'] || []")
+    }
+  }
+
+  private fun notifyNamedCallback(promise: String, name: String, message: String) {
+    context.webView.loadUrl("javascript: window['${promise}'].callbacks.notify(${context.btoa(name)}, ${context.btoa(message)})")
+  }
 
   /**
    * @return the id of a promise on the window
