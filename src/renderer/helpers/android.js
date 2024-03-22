@@ -217,8 +217,14 @@ export function handleAmbigiousContent(content, filePath) {
  */
 
 /**
+ * @callback CreateDirectory
+ * @param {string} directory name
+ * @returns {DirectoryHandle} handle to directory
+ */
+
+/**
  * @callback ListFiles
- * @returns {Array<AndroidFile>}
+ * @returns {Array<AndroidFile|DirectoryHandle>}
  */
 
 /**
@@ -226,6 +232,7 @@ export function handleAmbigiousContent(content, filePath) {
  * @property {boolean} canceled
  * @property {string?} uri
  * @property {CreateFile} createFile
+ * @property {CreateDirectory} createDirectory
  * @property {ListFiles} listFiles
  */
 
@@ -240,15 +247,32 @@ export async function requestDirectory() {
       canceled: true
     }
   } else {
-    return {
-      uri,
-      canceled: false,
-      createFile(fileName) {
-        return android.createFileInTree(uri, fileName)
-      },
-      listFiles() {
-        return JSON.parse(android.listFilesInTree(uri))
-      }
+    return restoreHandleFromDirectoryUri(uri)
+  }
+}
+
+/**
+ *
+ * @returns {Promise<DirectoryHandle>}
+ */
+export function restoreHandleFromDirectoryUri(uri) {
+  return {
+    uri,
+    canceled: false,
+    createFile(fileName) {
+      return android.createFileInTree(uri, fileName)
+    },
+    createDirectory(dirName) {
+      return restoreHandleFromDirectoryUri(android.createDirectoryInTree(uri, dirName))
+    },
+    listFiles() {
+      const files = JSON.parse(android.listFilesInTree(uri)).map((file) => {
+        if (file.isDirectory) {
+          Object.assign(file, restoreHandleFromDirectoryUri(file.uri))
+        }
+        return file
+      })
+      return files
     }
   }
 }
