@@ -441,7 +441,7 @@ class FreeTubeJavaScriptInterface {
         val uri = result!!.data!!.data
         var stringUri =  uri.toString()
         // something about the java bridge url decodes all strings, so I am going to double encode this one
-        resolve(promise, "{ \"uri\": \"$stringUri}\" }")
+        resolve(promise, "{ \"uri\": \"$stringUri\" }")
       } catch (ex: Exception) {
         reject(promise, ex.toString())
       }
