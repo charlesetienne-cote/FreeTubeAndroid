@@ -742,7 +742,7 @@ export function parseLocalListVideo(item) {
 
     let publishedText
 
-    if (!video.published?.isEmpty()) {
+    if (video.published != null && !video.published.isEmpty()) {
       publishedText = video.published.text
     }
 
@@ -838,7 +838,7 @@ function parseListItem(item) {
 export function parseLocalWatchNextVideo(video) {
   let publishedText
 
-  if (!video.published?.isEmpty()) {
+  if (video.published != null && !video.published.isEmpty()) {
     publishedText = video.published.text
   }
 
