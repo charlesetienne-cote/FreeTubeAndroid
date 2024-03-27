@@ -336,6 +336,7 @@ export default defineComponent({
         })
         this.previousHistoryOffset++
       })
+      window.addEventListener('app-resume', this.handleResume)
     }
     this.videoId = this.$route.params.id
     this.activeFormat = this.defaultVideoFormat
@@ -346,9 +347,17 @@ export default defineComponent({
     if (process.env.IS_ANDROID) {
       window.clearAllMediaSessionEventListeners()
       android.cancelMediaNotification()
+      window.removeEventListener('app-resume', this.handleResume)
     }
   },
   methods: {
+    async handleResume() {
+      if (document.hidden) {
+        // if the document is still hidden while we are resuming
+        await this.$refs.videoPlayer.$refs.video.requestFullscreen()
+        await document.exitFullscreen()
+      }
+    },
     onMountedDependOnLocalStateLoading() {
       // Prevent running twice
       if (this.onMountedRun) { return }

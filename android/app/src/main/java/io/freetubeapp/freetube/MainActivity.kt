@@ -10,6 +10,7 @@ import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -89,8 +90,6 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
       val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
       wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, POWER_MANAGER_TAG)
       wakeLock.acquire()
-      /*
-      commenting this out until issues with the splash screen making the app invisible can be addressed
 
       content = findViewById(android.R.id.content)
       content.viewTreeObserver.addOnPreDrawListener(
@@ -107,7 +106,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
             }
           }
         }
-      )*/
+      )
       activityResultListeners = mutableListOf()
 
       activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -170,6 +169,8 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
           this@MainActivity.binding.root.addView(view)
           webView.visibility = View.GONE
           this@MainActivity.binding.root.fitsSystemWindows = false
+
+          webView.loadUrl("javascript: window.dispatchEvent(new Event(\"start-fullscreen\"))")
         }
 
         override fun onHideCustomView() {
@@ -178,6 +179,8 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
           fullscreenView = null
           windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
           this@MainActivity.binding.root.fitsSystemWindows = true
+
+          webView.loadUrl("javascript: window.dispatchEvent(new Event(\"end-fullscreen\"))")
         }
       }
       webView.webViewClient = object: WebViewClient() {
@@ -286,6 +289,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   override fun onPause() {
     try {
       super.onPause()
+      webView.loadUrl("javascript: window.dispatchEvent(new Event(\"app-pause\"))")
       wakeLock.release()
     } catch (exception: Exception) {
       consoleWarn(exception.toString())
@@ -295,6 +299,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   override fun onResume() {
     super.onResume()
     paused = false
+    webView.loadUrl("javascript: window.dispatchEvent(new Event(\"app-resume\"))")
     if (wakeLock != null) {
       wakeLock.acquire()
     }
