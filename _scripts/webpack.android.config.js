@@ -197,11 +197,11 @@ config.plugins.push(
       patterns: [
         {
           from: path.join(__dirname, '../static/pwabuilder-sw.js'),
-          to: path.join(__dirname, '../dist/web/pwabuilder-sw.js'),
+          to: path.join(__dirname, '../android/app/src/main/assets/pwabuilder-sw.js'),
         },
         {
           from: path.join(__dirname, '../static'),
-          to: path.join(__dirname, '../dist/web/static'),
+          to: path.join(__dirname, '../android/app/src/main/assets/static'),
           globOptions: {
             dot: true,
             ignore: ['**/.*', '**/locales/**', '**/locales-android/**', '**/pwabuilder-sw.js', '**/dashFiles/**', '**/storyboards/**'],
