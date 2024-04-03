@@ -3,6 +3,7 @@ package io.freetubeapp.freetube
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -107,6 +108,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
           }
         }
       )
+
       activityResultListeners = mutableListOf()
 
       activityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -121,6 +123,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
           action ->
         webView.loadUrl(String.format("javascript: window.notifyMediaSessionListeners('%s')", action))
       }
+
       // this keeps android from shutting off the app to conserve battery
       keepAliveService = KeepAliveService()
       keepAliveIntent = Intent(this, keepAliveService.javaClass)
@@ -254,6 +257,22 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
       "atob(\"${encoder.encodeToString(message.encodeToByteArray())}\")"
     } else {
       "`${message}`"
+    }
+  }
+
+  override fun onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+    when (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+      Configuration.UI_MODE_NIGHT_NO -> {
+        webView.post {
+          webView.loadUrl("javascript: window.dispatchEvent(new Event(\"enabled-light-mode\"))")
+        }
+      }
+      Configuration.UI_MODE_NIGHT_YES -> {
+        webView.post {
+          webView.loadUrl("javascript: window.dispatchEvent(new Event(\"enabled-dark-mode\"))")
+        }
+      }
     }
   }
 

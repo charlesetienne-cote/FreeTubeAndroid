@@ -196,6 +196,12 @@ export default defineComponent({
           }
           // hides the splash screen
           android.hideSplashScreen()
+          window.addEventListener('enabled-light-mode', () => {
+            document.body.dataset.systemTheme = 'light'
+          })
+          window.addEventListener('enabled-dark-mode', () => {
+            document.body.dataset.systemTheme = 'dark'
+          })
         }
 
         this.dataReady = true
