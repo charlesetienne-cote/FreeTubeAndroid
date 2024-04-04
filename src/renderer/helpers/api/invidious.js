@@ -9,13 +9,15 @@ function getCurrentInstance() {
 }
 
 export function getProxyUrl(uri) {
+  const currentInstance = getCurrentInstance()
+
   const url = new URL(uri)
   const { origin } = url
-  if (!url.searchParams.has('host') && origin !== getCurrentInstance()) {
+  if (!url.searchParams.has('host') && origin !== currentInstance) {
     // invidious requires host param to be filled with the origin of the stream
     url.searchParams.append('host', origin.replace('https://', ''))
   }
-  return url.toString().replace(origin, getCurrentInstance())
+  return url.toString().replace(origin, currentInstance)
 }
 
 export function invidiousAPICall({ resource, id = '', params = {}, doLogError = true, subResource = '' }) {
@@ -326,7 +328,7 @@ export function filterInvidiousFormats(formats, allowAv1 = false) {
   // As we generate our own DASH manifest (using YouTube.js) for multiple audio track support in Electron,
   // we can allow AV1 in that situation. If we aren't in electron,
   // we still can't use them until Invidious fixes the issue on their side
-  if (process.env.IS_ELECTRON && allowAv1 && av1Formats.length > 0) {
+  if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && allowAv1 && av1Formats.length > 0) {
     return [...audioFormats, ...av1Formats]
   }
 
@@ -349,9 +351,8 @@ export async function getHashtagInvidious(hashtag, page) {
  * Generates a DASH manifest locally from Invidious' adaptive formats and manifest,
  * doing so allows us to support multiple audio tracks, which Invidious doesn't support yet
  * @param {import('youtubei.js').Misc.Format[]} formats
- * @param {string=} invidiousInstance the formats will be proxied through the specified instance, when one is provided
  */
-export async function generateInvidiousDashManifestLocally(formats, invidiousInstance) {
+export async function generateInvidiousDashManifestLocally(formats) {
   // create a dummy player, as deciphering requires making requests to YouTube,
   // which we want to avoid when Invidious is selected as the backend
   const player = new Player()
@@ -359,12 +360,12 @@ export async function generateInvidiousDashManifestLocally(formats, invidiousIns
 
   let urlTransformer
 
-  if (invidiousInstance) {
+  if (store.getters.getProxyVideos) {
     /**
      * @param {URL} url
      */
     urlTransformer = (url) => {
-      return new URL(url.toString().replace(url.origin, invidiousInstance))
+      return new URL(getProxyUrl(url.toString()))
     }
   }
 

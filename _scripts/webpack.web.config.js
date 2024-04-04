@@ -11,6 +11,8 @@ const ProcessLocalesPlugin = require('./ProcessLocalesPlugin')
 
 const isDevMode = process.env.NODE_ENV === 'development'
 
+const { version: swiperVersion } = JSON.parse(fs.readFileSync(path.join(__dirname, '../node_modules/swiper/package.json')))
+
 const config = {
   name: 'web',
   mode: process.env.NODE_ENV,
@@ -23,12 +25,10 @@ const config = {
     filename: '[name].js',
   },
   externals: {
-      electron: '{}',
-      cordova: '{}',
-      'music-controls': '{}',
-      'youtubei.js': '{}',
-      'universal-links': '{}'
-    },
+    electron: '{}',
+    android: '{}',
+    'youtubei.js': '{}'
+  },
   module: {
     rules: [
       {
@@ -116,9 +116,9 @@ const config = {
   plugins: [
     new webpack.DefinePlugin({
       'process.env.IS_ELECTRON': false,
-      'process.env.IS_CORDOVA': false,
       'process.env.IS_ELECTRON_MAIN': false,
-
+      'process.env.SWIPER_VERSION': `'${swiperVersion}'`,
+      'process.env.IS_ANDROID': false,
       // video.js' vhs-utils supports both atob() in web browsers and Buffer in node
       // As the FreeTube web build only runs in web browsers, we can override their check for atob() here: https://github.com/videojs/vhs-utils/blob/main/src/decode-b64-to-uint8-array.js#L3
       // overriding that check means we don't need to include a Buffer polyfill
@@ -137,13 +137,24 @@ const config = {
     new HtmlWebpackPlugin({
       excludeChunks: ['processTaskWorker'],
       filename: 'index.html',
-      template: path.resolve(__dirname, '../src/index.ejs'),
-      nodeModules: false,
+      template: path.resolve(__dirname, '../src/index.ejs')
     }),
     new VueLoaderPlugin(),
     new MiniCssExtractPlugin({
       filename: isDevMode ? '[name].css' : '[name].[contenthash].css',
       chunkFilename: isDevMode ? '[id].css' : '[id].[contenthash].css',
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.join(__dirname, '../node_modules/swiper/modules/{a11y,navigation,pagination}-element.css').replaceAll('\\', '/'),
+          to: 'swiper.css',
+          context: path.join(__dirname, '../node_modules/swiper/modules'),
+          transformAll: (assets) => {
+            return Buffer.concat(assets.map(asset => asset.data))
+          }
+        }
+      ]
     })
   ],
   resolve: {

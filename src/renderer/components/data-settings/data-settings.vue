@@ -2,24 +2,51 @@
   <ft-settings-section
     :title="$t('Settings.Data Settings.Data Settings')"
   >
-    <ft-flex-box>
+    <template v-if="usingAndroid">
+      <h4 class="groupTitle data-directory-heading">
+        {{ $t('Data Settings.Data Directory') }}
+      </h4>
+      <ft-flex-box class="dataSettingsBox">
+        <ft-button
+          :label="$t('Data Settings.Select Data Directory')"
+          @click="selectDataDirectory"
+        />
+        <ft-button
+          :label="$t('Data Settings.Reset Data Directory')"
+          @click="resetDataDirectory"
+        />
+        <ft-toggle-switch
+          :label="$t('Data Settings.Copy Data Files When Moving')"
+          :compact="true"
+          :default-value="shouldCopyDataFilesWhenMoving"
+          :tooltip="$t('Data Settings.Copy Data Files When Moving Tooltip')"
+          @change="shouldCopyDataFilesWhenMoving = !shouldCopyDataFilesWhenMoving"
+        />
+      </ft-flex-box>
+      <ft-flex-box>
+        <p>
+          {{ $t("Data Settings.Data Is Currently Stored In") }}:
+        </p>
+        <p class="data-directory">
+          {{ dataDirectory }}
+        </p>
+      </ft-flex-box>
+    </template>
+    <h4 class="groupTitle">
+      {{ $t('Subscriptions.Subscriptions') }}
+    </h4>
+    <ft-flex-box class="dataSettingsBox">
       <ft-button
         :label="$t('Settings.Data Settings.Import Subscriptions')"
         @click="importSubscriptions"
       />
       <ft-button
+        :label="$t('Settings.Data Settings.Manage Subscriptions')"
+        @click="openProfileSettings"
+      />
+      <ft-button
         :label="$t('Settings.Data Settings.Export Subscriptions')"
         @click="showExportSubscriptionsPrompt = true"
-      />
-    </ft-flex-box>
-    <ft-flex-box>
-      <ft-button
-        :label="$t('Settings.Data Settings.Import History')"
-        @click="importHistory"
-      />
-      <ft-button
-        :label="$t('Settings.Data Settings.Export History')"
-        @click="exportHistory"
       />
     </ft-flex-box>
     <ft-flex-box>
@@ -29,20 +56,40 @@
         </a>
       </p>
     </ft-flex-box>
-    <ft-flex-box>
+    <h4 class="groupTitle">
+      {{ $t('History.History') }}
+    </h4>
+    <ft-flex-box class="dataSettingsBox">
       <ft-button
-        :label="$t('Settings.Data Settings.Manage Subscriptions')"
-        @click="openProfileSettings"
+        :label="$t('Settings.Data Settings.Import History')"
+        @click="importHistory"
+      />
+      <ft-button
+        :label="$t('Settings.Data Settings.Export History')"
+        @click="exportHistory"
       />
     </ft-flex-box>
-    <ft-flex-box>
+    <h4 class="groupTitle">
+      {{ $t('Playlists') }}
+    </h4>
+    <ft-flex-box class="dataSettingsBox">
       <ft-button
         :label="$t('Settings.Data Settings.Import Playlists')"
         @click="importPlaylists"
       />
       <ft-button
         :label="$t('Settings.Data Settings.Export Playlists')"
-        @click="exportPlaylists"
+        @click="exportPlaylistsForOlderVersionsSometimes"
+      />
+    </ft-flex-box>
+    <ft-flex-box>
+      <ft-toggle-switch
+        :label="$t('Settings.Data Settings.Export Playlists For Older FreeTube Versions.Label')"
+        :compact="true"
+        :default-value="shouldExportPlaylistForOlderVersions"
+        :tooltip="$t('Settings.Data Settings.Export Playlists For Older FreeTube Versions.Tooltip')"
+        :tooltip-allow-newlines="true"
+        @change="shouldExportPlaylistForOlderVersions = !shouldExportPlaylistForOlderVersions"
       />
     </ft-flex-box>
     <ft-prompt
@@ -57,3 +104,4 @@
 </template>
 
 <script src="./data-settings.js" />
+<style scoped src="./data-settings.css" />

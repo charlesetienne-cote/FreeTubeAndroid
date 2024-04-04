@@ -4,7 +4,6 @@ import SubscriptionsTabUI from '../subscriptions-tab-ui/subscriptions-tab-ui.vue
 
 import { parseYouTubeRSSFeed, updateVideoListAfterProcessing } from '../../helpers/subscriptions'
 import { copyToClipboard, showToast } from '../../helpers/utils'
-import { cordovaFetch } from '../../helpers/api/local'
 
 export default defineComponent({
   name: 'SubscriptionsShorts',
@@ -115,12 +114,16 @@ export default defineComponent({
       this.attemptedFetch = true
 
       this.errorChannels = []
+      const subscriptionUpdates = []
+
       const videoListFromRemote = (await Promise.all(channelsToLoadFromRemote.map(async (channel) => {
         let videos = []
-        if ((!process.env.IS_CORDOVA && !process.env.IS_ELECTRON) || this.backendPreference === 'invidious') {
-          videos = await this.getChannelShortsInvidious(channel)
+        let name
+
+        if (!(process.env.IS_ELECTRON || process.env.IS_ANDROID) || this.backendPreference === 'invidious') {
+          ({ videos, name } = await this.getChannelShortsInvidious(channel))
         } else {
-          videos = await this.getChannelShortsLocal(channel)
+          ({ videos, name } = await this.getChannelShortsLocal(channel))
         }
 
         channelCount++
@@ -130,6 +133,14 @@ export default defineComponent({
           channelId: channel.id,
           videos: videos,
         })
+
+        if (name) {
+          subscriptionUpdates.push({
+            channelId: channel.id,
+            channelName: name
+          })
+        }
+
         return videos
       }))).flatMap((o) => o)
       videoList.push(...videoListFromRemote)
@@ -137,6 +148,8 @@ export default defineComponent({
       this.videoList = updateVideoListAfterProcessing(videoList)
       this.isLoading = false
       this.updateShowProgressBar(false)
+
+      this.batchUpdateSubscriptionDetails(subscriptionUpdates)
     },
 
     maybeLoadVideosForSubscriptionsFromRemote: async function () {
@@ -155,7 +168,7 @@ export default defineComponent({
       const feedUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`
 
       try {
-        const response = await (process.env.IS_CORDOVA ? cordovaFetch : fetch)(feedUrl)
+        const response = await fetch(feedUrl)
 
         if (response.status === 404) {
           // playlists don't exist if the channel was terminated but also if it doesn't have the tab,
@@ -169,7 +182,9 @@ export default defineComponent({
             this.errorChannels.push(channel)
           }
 
-          return []
+          return {
+            videos: []
+          }
         }
 
         return await parseYouTubeRSSFeed(await response.text(), channel.id)
@@ -185,10 +200,14 @@ export default defineComponent({
               showToast(this.$t('Falling back to Invidious API'))
               return this.getChannelShortsInvidious(channel, failedAttempts + 1)
             } else {
-              return []
+              return {
+                videos: []
+              }
             }
           default:
-            return []
+            return {
+              videos: []
+            }
         }
       }
     },
@@ -198,10 +217,9 @@ export default defineComponent({
       const feedUrl = `${this.currentInvidiousInstance}/feed/playlist/${playlistId}`
 
       try {
-        const fetchF = process.env.IS_CORDOVA ? cordovaFetch : fetch
-        const response = await fetchF(feedUrl)
+        const response = await fetch(feedUrl)
 
-        if (response.status === 500) {
+        if (response.status === 500 || response.status === 404) {
           return []
         }
 
@@ -214,19 +232,24 @@ export default defineComponent({
         })
         switch (failedAttempts) {
           case 0:
-            if ((process.env.IS_CORDOVA || process.env.IS_ELECTRON) && this.backendFallback) {
-              showToast(this.$t('Falling back to the local API'))
+            if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendFallback) {
+              showToast(this.$t('Falling back to Local API'))
               return this.getChannelShortsLocal(channel, failedAttempts + 1)
             } else {
-              return []
+              return {
+                videos: []
+              }
             }
           default:
-            return []
+            return {
+              videos: []
+            }
         }
       }
     },
 
     ...mapActions([
+      'batchUpdateSubscriptionDetails',
       'updateShowProgressBar',
       'updateSubscriptionShortsCacheByChannel',
     ]),

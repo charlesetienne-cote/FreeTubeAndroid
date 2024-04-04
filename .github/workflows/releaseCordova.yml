@@ -17,7 +17,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 16.x
+        node-version: 18.x
         cache: "yarn"
     - name: 🧶 Yarn install
       run: yarn ci
@@ -88,16 +88,15 @@ jobs:
         name: freetube-${{ steps.versionNumber.outputs.result }}-PWA
         path: dist/web
 
-    - name: 🚧 Setup Android SDK Tools
-      uses: android-actions/setup-android@v2.0.9
+    - name: 🔨 Setup Zip Action
+      uses: montudor/action-zip@v1.0.0
 
-    - name: ⬇ Download dependency `cordova-plugin-run-in-background`
-      run: |
-        git clone https://bitbucket.org/TheBosZ/cordova-plugin-run-in-background.git
-        sed -i 's@git+https://bitbucket.org/TheBosZ/cordova-plugin-run-in-background.git@../../cordova-plugin-run-in-background@g' ./src/cordova/package.js
+    - name: 🤐 Zip output
+      run: zip -qq -r freetube-${{ steps.versionNumber.outputs.result }}.zip *
+      working-directory: dist/web/
 
     - name: 📦 Pack for 📱Android with Node.js & Cordova
-      run: yarn pack:cordova
+      run: yarn pack:android
 
     - name: 🦴 Fetch keystore from secrets
       run: |
@@ -107,21 +106,42 @@ jobs:
          done <<< '${{ secrets.KEYSTORE }}'
          gpg -d --passphrase '${{ secrets.KEYSTORE_PASSWORD }}' --batch freetube.keystore.asc >> freetube.keystore
 
-    - name: 👷‍♀️ Build APK with Cordova with Node.js
-      run: yarn build:cordova freetube-${{ steps.versionNumber.outputs.result }}.apk ./freetube.keystore ${{ secrets.KEYSTORE_PASSWORD }}
+    - name: Inject signing config from secrets
+      run: |
+        sed -i 's@// inject signing config@// inject signing config\r\nstorePassword = "${{ secrets.KEYSTORE_PASSWORD }}"@' android/app/build.gradle.kts
+        sed -i 's@// inject signing config@// inject signing config\r\nstoreFile = file("../../freetube.keystore")@' android/app/build.gradle.kts
+        sed -i 's@// inject signing config@// inject signing config\r\nkeyPassword = "${{ secrets.KEYSTORE_PASSWORD }}"@' android/app/build.gradle.kts
+        sed -i 's@// inject signing config@keyAlias = "freetubecordova"@' android/app/build.gradle.kts
+        cat android/app/build.gradle.kts
 
-    - name: 📡 Upload Cordova APK Artifact
+    - name: Update name
+      run: |
+        sed -i 's/"FreeTube Android"/"FreeTube"/g' android/settings.gradle.kts
+        sed -i 's/FreeTube Android/FreeTube/g' android/app/src/main/res/values/strings.xml
+
+
+    - name: set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: cd android/ && chmod +x gradlew
+
+    - name: Build with Gradle
+      run: cd android/ && ./gradlew assembleRelease
+
+    - name: Rename APK w/ version info
+      run: |
+        cp android/app/build/outputs/apk/release/app-release.apk dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
+
+    - name: 📡 Upload APK Artifact
       uses: actions/upload-artifact@v3
       with:
         name: freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
-        path: dist/freetube-${{ steps.versionNumber.outputs.result }}.apk
-
-    - name: 🔨 Setup Zip Action
-      uses: montudor/action-zip@v1.0.0
-
-    - name: 🤐 Zip output
-      run: zip -qq -r freetube-${{ steps.versionNumber.outputs.result }}.zip *
-      working-directory: dist/web/
+        path: dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
 
     - name: Create release body
       run: |
@@ -156,6 +176,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist/freetube-${{ steps.versionNumber.outputs.result }}.apk
-        asset_name: freetube-${{ steps.versionNumber.outputs.result }}-android.apk
+        asset_path: dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
+        asset_name: freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
         asset_content_type: application/apk

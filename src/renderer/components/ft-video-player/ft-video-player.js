@@ -1,5 +1,5 @@
 import { defineComponent } from 'vue'
-import { mapActions } from 'vuex'
+import { mapActions, mapMutations } from 'vuex'
 
 import videojs from 'video.js'
 import qualitySelector from '@silvermine/videojs-quality-selector'
@@ -24,6 +24,8 @@ import {
 } from '../../helpers/utils'
 import { getProxyUrl } from '../../helpers/api/invidious'
 import store from '../../store'
+import { STATE_PAUSED, STATE_PLAYING, updateMediaSessionState } from '../../helpers/android'
+import android from 'android'
 
 const EXPECTED_PLAY_RELATED_ERROR_MESSAGES = [
   // This is thrown when `play()` called but user already viewing another page
@@ -145,7 +147,6 @@ export default defineComponent({
       statsModal: null,
       showStatsModal: false,
       statsModalEventName: 'updateStats',
-      usingTouch: false,
       // whether or not sponsor segments should be skipped
       skipSponsors: true,
       // countdown before actually skipping sponsor segments
@@ -184,6 +185,9 @@ export default defineComponent({
     }
   },
   computed: {
+    usingTouch: function () {
+      return this.$store.getters.getUsingTouch
+    },
     currentLocale: function () {
       return this.$i18n.locale.replace('_', '-')
     },
@@ -321,6 +325,10 @@ export default defineComponent({
       return playbackRates
     },
 
+    enableSubtitlesByDefault: function () {
+      return this.$store.getters.getEnableSubtitlesByDefault
+    },
+
     enableScreenshot: function () {
       return this.$store.getters.getEnableScreenshot
     },
@@ -442,7 +450,6 @@ export default defineComponent({
           // (when default quality is low like 240p)
           playerBandwidthOption.bandwidth = this.selectedBitrate * VHS_BANDWIDTH_VARIANCE + 1
         }
-
         this.player = videojs(this.$refs.video, {
           html5: {
             preloadTextTracks: false,
@@ -680,6 +687,9 @@ export default defineComponent({
         })
 
         this.player.on('play', async () => {
+          if (process.env.IS_ANDROID) {
+            updateMediaSessionState(STATE_PLAYING.toString())
+          }
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'playing'
           }
@@ -692,6 +702,9 @@ export default defineComponent({
         })
 
         this.player.on('pause', () => {
+          if (process.env.IS_ANDROID) {
+            updateMediaSessionState(STATE_PAUSED)
+          }
           if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'paused'
           }
@@ -715,6 +728,10 @@ export default defineComponent({
             this.updateStatsContent()
           }
           this.$emit('timeupdate')
+          if (process.env.IS_ANDROID) {
+            // todo add code to update state of media session
+            updateMediaSessionState(null, Math.floor(this.player.currentTime() * 1000).toString())
+          }
         })
 
         this.player.textTrackSettings.on('modalclose', (_) => {
@@ -1310,7 +1327,7 @@ export default defineComponent({
 
       this.useDash = false
       this.useHls = false
-      this.activeSourceList = (this.proxyVideos || !process.env.IS_ELECTRON)
+      this.activeSourceList = (this.proxyVideos || (!process.env.IS_ELECTRON && !process.env.IS_ANDROID))
         // use map here to return slightly different list without modifying original
         ? this.sourceList.map((source) => {
           return {
@@ -1406,6 +1423,14 @@ export default defineComponent({
       const trackIndex = this.useDash ? 1 : 0
 
       const tracks = this.player.textTracks()
+
+      // visually and semantically disable any other enabled tracks
+      for (let i = 0; i < tracks.length; ++i) {
+        if (i !== trackIndex && tracks[i].mode === 'showing') {
+          tracks[i].mode = 'disabled'
+        }
+      }
+
       if (tracks.length > trackIndex) {
         if (tracks[trackIndex].mode === 'showing') {
           tracks[trackIndex].mode = 'disabled'
@@ -1805,6 +1830,34 @@ export default defineComponent({
 
           // For default auto, it may select a resolution before generating the quality buttons
           button.querySelector('#vjs-current-quality').innerText = defaultIsAuto ? autoQualityLabel : currentQualityLabel
+          const vjsMenu = button.querySelector('.vjs-menu')
+          let isTapping = false
+          button.addEventListener('touchstart', () => {
+            isTapping = true
+          })
+          button.addEventListener('touchmove', () => {
+            // if they are moving, they cannot be tapping
+            isTapping = false
+          })
+          button.addEventListener('touchend', (e) => {
+            if (isTapping) {
+              button.focus()
+              // make it easier to toggle the vjs-menu on touch (hover css is inconsistent w/ touch)
+              if (!e.target.classList.contains('quality-item') && !e.target.classList.contains('vjs-menu-item-text')) {
+                vjsMenu.classList.toggle('vjs-lock-showing')
+              } else {
+                // hide the quality selector on select (just like the other quality selectors do on mobile)
+                vjsMenu.classList.remove('vjs-lock-showing')
+              }
+              this.handleClick(e)
+              isTapping = false
+            }
+          })
+          button.addEventListener('focusout', () => {
+            // remove class which shows the selector
+            vjsMenu.classList.remove('vjs-lock-showing')
+          })
+          button.classList.add('dash-selector')
 
           return button.children[0]
         }
@@ -1820,6 +1873,8 @@ export default defineComponent({
         const bCode = captionB.language_code.split('-')
         const aName = (captionA.label) // ex: english (auto-generated)
         const bName = (captionB.label)
+        const aIsAutotranslated = captionA.is_autotranslated
+        const bIsAutotranslated = captionB.is_autotranslated
         const userLocale = this.currentLocale.split('-') // ex. [en,US]
         if (aCode[0] === userLocale[0]) { // caption a has same language as user's locale
           if (bCode[0] === userLocale[0]) { // caption b has same language as user's locale
@@ -1828,6 +1883,12 @@ export default defineComponent({
               return -1
             } else if (aName.search('auto') !== -1) {
               // prefer caption b: a is auto-generated captions
+              return 1
+            } else if (bIsAutotranslated) {
+              // prefer caption a: b is auto-translated captions
+              return -1
+            } else if (aIsAutotranslated) {
+              // prefer caption b: a is auto-translated captions
               return 1
             } else if (aCode[1] === userLocale[1]) {
               // prefer caption a: caption a has same county code as user's locale
@@ -1864,15 +1925,16 @@ export default defineComponent({
         captionList = this.captionHybridList
       }
 
-      for (const caption of this.sortCaptions(captionList)) {
+      this.sortCaptions(captionList).forEach((caption, i) =>
         this.player.addRemoteTextTrack({
           kind: 'subtitles',
           src: caption.url,
           srclang: caption.language_code,
           label: caption.label,
-          type: caption.type
+          type: caption.type,
+          default: i === 0 && this.enableSubtitlesByDefault
         }, true)
-      }
+      )
     },
 
     toggleFullWindow: function () {
@@ -1953,13 +2015,13 @@ export default defineComponent({
     },
 
     handleTouchStart: function () {
-      this.usingTouch = true
+      this.setUsingTouch(true)
     },
 
     handleMouseOver: function () {
       // This addresses a discrepancy that only seems to occur in the mobile version of firefox
       if (navigator.userAgent.search('Firefox') !== -1 && (videojs.browser.IS_ANDROID || videojs.browser.IS_IOS)) { return }
-      this.usingTouch = false
+      this.setUsingTouch(false)
     },
 
     toggleShowStatsModal: function () {
@@ -2250,7 +2312,9 @@ export default defineComponent({
         this.powerSaveBlocker = null
       }
     },
-
+    ...mapMutations([
+      'setUsingTouch'
+    ]),
     ...mapActions([
       'updateDefaultCaptionSettings',
       'parseScreenshotCustomFileName',

@@ -9,13 +9,14 @@ import FtPrompt from './components/ft-prompt/ft-prompt.vue'
 import FtButton from './components/ft-button/ft-button.vue'
 import FtToast from './components/ft-toast/ft-toast.vue'
 import FtProgressBar from './components/ft-progress-bar/ft-progress-bar.vue'
+import FtPlaylistAddVideoPrompt from './components/ft-playlist-add-video-prompt/ft-playlist-add-video-prompt.vue'
+import FtCreatePlaylistPrompt from './components/ft-create-playlist-prompt/ft-create-playlist-prompt.vue'
 import { marked } from 'marked'
-import { Injectables, IpcChannels } from '../constants'
+import { IpcChannels } from '../constants'
 import packageDetails from '../../package.json'
 import { openExternalLink, openInternalPath, showToast } from './helpers/utils'
-import cordova from 'cordova'
-import 'core-js/stable'
-import universalLinks from 'universal-links'
+import 'core-js'
+import android from 'android'
 
 let ipcRenderer = null
 
@@ -31,17 +32,13 @@ export default defineComponent({
     FtPrompt,
     FtButton,
     FtToast,
-    FtProgressBar
-  },
-  provide: function () {
-    return {
-      [Injectables.SHOW_OUTLINES]: this.showOutlines
-    }
+    FtProgressBar,
+    FtPlaylistAddVideoPrompt,
+    FtCreatePlaylistPrompt,
   },
   data: function () {
     return {
       dataReady: false,
-      hideOutlines: true,
       showUpdatesBanner: false,
       showBlogBanner: false,
       showReleaseNotes: false,
@@ -62,6 +59,9 @@ export default defineComponent({
     showProgressBar: function () {
       return this.$store.getters.getShowProgressBar
     },
+    outlinesHidden: function () {
+      return this.$store.getters.getOutlinesHidden
+    },
     isLocaleRightToLeft: function () {
       return this.locale === 'ar' || this.locale === 'fa' || this.locale === 'he' ||
         this.locale === 'ur' || this.locale === 'yi' || this.locale === 'ku'
@@ -71,6 +71,12 @@ export default defineComponent({
     },
     checkForBlogPosts: function () {
       return this.$store.getters.getCheckForBlogPosts
+    },
+    showAddToPlaylistPrompt: function () {
+      return this.$store.getters.getShowAddToPlaylistPrompt
+    },
+    showCreatePlaylistPrompt: function () {
+      return this.$store.getters.getShowCreatePlaylistPrompt
     },
     windowTitle: function () {
       const routeTitle = this.$route.meta.title
@@ -114,6 +120,10 @@ export default defineComponent({
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     },
 
+    landingPage: function() {
+      return '/' + this.$store.getters.getLandingPage
+    },
+
     externalLinkOpeningPromptNames: function () {
       return [
         this.$t('Yes'),
@@ -139,7 +149,7 @@ export default defineComponent({
     $route () {
       // react to route changes...
       // Hide top nav filter panel on page change
-      this.$refs.topNav.hideFilters()
+      this.$refs.topNav?.hideFilters()
     }
   },
   created () {
@@ -148,50 +158,21 @@ export default defineComponent({
     this.setLocale()
   },
   mounted: function () {
-    if (process.env.IS_CORDOVA) {
-      universalLinks.subscribe('youtube_shortended', (event) => {
-        this.$router.push({ path: `/watch${event.path}` })
-      })
-      universalLinks.subscribe('youtube', (event) => {
-        const { url } = event
-        const uri = new URL(url)
-        // handle youtube link expects the host to be youtube
-        uri.host = 'youtube.com'
-        this.handleYoutubeLink(uri.toString())
-      })
-      if ('plugins' in cordova && 'backgroundMode' in cordova.plugins) {
-        const { backgroundMode } = cordova.plugins
-        backgroundMode.setDefaults({
-          title: 'FreeTube',
-          // TODO ✏ add this to locale strings
-          text: 'FreeTube is running in the background.'
-        })
-        backgroundMode.enable()
-        backgroundMode.on('activate', () => {
-          // By default android wants to pause videos in the background, this disables that "optimization"
-          backgroundMode.disableWebViewOptimizations()
-        })
-      } else {
-        console.error('Background mode plugin failed to load.')
-      }
-    }
     this.grabUserSettings().then(async () => {
       this.checkThemeSettings()
-
-      await this.fetchInvidiousInstances()
-      if (this.defaultInvidiousInstance === '') {
-        await this.setRandomCurrentInvidiousInstance()
+      try {
+        await this.fetchInvidiousInstances()
+        if (this.defaultInvidiousInstance === '') {
+          await this.setRandomCurrentInvidiousInstance()
+        }
+      } catch (ex) {
+        console.error(ex)
       }
 
       this.grabAllProfiles(this.$t('Profile.All Channels')).then(async () => {
         this.grabHistory()
         this.grabAllPlaylists()
 
-        document.addEventListener('visibilitychange', () => {
-          if (!document.hidden) { // if the window was unfocused, the system theme might have changed
-            this.watchSystemTheme()
-          }
-        })
         if (process.env.IS_ELECTRON) {
           ipcRenderer = require('electron').ipcRenderer
           this.setupListenersToSyncWindows()
@@ -200,17 +181,31 @@ export default defineComponent({
           this.openAllLinksExternally()
           this.enableSetSearchQueryText()
           this.enableOpenUrl()
+          this.watchSystemTheme()
           await this.checkExternalPlayer()
         }
-        this.watchSystemTheme()
+        if (process.env.IS_ANDROID) {
+          // function defined on webview window
+          window.addYoutubeLinkHandler((link) => {
+            this.handleYoutubeLink(link)
+          })
+          if (location.search.indexOf('?intent=') !== -1) {
+            const intent = location.search.split('?intent=')[1]
+            const uri = decodeURIComponent(intent)
+            await this.handleYoutubeLink(uri)
+          }
+          // hides the splash screen
+          android.hideSplashScreen()
+          window.addEventListener('enabled-light-mode', () => {
+            document.body.dataset.systemTheme = 'light'
+          })
+          window.addEventListener('enabled-dark-mode', () => {
+            document.body.dataset.systemTheme = 'dark'
+          })
+        }
 
         this.dataReady = true
-        setTimeout(() => {
-          if (process.env.IS_CORDOVA) {
-            // hide the splashscreen
-            navigator.splashscreen.hide()
-          }
-        }, 250)
+
         setTimeout(() => {
           this.checkForNewUpdates()
           this.checkForNewBlogPosts()
@@ -218,10 +213,17 @@ export default defineComponent({
       })
 
       this.$router.afterEach((to, from) => {
-        this.$refs.topNav.navigateHistory()
+        this.$refs.topNav?.navigateHistory()
+      })
+
+      this.$router.onReady(() => {
+        if (this.$router.currentRoute.path === '/') {
+          this.$router.replace({ path: this.landingPage })
+        }
       })
     })
   },
+
   methods: {
     checkThemeSettings: function () {
       const theme = {
@@ -329,7 +331,7 @@ export default defineComponent({
     activateKeyboardShortcuts: function () {
       document.addEventListener('keydown', this.handleKeyboardShortcuts)
       document.addEventListener('mousedown', () => {
-        this.hideOutlines = true
+        this.hideOutlines()
       })
     },
 
@@ -354,7 +356,7 @@ export default defineComponent({
       }
       switch (event.key) {
         case 'Tab':
-          this.hideOutlines = false
+          this.showOutlines()
           break
         case 'L':
         case 'l':
@@ -414,7 +416,7 @@ export default defineComponent({
     },
 
     handleYoutubeLink: function (href, { doCreateNewWindow = false } = { }) {
-      this.getYoutubeUrlInfo(href).then((result) => {
+      return this.getYoutubeUrlInfo(href).then((result) => {
         switch (result.urlType) {
           case 'video': {
             const { videoId, timestamp, playlistId } = result
@@ -503,45 +505,9 @@ export default defineComponent({
      * all systems running the electron app.
      */
     watchSystemTheme: function () {
-      if (process.env.IS_ELECTRON) {
-        ipcRenderer.on(IpcChannels.NATIVE_THEME_UPDATE, (event, shouldUseDarkColors) => {
-          document.body.dataset.systemTheme = shouldUseDarkColors ? 'dark' : 'light'
-        })
-      } else if (process.env.IS_CORDOVA) {
-        if ('plugins' in cordova && 'ThemeDetection' in cordova.plugins) {
-          cordova.plugins.ThemeDetection.isAvailable((isThemeDetectionAvailable) => {
-            if (isThemeDetectionAvailable) {
-              cordova.plugins.ThemeDetection.isDarkModeEnabled((message) => {
-                document.body.dataset.systemTheme = message.value ? 'dark' : 'light'
-              })
-            }
-          }, console.error)
-        } else {
-          console.error('Theme detection plugin failed to load.')
-        }
-      }
-    },
-
-    openInternalPath: function({ path, doCreateNewWindow, query = {}, searchQueryText = null }) {
-      if (process.env.IS_ELECTRON && doCreateNewWindow) {
-        const { ipcRenderer } = require('electron')
-
-        // Combine current document path and new "hash" as new window startup URL
-        const newWindowStartupURL = [
-          window.location.href.split('#')[0],
-          `#${path}?${(new URLSearchParams(query)).toString()}`
-        ].join('')
-        ipcRenderer.send(IpcChannels.CREATE_NEW_WINDOW, {
-          windowStartupUrl: newWindowStartupURL,
-          searchQueryText
-        })
-      } else {
-        // Web
-        this.$router.push({
-          path,
-          query
-        })
-      }
+      ipcRenderer.on(IpcChannels.NATIVE_THEME_UPDATE, (event, shouldUseDarkColors) => {
+        document.body.dataset.systemTheme = shouldUseDarkColors ? 'dark' : 'light'
+      })
     },
 
     enableSetSearchQueryText: function () {
@@ -591,17 +557,9 @@ export default defineComponent({
       }
     },
 
-    /**
-     * provided to all child components, see `provide` near the top of this file
-     * after injecting it, they can show outlines during keyboard navigation
-     * e.g. cycling through tabs with the arrow keys
-     */
-    showOutlines: function () {
-      this.hideOutlines = false
-    },
-
     ...mapMutations([
-      'setInvidiousInstancesList'
+      'setInvidiousInstancesList',
+      'setUsingTouch'
     ]),
 
     ...mapActions([
@@ -616,7 +574,9 @@ export default defineComponent({
       'setupListenersToSyncWindows',
       'updateBaseTheme',
       'updateMainColor',
-      'updateSecColor'
+      'updateSecColor',
+      'showOutlines',
+      'hideOutlines'
     ])
   }
 })

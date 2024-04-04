@@ -1,6 +1,17 @@
 <template>
   <div>
     <template v-if="unlocked">
+      <div class="switchColumnGrid">
+        <div class="switchColumn">
+          <ft-toggle-switch
+            class="settingsToggle"
+            :label="$t('Settings.Expand All Settings Sections')"
+            :default-value="allSettingsSectionsExpandedByDefault"
+            :compact="false"
+            @change="updateAllSettingsSectionsExpandedByDefault"
+          />
+        </div>
+      </div>
       <general-settings />
       <hr>
       <theme-settings />
@@ -26,8 +37,6 @@
       <sponsor-block-settings />
       <hr v-if="usingElectron">
       <experimental-settings v-if="usingElectron" />
-      <hr v-if="usingCordova">
-      <cordova-settings v-if="usingCordova" />
       <hr>
       <password-settings />
     </template>

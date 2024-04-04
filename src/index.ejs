@@ -2,40 +2,87 @@
 <html>
 
   <head>
-    <% if (process.env.IS_CORDOVA) { %>
-    <script>
-      // ⌚ Wait for cordova to load before loading webpack
-      const onCordovaLoaded = () => {
-        const script = document.createElement('script')
-        script.src = "web.js"
-        script.defer = true
-        script.async = true
-        document.head.appendChild(script)
-      }
-    </script>
-    <script src="cordova.js" onload="onCordovaLoaded()"></script>
-    <link rel="stylesheet" type="text/css" href="web.css" />
+    <% if (process.env.IS_ANDROID) { %>
+      <!-- 🔧🐒 -->
+      <script>
+        window.ofetch = window.fetch
+        window.fetch = async (...args) => {
+          if (typeof args[0] === 'string' && args[0].startsWith('file://')) {
+            // forward to xml http request
+            /** @type {Response} */
+            const response = await new Promise((resolve, reject) => {
+              const req = new XMLHttpRequest()
+              req.responseType = 'arraybuffer'
+              req.onload = () => {
+                resolve(new Response(req.response, { status: req.status, headers: { 'Content-Type': req.getResponseHeader('content-type') } }))
+              }
+              req.onerror = (error) => {
+                reject(error)
+              }
+              req.open('GET', args[0])
+              req.send()
+            })
+            return response
+          }
+          return await window.ofetch(...args)
+        }
+        window.mediaSessionListeners = window.mediaSessionListeners || {}
+        window.addMediaSessionEventListener = function (eventName, listener) {
+          if (!(eventName in window.mediaSessionListeners)) {
+            window.mediaSessionListeners[eventName] = [];
+          }
+          window.mediaSessionListeners[eventName].push(listener)
+        }
+        window.notifyMediaSessionListeners = function (eventName, ...message) {
+          if ((eventName in window.mediaSessionListeners)) {
+            window.mediaSessionListeners[eventName].forEach(listener => listener(...message));
+          }
+        }
+        window.clearAllMediaSessionEventListeners = function () {
+          window.mediaSessionListeners = {}
+        }
+        window.awaitAsyncResult = function (id, callbacks = {}) {
+          return new Promise((resolve, reject) => {
+            const interval = setInterval(async () => {
+              if (id in window) {
+                clearInterval(interval)
+                try {
+                  if ('callbacks' in window[id]) {
+                    Object.assign(window[id].callbacks, callbacks)
+                  }
+                  const result = await window[id].promise
+                  resolve(Android.getSyncMessage(id))
+                } catch (ex) {
+                  reject(Android.getSyncMessage(id))
+                }
+              }
+            }, 1)
+          })
+        }
+        window.youtubeLinkHandlers = window.youtubeLinkHandlers || []
+        window.addYoutubeLinkHandler = function (handler) {
+          const i = window.youtubeLinkHandlers.length
+          window.youtubeLinkHandlers.push(handler)
+          return i
+        }
+        window.notifyYoutubeLinkHandlers = function (message) {
+          window.youtubeLinkHandlers.forEach((handler) => handler(message))
+        }
+      </script>
     <% } %>
     <meta charset="utf-8" />
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
-    <% if (!process.env.IS_ELECTRON && !process.env.IS_CORDOVA) { %>
+    <% if (!process.env.IS_ELECTRON && !process.env.IS_ANDROID) { %>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="shortcut icon" href="static/icon.ico" />
     <% } %>
     <title></title>
-    <% if (htmlWebpackPlugin.options.nodeModules) { %>
-    <script>
-      require('module').globalPaths.push(
-        `<%= htmlWebpackPlugin.options.nodeModules.replace(/\\/g, '\\\\') %>`
-      )
-    </script>
-    <% } %>
   </head>
 
   <body>
     <div id="app"></div>
-    <% if (!process.env.IS_ELECTRON && !process.env.IS_CORDOVA) { %>
+    <% if (!process.env.IS_ELECTRON && !process.env.IS_ANDROID) { %>
     <script>
     // This is the service worker with the Advanced caching
 
