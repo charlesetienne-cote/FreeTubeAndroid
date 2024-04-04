@@ -176,6 +176,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist/freetube-${{ steps.versionNumber.outputs.result }}.apk
-        asset_name: freetube-${{ steps.versionNumber.outputs.result }}-android.apk
+        asset_path: dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
+        asset_name: freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
         asset_content_type: application/apk
