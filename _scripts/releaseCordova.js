@@ -6,7 +6,7 @@ const { fetch } = require('undici')
 const { get } = require('prompt')
 const { exec } = require('child_process')
 const { randomUUID } = require('crypto')
-const { writeFile, rm } = require('fs/promises')
+const { writeFile, rm, readFile } = require('fs/promises')
 // #endregion
 ;(async (get, exec) => {
   const givenArguments = { dryRun: false }
@@ -20,6 +20,12 @@ const { writeFile, rm } = require('fs/promises')
     if (arg === '--dry-run') {
       givenArguments.dryRun = true
     }
+    if (arg.startsWith('--f=')) {
+      givenArguments.message = arg.split('--f=')[1]
+    }
+  }
+  if (givenArguments.dryRun) {
+    console.log('starting dry run')
   }
   const releases = await fetch('https://api.github.com/repos/MarmadileManteater/FreeTubeCordova/releases')
   /** @type {Array<{tag_name: string}>} */
@@ -45,32 +51,38 @@ const { writeFile, rm } = require('fs/promises')
     versionNumber = defaultVersionNumber
   }
   // #endregion
-  // #region Latest Git History
-  const gitDiff = (await exec('git log origin/development...origin/release')).stdout
-  const numberOfCommits = ('numberOfCommits' in givenArguments) ? givenArguments.numberOfCommits : 3
-  let accumulator = 0
-  let mostRecentCommits = ''
-  for (let line of gitDiff.split('\n')) {
-    if (line.trim() === '') {
-      continue
+  if (!('message' in givenArguments)) {
+    // #region Latest Git History
+    const gitDiff = (await exec('git log origin/development...origin/release')).stdout
+    const numberOfCommits = ('numberOfCommits' in givenArguments) ? givenArguments.numberOfCommits : 3
+    let accumulator = 0
+    let mostRecentCommits = ''
+    for (let line of gitDiff.split('\n')) {
+      if (line.trim() === '') {
+        continue
+      }
+      if (line.startsWith('commit ')) {
+        mostRecentCommits += `\n`
+        accumulator++
+      }
+      if (accumulator < numberOfCommits + 1) {
+        mostRecentCommits += `${line}\n`
+      }
     }
-    if (line.startsWith('commit ')) {
-      mostRecentCommits += `\n`
-      accumulator++
-    }
-    if (accumulator < numberOfCommits + 1) {
-      mostRecentCommits += `${line}\n`
-    }
+    mostRecentCommits = mostRecentCommits.trim()
+    // #endregion
+    givenArguments.message = mostRecentCommits
+  } else {
+    // message is in given arguments (a file was passed that needs to be read)
+    givenArguments.message = await readFile(givenArguments.message)
   }
-  mostRecentCommits = mostRecentCommits.trim()
-  // #endregion
   const commitMessage = `**Release ${currentRunNumber}**
 
-${mostRecentCommits}
+  ${givenArguments.message}
 
-...
+  ...
 
-**Full Changelog**: https://github.com/MarmadileManteater/FreeTubeCordova/compare/${latestTag}...${versionNumber}`
+  **Full Changelog**: https://github.com/MarmadileManteater/FreeTubeCordova/compare/${latestTag}...${versionNumber}`
   // #region Commit changes to release branch
   if (!givenArguments.dryRun) {
     const fileId = randomUUID()
