@@ -135,7 +135,9 @@ jobs:
 
     - name: Rename APK w/ version info
       run: |
-        cp android/app/build/outputs/apk/debug/app-debug.apk dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
+        ls -la android/app/build/outputs/apk
+        ls -la android/app/build/outputs/apk/release/
+        cp android/app/build/outputs/apk/release/app-release.apk dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
 
     - name: 📡 Upload APK Artifact
       uses: actions/upload-artifact@v3
