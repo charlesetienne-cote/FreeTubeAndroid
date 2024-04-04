@@ -48,7 +48,7 @@ android {
     signingConfigs {
       getByName("debug") {
         // inject signing config
-      }
+      };
     }
     namespace = "io.freetubeapp.freetube"
     compileSdk = 34
@@ -68,11 +68,16 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // in this case debug is just a name of a signing config
+            // the release workflow injects the release keystore info into the "debug" signing config
+            // i tried to add a signing config called "release", but i got build errors :(
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
