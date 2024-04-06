@@ -6,6 +6,6 @@
     <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
     <item name="android:windowSplashScreenBackground">#212121</item>
     <item name="android:windowSplashScreenIconBackgroundColor">#212121</item>
-
+    <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
   </style>
 </resources>
