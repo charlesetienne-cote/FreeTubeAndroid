@@ -22,6 +22,11 @@ jobs:
     - name: 🧶 Yarn install
       run: yarn ci
 
+    - name: Set environment icon & splash for android app
+      run: |
+        # to make it easier to tell which is which when multiple are installed
+        node ./_scripts/_setAppSplashTheme.mjs --nightly
+
     - name: 🔍Lint code
       run: yarn lint
 
