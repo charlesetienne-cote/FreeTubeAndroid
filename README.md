@@ -21,21 +21,24 @@ An open source YouTube player built with privacy in mind.
 <p align="center"><a href="https://freetubeapp.io/">Website</a> &bull; <a href="https://blog.freetubeapp.io/">Blog</a> &bull; <a href="https://docs.freetubeapp.io/">Documentation</a> &bull; <a href="https://docs.freetubeapp.io/faq/">FAQ</a> &bull; <a href="https://github.com/FreeTubeApp/FreeTube/discussions">Discussions</a></p>
 <hr>
 
-FreeTube Cordova is an open source YouTube player built with privacy in mind. Use YouTube without advertisements and prevent Google from tracking you with their cookies and JavaScript.
-Available for Android and as a PWA. FreeTube Cordova is a fork of [FreeTube](https://www.github.com/FreeTubeApp).
-FreeTube Cordova is currently in Beta. While it should work well for most users, there are still bugs and missing features that need to be addressed.
+FreeTube Android is an open source YouTube player built with privacy in mind. Use YouTube without advertisements and prevent Google from tracking you with their cookies and JavaScript.
+Available as an APK and as a PWA (progressive web app). FreeTube Android is a fork of [FreeTube](https://www.github.com/FreeTubeApp).
+
+> [!NOTE]
+> FreeTube Android is currently in Beta. While it should work well for most users, there are still bugs and missing features that need to be addressed.
+
 <p align='center'>
   <a href='https://apt.izzysoft.de/fdroid/index/apk/io.freetubeapp.freetube'>
     <img height='100' alt='Get it on IzzyOnDroid' src='https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png'>
   </a>
 </p>
 
-<p align="center"><a href="https://github.com/MarmadileManteater/FreeTubeCordova/releases">Download FreeTubeCordova</a></p>
+<p align="center"><a href="https://github.com/MarmadileManteater/FreeTubeCordova/releases">Download FreeTube Android</a></p>
 
 <hr>
 
 ## How does it work?
-FreeTube Cordova uses the [Invidious API](https://github.com/iv-org/invidious) to serve data and videos. No official YouTube APIs are used to obtain data. Your subscriptions and history are stored locally on your device and are never sent out.
+The APK uses a built in extractor to grab and serve data / videos, and can optionally use the [Invidious API](https://github.com/iv-org/invidious). The PWA *only* uses the [Invidious API](https://github.com/iv-org/invidious). No official YouTube APIs are used to obtain data. Your subscriptions and history are stored locally on your device and are never sent out.
 
 ## Features
 * Watch videos without ads
@@ -50,8 +53,6 @@ FreeTube Cordova uses the [Invidious API](https://github.com/iv-org/invidious) t
 * Most popular videos page based on the set Invidious instance
 * SponsorBlock 
 * Full Theme support
-* Multiple windows
-* Mini Player (Picture-in-Picture)
 * Keyboard shortcuts
 * Option to show only family friendly content
 * Show/hide functionality or elements within the app using the distraction free settings
@@ -61,15 +62,6 @@ Go to [FreeTube's Documentation](https://docs.freetubeapp.io/) if you'd like to 
 ## Screenshots
 <img alt="watching video" src="./metadata/en-US/images/phoneScreenshots/1.png" width=300> <img alt="trending videos" src="./metadata/en-US/images/phoneScreenshots/2.png" width=300> <img alt="subscription feed" src="./metadata/en-US/images/phoneScreenshots/3.png" width=300>
 
-## How to install
-
-There is a deployed PWA (progressive web app) available here:
-
-[https://marmadilemanteater.github.io/freetube/#/](https://marmadilemanteater.github.io/freetube/#/)
-
-There is an APK which can be downloaded here:
-
-[https://github.com/MarmadileManteater/FreeTubeCordova/releases](https://github.com/MarmadileManteater/FreeTubeCordova/releases)
 
 ### Automated Builds (Nightly / Weekly)
 Builds are automatically created from changes to our development branch via [GitHub Actions](https://github.com/MarmadileManteater/FreeTubeCordova/actions/workflows/buildCordova.yml).
@@ -77,14 +69,16 @@ Builds are automatically created from changes to our development branch via [Git
 The first build with a green check mark is the latest build. You will need to have a GitHub account to download these builds.
 
 ## How to build and test
-### Commands for the Android APK
+### Commands for the APK
 ```bash
 # 📦 Packs the project using `webpack.android.config.js`
 yarn pack:android
 # 🚧 for development
 yarn pack:android:dev
 ```
-### Commands for the PWA (progressive web app)
+> [!NOTE]
+> These commands only build the assets necessary for the project located in `android/` to be built. In order to obtain a complete build, you will need to build the project located in `android/` with `gradle`.
+### Commands for the PWA
 ```bash
 # 🐛 Debugs the project using `webpack.web.config.js`
 yarn dev:web
@@ -126,13 +120,13 @@ before sending your pull request.
 <img src="https://hosted.weblate.org/widgets/free-tube/-/287x66-grey.png" alt="Translation status" />
 </a>
 
-If you'd like to localize FreeTubeCordova, please send submissions to [FreeTube's weblate](https://hosted.weblate.org/engage/free-tube/).
+If you'd like to localize FreeTube Android, please send submissions to [FreeTube's weblate](https://hosted.weblate.org/engage/free-tube/).
 
 ## Contact
 If you ever have any questions, feel free to make an issue here on GitHub. 
 
 ## Upstream Donations
-If you enjoy using FreeTubeCordova, you're welcome to leave a donation using the following methods to support upstream development and maintenance.  
+If you enjoy using FreeTube Android, you're welcome to leave a donation using the following methods to support upstream development and maintenance.  
 
 * [FreeTube on Liberapay](https://liberapay.com/FreeTube)
 
