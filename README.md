@@ -38,7 +38,7 @@ Available as an APK and as a PWA (progressive web app). FreeTube Android is a fo
 <hr>
 
 ## How does it work?
-The APK uses a built in extractor to grab and serve data / videos, and can optionally use the [Invidious API](https://github.com/iv-org/invidious). The PWA *only* uses the [Invidious API](https://github.com/iv-org/invidious). No official YouTube APIs are used to obtain data. Your subscriptions and history are stored locally on your device and are never sent out.
+The APK uses a built in extractor to grab and serve data / videos, and can optionally use the [Invidious API](https://github.com/iv-org/invidious). The PWA *only* uses the Invidious API. No official YouTube APIs are used to obtain data. Your subscriptions and history are stored locally on your device and are never sent out.
 
 ## Features
 * Watch videos without ads
