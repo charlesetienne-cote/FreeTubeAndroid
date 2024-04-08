@@ -1,4 +1,4 @@
-FreeTube Cordova is a YouTube client that uses the Invidious API to serve data and videos from YouTube.
+FreeTube Android (formerly FreeTubeCordova) is a YouTube client that uses uses a built in extractor to grab and serve data / videos from YouTube. The Invidious API can also be optionally used.
 No official YouTube APIs are used to obtain data.
 Your subscriptions and history are stored locally on your device and are never sent out.
 
@@ -15,4 +15,4 @@ Features:
 - Parental controls
 - Subscribe to channels without an account
 
-FreeTube Cordova is currently in Beta. While it should work well for most users, there are still bugs and missing features that need to be addressed.
+FreeTube Android is currently in Beta. While it should work well for most users, there are still bugs and missing features that need to be addressed.
