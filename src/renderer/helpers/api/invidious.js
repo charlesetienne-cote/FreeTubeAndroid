@@ -21,10 +21,6 @@ export function getProxyUrl(uri) {
 }
 
 export function invidiousAPICall({ resource, id = '', params = {}, doLogError = true, subResource = '' }) {
-  if (store.getters.getProxyVideos) {
-    // pass local flag to the invidious endpoint
-    params.local = 'true'
-  }
   return new Promise((resolve, reject) => {
     const requestUrl = getCurrentInstance() + '/api/v1/' + resource + '/' + id + (!isNullOrEmpty(subResource) ? `/${subResource}` : '') + '?' + new URLSearchParams(params).toString()
     fetch(requestUrl)
@@ -325,10 +321,10 @@ export function filterInvidiousFormats(formats, allowAv1 = false) {
   // Which is caused by Invidious API limitation on AV1 formats (see related issues)
   // Commented code to be restored after Invidious issue fixed
   //
-  // As we generate our own DASH manifest (using YouTube.js) for multiple audio track support in Electron,
-  // we can allow AV1 in that situation. If we aren't in electron,
+  // As we generate our own DASH manifest (using YouTube.js) for multiple audio track support when the local API is supported,
+  // we can allow AV1 in that situation. When the local API isn't supported,
   // we still can't use them until Invidious fixes the issue on their side
-  if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && allowAv1 && av1Formats.length > 0) {
+  if (process.env.SUPPORTS_LOCAL_API && allowAv1 && av1Formats.length > 0) {
     return [...audioFormats, ...av1Formats]
   }
 

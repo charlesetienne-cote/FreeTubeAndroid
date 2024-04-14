@@ -25,7 +25,6 @@ const config = {
     filename: '[name].js',
   },
   externals: {
-    electron: '{}',
     android: '{}',
     'youtubei.js': '{}'
   },
@@ -117,6 +116,7 @@ const config = {
     new webpack.DefinePlugin({
       'process.env.IS_ELECTRON': false,
       'process.env.IS_ELECTRON_MAIN': false,
+      'process.env.SUPPORTS_LOCAL_API': false,
       'process.env.SWIPER_VERSION': `'${swiperVersion}'`,
       'process.env.IS_ANDROID': false,
       // video.js' vhs-utils supports both atob() in web browsers and Buffer in node
@@ -148,7 +148,7 @@ const config = {
       patterns: [
         {
           from: path.join(__dirname, '../node_modules/swiper/modules/{a11y,navigation,pagination}-element.css').replaceAll('\\', '/'),
-          to: 'swiper.css',
+          to: `swiper-${swiperVersion}.css`,
           context: path.join(__dirname, '../node_modules/swiper/modules'),
           transformAll: (assets) => {
             return Buffer.concat(assets.map(asset => asset.data))

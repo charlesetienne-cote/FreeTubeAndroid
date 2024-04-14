@@ -1,6 +1,5 @@
 import { defineComponent } from 'vue'
 import { mapActions } from 'vuex'
-import fs from 'fs/promises'
 import FtLoader from '../../components/ft-loader/ft-loader.vue'
 import FtVideoPlayer from '../../components/ft-video-player/ft-video-player.vue'
 import WatchVideoInfo from '../../components/watch-video-info/watch-video-info.vue'
@@ -12,14 +11,12 @@ import WatchVideoPlaylist from '../../components/watch-video-playlist/watch-vide
 import WatchVideoRecommendations from '../../components/watch-video-recommendations/watch-video-recommendations.vue'
 import FtAgeRestricted from '../../components/ft-age-restricted/ft-age-restricted.vue'
 import packageDetails from '../../../../package.json'
-import { pathExists } from '../../helpers/filesystem'
 import {
   buildVTTFileLocally,
   copyToClipboard,
   formatDurationAsTimestamp,
   formatNumber,
   getFormatsFromHLSManifest,
-  getUserDataPath,
   showToast
 } from '../../helpers/utils'
 import {
@@ -147,9 +144,6 @@ export default defineComponent({
     },
     rememberHistory: function () {
       return this.$store.getters.getRememberHistory
-    },
-    removeVideoMetaFiles: function () {
-      return this.$store.getters.getRemoveVideoMetaFiles
     },
     saveWatchedProgress: function () {
       return this.$store.getters.getSaveWatchedProgress
@@ -341,6 +335,7 @@ export default defineComponent({
     this.videoId = this.$route.params.id
     this.activeFormat = this.defaultVideoFormat
     this.useTheatreMode = this.defaultTheatreMode && this.theatrePossible
+
     this.onMountedDependOnLocalStateLoading()
   },
   beforeDestroy() {
@@ -369,7 +364,7 @@ export default defineComponent({
       this.checkIfPlaylist()
       this.checkIfTimestamp()
 
-      if (!(process.env.IS_ELECTRON || process.env.IS_ANDROID) || this.backendPreference === 'invidious') {
+      if (!process.env.SUPPORTS_LOCAL_API || this.backendPreference === 'invidious') {
         this.getVideoInformationInvidious()
       } else {
         this.getVideoInformationLocal()
@@ -777,7 +772,11 @@ export default defineComponent({
           }
 
           if (result.storyboards?.type === 'PlayerStoryboardSpec') {
-            await this.createLocalStoryboardUrls(result.storyboards.boards.at(-1))
+            let source = result.storyboards.boards
+            if (window.innerWidth < 500) {
+              source = source.filter((board) => board.thumbnail_height <= 90)
+            }
+            this.createLocalStoryboardUrls(source.at(-1))
           }
         }
 
@@ -950,8 +949,8 @@ export default defineComponent({
             this.audioTracks = []
             this.dashSrc = await this.createInvidiousDashManifest()
 
-            if (process.env.IS_ELECTRON && this.audioTracks.length > 0) {
-              // when we are in Electron and the video has multiple audio tracks,
+            if (process.env.SUPPORTS_LOCAL_API && this.audioTracks.length > 0) {
+              // when the local API is supported and the video has multiple audio tracks,
               // we populate the list inside createInvidiousDashManifest
               // as we need to work out the different audio tracks for the DASH manifest anyway
               this.audioSourceList = this.audioTracks.find(track => track.isDefault).sourceList
@@ -988,7 +987,7 @@ export default defineComponent({
             copyToClipboard(err.responseText)
           })
           console.error(err)
-          if ((process.env.IS_ELECTRON || process.env.IS_ANDROID) && this.backendPreference === 'invidious' && this.backendFallback) {
+          if (process.env.SUPPORTS_LOCAL_API && this.backendPreference === 'invidious' && this.backendFallback) {
             showToast(this.$t('Falling back to Local API'))
             this.getVideoInformationLocal()
           } else {
@@ -1313,7 +1312,7 @@ export default defineComponent({
             copyToClipboard(err)
           })
           console.error(err)
-          if (!(process.env.IS_ELECTRON || process.env.IS_ANDROID) || (this.backendPreference === 'local' && this.backendFallback)) {
+          if (!process.env.SUPPORTS_LOCAL_API || (this.backendPreference === 'local' && this.backendFallback)) {
             showToast(this.$t('Falling back to Invidious API'))
             this.getVideoInformationInvidious()
           }
@@ -1508,21 +1507,9 @@ export default defineComponent({
         }
       }
 
-      if (process.env.IS_ELECTRON && this.removeVideoMetaFiles) {
-        if (process.env.NODE_ENV === 'development') {
-          const vttFileLocation = `static/storyboards/${videoId}.vtt`
-          // only delete the file it actually exists
-          if (await pathExists(vttFileLocation)) {
-            await fs.rm(vttFileLocation)
-          }
-        } else {
-          const userData = await getUserDataPath()
-          const vttFileLocation = `${userData}/storyboards/${videoId}.vtt`
-
-          if (await pathExists(vttFileLocation)) {
-            await fs.rm(vttFileLocation)
-          }
-        }
+      if (this.videoStoryboardSrc.startsWith('blob:')) {
+        URL.revokeObjectURL(this.videoStoryboardSrc)
+        this.videoStoryboardSrc = ''
       }
     },
 
@@ -1566,7 +1553,7 @@ export default defineComponent({
       // If we are in Electron,
       // we can use YouTube.js' DASH manifest generator to generate the manifest.
       // Using YouTube.js' gives us support for multiple audio tracks (currently not supported by Invidious)
-      if (process.env.IS_ELECTRON || process.env.IS_ANDROID) {
+      if (process.env.SUPPORTS_LOCAL_API) {
         // Invidious' API response doesn't include the height and width (and fps and qualityLabel for AV1) of video streams
         // so we need to extract them from Invidious' manifest
         const response = await fetch(url)
@@ -1687,41 +1674,14 @@ export default defineComponent({
         })
     },
 
-    createLocalStoryboardUrls: async function (storyboardInfo) {
+    createLocalStoryboardUrls: function (storyboardInfo) {
       const results = buildVTTFileLocally(storyboardInfo, this.videoLengthSeconds)
-      const userData = await getUserDataPath()
-      let fileLocation
-      let uriSchema
 
-      if (process.env.IS_ANDROID) {
-        this.videoStoryboardSrc = `data:text/vtt;base64,${btoa(results)}`
-        return
-      }
+      // after the player migration, switch to using a data URI, as those don't need to be revoked
 
-      // Dev mode doesn't have access to the file:// schema, so we access
-      // storyboards differently when run in dev
-      if (process.env.NODE_ENV === 'development') {
-        fileLocation = `static/storyboards/${this.videoId}.vtt`
-        uriSchema = `storyboards/${this.videoId}.vtt`
-        // if the location does not exist, writeFile will not create the directory, so we have to do that manually
-        if (!(await pathExists('static/storyboards/'))) {
-          fs.mkdir('static/storyboards/')
-        } else if (await pathExists(fileLocation)) {
-          await fs.rm(fileLocation)
-        }
+      const blob = new Blob([results], { type: 'text/vtt;charset=UTF-8' })
 
-        await fs.writeFile(fileLocation, results)
-      } else {
-        if (!(await pathExists(`${userData}/storyboards/`))) {
-          await fs.mkdir(`${userData}/storyboards/`)
-        }
-        fileLocation = `${userData}/storyboards/${this.videoId}.vtt`
-        uriSchema = `file://${fileLocation}`
-
-        await fs.writeFile(fileLocation, results)
-      }
-
-      this.videoStoryboardSrc = uriSchema
+      this.videoStoryboardSrc = URL.createObjectURL(blob)
     },
 
     tryAddingTranslatedLocaleCaption: function (captionTracks, locale, baseUrl) {
@@ -1873,8 +1833,6 @@ export default defineComponent({
 
     ...mapActions([
       'updateHistory',
-      'grabHistory',
-      'removeFromHistory',
       'updateWatchProgress',
       'updateLastViewedPlaylist',
       'updatePlaylistLastPlayedAt',
