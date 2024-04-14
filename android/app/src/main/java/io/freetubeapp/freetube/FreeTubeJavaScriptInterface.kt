@@ -585,7 +585,9 @@ class FreeTubeJavaScriptInterface {
   fun enableKeepScreenOn() {
     if (!keepScreenOn) {
       keepScreenOn = true
-      context.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+      context.runOnUiThread {
+        context.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+      }
     }
   }
 
@@ -593,7 +595,9 @@ class FreeTubeJavaScriptInterface {
   fun disableKeepScreenOn() {
     if (keepScreenOn) {
       keepScreenOn = false
-      context.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+      context.runOnUiThread {
+        context.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+      }
     }
   }
   private fun addNamedCallbackToPromise(promise: String, name: String) {
