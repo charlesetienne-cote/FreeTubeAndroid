@@ -581,6 +581,7 @@ class FreeTubeJavaScriptInterface {
     return value!!
   }
 
+  @JavascriptInterface
   fun enableKeepScreenOn() {
     if (!keepScreenOn) {
       keepScreenOn = true
@@ -588,6 +589,7 @@ class FreeTubeJavaScriptInterface {
     }
   }
 
+  @JavascriptInterface
   fun disableKeepScreenOn() {
     if (keepScreenOn) {
       keepScreenOn = false
