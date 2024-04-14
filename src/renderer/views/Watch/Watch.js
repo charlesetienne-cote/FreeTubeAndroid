@@ -35,9 +35,7 @@ import {
   youtubeImageUrlToInvidious
 } from '../../helpers/api/invidious'
 import {
-  createMediaSession,
-  updateMediaSessionState,
-  STATE_PAUSED
+  createMediaSession
 } from '../../helpers/android'
 import android from 'android'
 

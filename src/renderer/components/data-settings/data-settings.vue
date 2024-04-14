@@ -25,7 +25,7 @@
       </ft-flex-box>
       <ft-flex-box>
         <p>
-          {{ $t("Data Settings.Data Is Currently Stored In") }}:
+          {{ $t('Data Settings.Data Is Currently Stored In') }}
         </p>
         <p class="data-directory">
           {{ dataDirectory }}
