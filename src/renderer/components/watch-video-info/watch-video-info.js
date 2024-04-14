@@ -105,6 +105,9 @@ export default defineComponent({
     }
   },
   computed: {
+    usingElectron: function () {
+      return process.env.IS_ELECTRON
+    },
     hideSharingActions: function() {
       return this.$store.getters.getHideSharingActions
     },

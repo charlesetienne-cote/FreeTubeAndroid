@@ -99,7 +99,7 @@
           @click="toggleQuickBookmarked"
         />
         <ft-icon-button
-          v-if="externalPlayer !== ''"
+          v-if="externalPlayer !== '' && usingElectron"
           :title="$t('Video.External Player.OpenInTemplate', { externalPlayer })"
           :icon="['fas', 'external-link-alt']"
           class="option"
