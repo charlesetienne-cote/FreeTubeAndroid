@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -74,7 +73,6 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     content = findViewById(android.R.id.content)
     content.viewTreeObserver.addOnPreDrawListener(
       object : ViewTreeObserver.OnPreDrawListener {

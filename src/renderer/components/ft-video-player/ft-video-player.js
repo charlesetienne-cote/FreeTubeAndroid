@@ -689,6 +689,7 @@ export default defineComponent({
 
         this.player.on('play', async () => {
           if (process.env.IS_ANDROID) {
+            android.enableKeepScreenOn()
             updateMediaSessionState(STATE_PLAYING.toString())
           }
           if ('mediaSession' in navigator) {
@@ -704,6 +705,7 @@ export default defineComponent({
 
         this.player.on('pause', () => {
           if (process.env.IS_ANDROID) {
+            android.disableKeepScreenOn()
             updateMediaSessionState(STATE_PAUSED)
           }
           if ('mediaSession' in navigator) {
@@ -730,7 +732,6 @@ export default defineComponent({
           }
           this.$emit('timeupdate')
           if (process.env.IS_ANDROID) {
-            // todo add code to update state of media session
             updateMediaSessionState(null, Math.floor(this.player.currentTime() * 1000).toString())
           }
         })

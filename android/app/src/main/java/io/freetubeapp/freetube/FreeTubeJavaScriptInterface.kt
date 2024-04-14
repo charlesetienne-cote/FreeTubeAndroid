@@ -14,6 +14,7 @@ import android.media.session.PlaybackState
 import android.media.session.PlaybackState.STATE_PAUSED
 import android.net.Uri
 import android.os.Build
+import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import androidx.activity.result.ActivityResult
 import androidx.annotation.RequiresApi
@@ -32,6 +33,7 @@ class FreeTubeJavaScriptInterface {
   private var lastPosition: Long
   private var lastState: Int
   private var lastNotification: Notification? = null
+  private var keepScreenOn: Boolean = false
   var syncMessages: MutableMap<String, String> = HashMap()
 
   companion object {
@@ -577,6 +579,20 @@ class FreeTubeJavaScriptInterface {
     val value = syncMessages[promise]
     syncMessages.remove(promise)
     return value!!
+  }
+
+  fun enableKeepScreenOn() {
+    if (!keepScreenOn) {
+      keepScreenOn = true
+      context.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+  }
+
+  fun disableKeepScreenOn() {
+    if (keepScreenOn) {
+      keepScreenOn = false
+      context.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
   }
   private fun addNamedCallbackToPromise(promise: String, name: String) {
     context.runOnUiThread {
