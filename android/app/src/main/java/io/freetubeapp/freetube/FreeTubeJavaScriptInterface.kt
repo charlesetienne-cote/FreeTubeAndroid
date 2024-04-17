@@ -8,6 +8,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
@@ -19,6 +20,7 @@ import android.webkit.JavascriptInterface
 import androidx.activity.result.ActivityResult
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.view.WindowCompat
 import androidx.documentfile.provider.DocumentFile
 import java.io.File
 import java.io.FileInputStream
@@ -600,6 +602,38 @@ class FreeTubeJavaScriptInterface {
       }
     }
   }
+
+  /**
+   *
+   */
+  @JavascriptInterface
+  fun themeSystemUi(topHex: String, bottomHex: String, darkMode: Boolean = true) {
+    context.runOnUiThread {
+      val windowInsetsController =
+        WindowCompat.getInsetsController(context.window, context.window.decorView)
+      windowInsetsController.isAppearanceLightNavigationBars = !darkMode
+      windowInsetsController.isAppearanceLightStatusBars = !darkMode
+      fun hexToColour(hex: String) : Int {
+        return Color.rgb(
+          Integer.valueOf(hex.substring(1, 3), 16),
+          Integer.valueOf(hex.substring(3, 5), 16),
+          Integer.valueOf(hex.substring(5, 7), 16)
+        )
+      }
+      context.window.navigationBarColor = hexToColour(topHex)
+      context.window.statusBarColor = hexToColour(bottomHex)
+    }
+  }
+
+  @JavascriptInterface
+  fun getSystemTheme(): String {
+    if (context.darkMode) {
+      return "dark"
+    } else {
+      return "light"
+    }
+  }
+
   private fun addNamedCallbackToPromise(promise: String, name: String) {
     context.runOnUiThread {
       context.webView.loadUrl("javascript: window['${promise}'].callbacks = window['${promise}'].callbacks || {};  window['${promise}'].callbacks.notify = (key, message) => window['${promise}'].callbacks[key].forEach(callback => callback(message)); window['${promise}'].callbacks['${name}'] = window['${promise}'].callbacks['${name}'] || []")

@@ -18,6 +18,7 @@ import { openExternalLink, openInternalPath, showToast } from './helpers/utils'
 import { translateWindowTitle } from './helpers/strings'
 import 'core-js'
 import android from 'android'
+import { updateSystemTheme, updateTheme } from './helpers/android'
 
 let ipcRenderer = null
 
@@ -197,10 +198,10 @@ export default defineComponent({
           // hides the splash screen
           android.hideSplashScreen()
           window.addEventListener('enabled-light-mode', () => {
-            document.body.dataset.systemTheme = 'light'
+            this.checkThemeSettings()
           })
           window.addEventListener('enabled-dark-mode', () => {
-            document.body.dataset.systemTheme = 'dark'
+            this.checkThemeSettings()
           })
         }
 
@@ -230,8 +231,17 @@ export default defineComponent({
         mainColor: this.mainColor || 'mainRed',
         secColor: this.secColor || 'secBlue'
       }
-
-      this.updateTheme(theme)
+      if (process.env.IS_ANDROID) {
+        if (theme.baseTheme === 'system') {
+          // get a more precise theme with this
+          theme.baseTheme = android.getSystemTheme()
+        }
+        this.updateTheme(theme)
+        setTimeout(() => {
+          // 0 ms timeout to allow the css to update
+          updateSystemTheme(theme.baseTheme)
+        })
+      }
     },
 
     updateTheme: function (theme) {

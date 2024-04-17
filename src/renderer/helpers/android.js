@@ -304,3 +304,27 @@ export async function initalizeDatabasesInDirectory(directoryHandle) {
   }
   return filteredFiles
 }
+
+export function updateSystemTheme(theme) {
+  const dark = [
+    'dark',
+    'black',
+    'dracula',
+    'catppuccinMocha',
+    'nordic',
+    'hotPink'
+  ]
+  const light = [
+    'light',
+    'pastelPink'
+  ]
+  const bodyStyle = getComputedStyle(document.body)
+  const top = bodyStyle.getPropertyValue('--card-bg-color')
+  const bottom = bodyStyle.getPropertyValue('--side-nav-color')
+  if (dark.indexOf(theme) !== -1) {
+    android.themeSystemUi(bottom, top, true)
+  }
+  if (light.indexOf(theme) !== -1) {
+    android.themeSystemUi(bottom, top, false)
+  }
+}

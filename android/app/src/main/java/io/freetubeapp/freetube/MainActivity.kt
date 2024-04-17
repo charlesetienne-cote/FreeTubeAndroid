@@ -45,6 +45,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   lateinit var activityResultLauncher: ActivityResultLauncher<Intent>
   lateinit var content: View
   var showSplashScreen: Boolean = true
+  var darkMode: Boolean = false
 
   /*
    * Gets the number of available cores
@@ -73,6 +74,15 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   @Suppress("DEPRECATION")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+      Configuration.UI_MODE_NIGHT_NO -> {
+        darkMode = false
+      }
+      Configuration.UI_MODE_NIGHT_YES -> {
+        darkMode = true
+      }
+    }
+
     content = findViewById(android.R.id.content)
     content.viewTreeObserver.addOnPreDrawListener(
       object : ViewTreeObserver.OnPreDrawListener {
@@ -242,11 +252,13 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     super.onConfigurationChanged(newConfig)
     when (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
       Configuration.UI_MODE_NIGHT_NO -> {
+        darkMode = false
         webView.post {
           webView.loadUrl("javascript: window.dispatchEvent(new Event(\"enabled-light-mode\"))")
         }
       }
       Configuration.UI_MODE_NIGHT_YES -> {
+        darkMode = true
         webView.post {
           webView.loadUrl("javascript: window.dispatchEvent(new Event(\"enabled-dark-mode\"))")
         }
