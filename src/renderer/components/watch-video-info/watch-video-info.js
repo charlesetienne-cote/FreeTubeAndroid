@@ -104,6 +104,7 @@ export default defineComponent({
       required: true
     }
   },
+  emits: ['set-info-area-sticky', 'scroll-to-info-area', 'pause-player'],
   computed: {
     usingElectron: function () {
       return process.env.IS_ELECTRON
