@@ -58,10 +58,14 @@
 
   .banner {
     inline-size: 90%;
-    margin-block: 60px 0;
+    margin-block: 20px 0;
   }
 
   .flexBox {
     margin-block: 60px -75px;
+  }
+
+  .flexBox:has(.floatingRefreshSection) {
+    margin-block: 100px;
   }
 }
