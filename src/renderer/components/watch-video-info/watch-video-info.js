@@ -104,7 +104,7 @@ export default defineComponent({
       required: true
     }
   },
-  emits: ['set-info-area-sticky', 'scroll-to-info-area', 'pause-player'],
+  emits: ['change-format', 'pause-player', 'set-info-area-sticky', 'scroll-to-info-area'],
   computed: {
     usingElectron: function () {
       return process.env.IS_ELECTRON
@@ -389,6 +389,10 @@ export default defineComponent({
 
       // TODO: Maybe show playlist name
       showToast(this.$t('Video.Video has been removed from your saved list'))
+    },
+
+    changeFormat: function(value) {
+      this.$emit('change-format', value)
     },
 
     ...mapActions([
