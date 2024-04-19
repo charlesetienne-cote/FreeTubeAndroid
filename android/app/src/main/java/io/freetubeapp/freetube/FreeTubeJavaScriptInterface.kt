@@ -614,11 +614,24 @@ class FreeTubeJavaScriptInterface {
       windowInsetsController.isAppearanceLightNavigationBars = !darkMode
       windowInsetsController.isAppearanceLightStatusBars = !darkMode
       fun hexToColour(hex: String) : Int {
-        return Color.rgb(
-          Integer.valueOf(hex.substring(1, 3), 16),
-          Integer.valueOf(hex.substring(3, 5), 16),
-          Integer.valueOf(hex.substring(5, 7), 16)
-        )
+        return if (hex.length === 7) {
+          Color.rgb(
+            Integer.valueOf(hex.substring(1, 3), 16),
+            Integer.valueOf(hex.substring(3, 5), 16),
+            Integer.valueOf(hex.substring(5, 7), 16)
+          )
+        } else if (hex.length === 4) {
+          val r = hex.substring(1, 2)
+          val g = hex.substring(2, 3)
+          val b = hex.substring(3, 4)
+          Color.rgb(
+            Integer.valueOf("$r$r", 16),
+            Integer.valueOf("$g$g", 16),
+            Integer.valueOf("$b$b", 16)
+          )
+        } else {
+          Color.TRANSPARENT
+        }
       }
       context.window.navigationBarColor = hexToColour(topHex)
       context.window.statusBarColor = hexToColour(bottomHex)
