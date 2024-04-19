@@ -241,6 +241,8 @@ export default defineComponent({
           // 0 ms timeout to allow the css to update
           updateSystemTheme(theme.baseTheme)
         })
+      } else {
+        this.updateTheme(theme)
       }
     },
 
