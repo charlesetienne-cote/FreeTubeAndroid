@@ -433,6 +433,9 @@ export default defineComponent({
     window.removeEventListener('beforeunload', this.stopPowerSaveBlocker)
   },
   methods: {
+    handlePause() {
+      this.player.exitFullscreen()
+    },
     initializePlayer: async function () {
       if (typeof this.$refs.video !== 'undefined') {
         if (!this.useDash) {
@@ -466,8 +469,8 @@ export default defineComponent({
         })
         this.player.mobileUi({
           fullscreen: {
-            enterOnRotate: this.enterFullscreenOnDisplayRotate,
-            exitOnRotate: this.enterFullscreenOnDisplayRotate,
+            enterOnRotate: !process.env.IS_ANDROID && this.enterFullscreenOnDisplayRotate,
+            exitOnRotate: !process.env.IS_ANDROID && this.enterFullscreenOnDisplayRotate,
             lockOnRotate: false
           },
           // Without this flag, the mobile UI will only activate
@@ -480,6 +483,23 @@ export default defineComponent({
             tapTimeout: 300
           }
         })
+
+        if (process.env.IS_ANDROID) {
+          window.addEventListener('app-pause', this.handlePause)
+          screen.orientation.onchange = () => {
+            if (this.player.isFullscreen() && screen.orientation.angle === 0) {
+              this.player.exitFullscreen()
+            } else if (Math.abs(screen.orientation.angle) === 90) {
+              if (!android.isAppPaused()) {
+                this.player.requestFullscreen()
+              }
+            }
+          }
+          this.player.on('dispose', () => {
+            screen.orientation.onchange = null
+            window.removeEventListener('app-pause', this.handlePause)
+          })
+        }
 
         const qualityLevels = this.player.qualityLevels()
 

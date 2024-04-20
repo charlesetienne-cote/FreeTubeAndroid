@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
   lateinit var content: View
   var showSplashScreen: Boolean = true
   var darkMode: Boolean = false
+  var paused: Boolean = false
 
   /*
    * Gets the number of available cores
@@ -297,11 +298,13 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
 
   override fun onPause() {
     super.onPause()
+    paused = true
     webView.loadUrl("javascript: window.dispatchEvent(new Event(\"app-pause\"))")
   }
 
   override fun onResume() {
     super.onResume()
+    paused = false
     webView.loadUrl("javascript: window.dispatchEvent(new Event(\"app-resume\"))")
   }
 
