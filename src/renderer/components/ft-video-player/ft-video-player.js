@@ -489,7 +489,7 @@ export default defineComponent({
           screen.orientation.onchange = () => {
             if (this.player.isFullscreen() && screen.orientation.angle === 0) {
               this.player.exitFullscreen()
-            } else if (Math.abs(screen.orientation.angle) === 90) {
+            } else if (screen.orientation.angle === 90 || screen.orientation.angle === 270) {
               if (!android.isAppPaused()) {
                 this.player.requestFullscreen()
               }
