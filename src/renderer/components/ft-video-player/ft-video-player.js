@@ -484,7 +484,7 @@ export default defineComponent({
           }
         })
 
-        if (process.env.IS_ANDROID) {
+        if (process.env.IS_ANDROID && this.enterFullscreenOnDisplayRotate) {
           window.addEventListener('app-pause', this.handlePause)
           screen.orientation.onchange = () => {
             if (this.player.isFullscreen() && screen.orientation.angle === 0) {
