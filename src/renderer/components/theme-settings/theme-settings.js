@@ -124,7 +124,9 @@ export default defineComponent({
   },
   watch: {
     barColor(val) {
-      updateAndroidTheme(val)
+      if (process.env.IS_ANDROID) {
+        updateAndroidTheme(val)
+      }
     }
   },
   mounted: function () {
