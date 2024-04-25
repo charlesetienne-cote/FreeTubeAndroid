@@ -1,7 +1,7 @@
 {
   "name": "FreeTube",
   "short_name": "FreeTube",
-  "start_url": "./index.html",
+  "start_url": "../index.html",
   "categories": [
     "multimedia",
     "browser"
