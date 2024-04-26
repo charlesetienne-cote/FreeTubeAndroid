@@ -15,6 +15,7 @@
           :default-value="backendFallback"
           :compact="true"
           :tooltip="$t('Tooltips.General Settings.Fallback to Non-Preferred Backend on Failure')"
+          :disabled="usingBrowser"
           @change="updateBackendFallback"
         />
         <ft-toggle-switch

@@ -17,6 +17,7 @@
           :compact="true"
           :default-value="proxyVideos"
           :tooltip="$t('Tooltips.Player Settings.Proxy Videos Through Invidious')"
+          :disabled="usingBrowser"
           @change="updateProxyVideos"
         />
         <ft-toggle-switch
