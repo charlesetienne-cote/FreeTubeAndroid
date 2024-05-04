@@ -9,7 +9,7 @@
     >
       <ft-card
         class="promptCard"
-        :class="{ autosize, [theme]: true }"
+        :class="{ autosize, [theme]: true, fullscreen }"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="('dialog-' + sanitizedLabel)"
@@ -50,3 +50,4 @@
 
 <script src="./ft-prompt.js" />
 <style scoped src="./ft-prompt.css" />
+<style src="./global.css" />

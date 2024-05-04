@@ -4,6 +4,7 @@ import FtCard from '../../components/ft-card/ft-card.vue'
 import FtFlexBox from '../../components/ft-flex-box/ft-flex-box.vue'
 import FtButton from '../../components/ft-button/ft-button.vue'
 import { sanitizeForHtmlId } from '../../helpers/accessibility'
+import android from 'android'
 
 export default defineComponent({
   name: 'FtPrompt',
@@ -40,6 +41,10 @@ export default defineComponent({
     theme: {
       type: String,
       default: 'base'
+    },
+    fullscreen: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['click'],
@@ -66,12 +71,23 @@ export default defineComponent({
       })
       this.focusItem(0)
     })
+    if (process.env.IS_ANDROID) {
+      android.enterPromptMode()
+      window.addEventListener('exit-prompt', this.exitPrompt)
+    }
   },
   beforeDestroy: function () {
     document.removeEventListener('keydown', this.closeEventFunction, true)
     nextTick(() => this.lastActiveElement?.focus())
+    if (process.env.IS_ANDROID) {
+      android.exitPromptMode()
+      window.removeEventListener('exit-prompt', this.exitPrompt)
+    }
   },
   methods: {
+    exitPrompt: function () {
+      this.$emit('click', null)
+    },
     optionButtonTextColor: function(index) {
       if (index === 0 && this.isFirstOptionDestructive) {
         return 'var(--destructive-text-color)'

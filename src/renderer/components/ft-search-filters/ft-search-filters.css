@@ -28,3 +28,11 @@
     flex-flow: column;
   }
 }
+
+@media only screen and (width <= 420px) {
+  .radioFlexBox {
+    max-block-size: calc(100vh - 7em);
+    overflow-y: scroll;
+    justify-content: start;
+  }
+}

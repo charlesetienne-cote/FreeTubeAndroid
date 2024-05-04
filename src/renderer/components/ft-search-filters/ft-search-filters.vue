@@ -2,6 +2,7 @@
   <ft-prompt
     theme="slim"
     :label="title"
+    :fullscreen="true"
     @click="hideSearchFilters"
   >
     <div>

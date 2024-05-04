@@ -2,6 +2,7 @@
   <ft-prompt
     theme="flex-column"
     :label="title"
+    :fullscreen="true"
     @click="hide"
   >
     <h2 class="heading">

@@ -602,39 +602,39 @@ class FreeTubeJavaScriptInterface {
       }
     }
   }
+  private fun hexToColour(hex: String) : Int {
+    return if (hex.length === 7) {
+      Color.rgb(
+        Integer.valueOf(hex.substring(1, 3), 16),
+        Integer.valueOf(hex.substring(3, 5), 16),
+        Integer.valueOf(hex.substring(5, 7), 16)
+      )
+    } else if (hex.length === 4) {
+      val r = hex.substring(1, 2)
+      val g = hex.substring(2, 3)
+      val b = hex.substring(3, 4)
+      Color.rgb(
+        Integer.valueOf("$r$r", 16),
+        Integer.valueOf("$g$g", 16),
+        Integer.valueOf("$b$b", 16)
+      )
+    } else {
+      Color.TRANSPARENT
+    }
+  }
 
   /**
    *
    */
   @JavascriptInterface
-  fun themeSystemUi(topHex: String, bottomHex: String, topDarkMode: Boolean = true, bottomDarkMode: Boolean  = true) {
+  fun themeSystemUi(navigationHex: String, statusHex: String, navigationDarkMode: Boolean  = true,  statusDarkMode: Boolean = true) {
     context.runOnUiThread {
       val windowInsetsController =
         WindowCompat.getInsetsController(context.window, context.window.decorView)
-      windowInsetsController.isAppearanceLightNavigationBars = !bottomDarkMode
-      windowInsetsController.isAppearanceLightStatusBars = !topDarkMode
-      fun hexToColour(hex: String) : Int {
-        return if (hex.length === 7) {
-          Color.rgb(
-            Integer.valueOf(hex.substring(1, 3), 16),
-            Integer.valueOf(hex.substring(3, 5), 16),
-            Integer.valueOf(hex.substring(5, 7), 16)
-          )
-        } else if (hex.length === 4) {
-          val r = hex.substring(1, 2)
-          val g = hex.substring(2, 3)
-          val b = hex.substring(3, 4)
-          Color.rgb(
-            Integer.valueOf("$r$r", 16),
-            Integer.valueOf("$g$g", 16),
-            Integer.valueOf("$b$b", 16)
-          )
-        } else {
-          Color.TRANSPARENT
-        }
-      }
-      context.window.navigationBarColor = hexToColour(topHex)
-      context.window.statusBarColor = hexToColour(bottomHex)
+      windowInsetsController.isAppearanceLightNavigationBars = !navigationDarkMode
+      windowInsetsController.isAppearanceLightStatusBars = !statusDarkMode
+      context.window.navigationBarColor = hexToColour(navigationHex)
+      context.window.statusBarColor = hexToColour(statusHex)
     }
   }
 
@@ -650,6 +650,18 @@ class FreeTubeJavaScriptInterface {
   @JavascriptInterface
   fun isAppPaused(): Boolean {
     return context.paused
+  }
+
+  @JavascriptInterface
+  fun enterPromptMode() {
+    context.webView.isVerticalScrollBarEnabled = false
+    context.isInAPrompt = true
+  }
+
+  @JavascriptInterface
+  fun exitPromptMode() {
+    context.webView.isVerticalScrollBarEnabled = true
+    context.isInAPrompt = false
   }
 
   private fun addNamedCallbackToPromise(promise: String, name: String) {
